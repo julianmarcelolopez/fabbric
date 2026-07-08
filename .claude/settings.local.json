@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//c/projects/bordart-admin/src/app/\\(dashboard\\)/**)",
+      "Read(//c/projects/bordart-admin/src/**)",
+      "Read(//c/projects/bordart-admin/**)",
+      "Bash(find src/app/actions -type f)",
+      "Read(//c/projects/bordart-admin/src/app/**)",
+      "Read(//c/projects/bordart-admin/src/lib/**)"
+    ]
+  }
+}

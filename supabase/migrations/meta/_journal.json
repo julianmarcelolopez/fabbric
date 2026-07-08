@@ -1,0 +1,27 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1783477829842,
+      "tag": "0000_init_t0_t2",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1783534604176,
+      "tag": "0001_home_sections",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1783538324659,
+      "tag": "0002_stock_y_catalog_config",
+      "breakpoints": true
+    }
+  ]
+}

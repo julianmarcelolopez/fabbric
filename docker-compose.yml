@@ -1,0 +1,38 @@
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+      target: dev
+    env_file: .env.local
+    environment:
+      # Bind mounts Windows->WSL2 no propagan eventos de archivos: watch por polling
+      - CHOKIDAR_USEPOLLING=1
+      - CHOKIDAR_INTERVAL=1000
+    ports:
+      - "4000:4000"
+    volumes:
+      # Bind mount del repo para hot reload; los node_modules del contenedor
+      # se preservan con volúmenes anónimos (no se pisan con los de Windows)
+      - .:/app
+      - /app/node_modules
+      - /app/backend/node_modules
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+      target: dev
+    env_file: .env.local
+    environment:
+      # Bind mounts Windows->WSL2 no propagan eventos de archivos: watch por polling
+      - CHOKIDAR_USEPOLLING=1
+      - CHOKIDAR_INTERVAL=1000
+    ports:
+      - "5173:5173"
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - /app/frontend/node_modules
+    depends_on:
+      - backend
