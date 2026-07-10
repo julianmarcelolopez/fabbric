@@ -1,6 +1,6 @@
 # Tarea 3 — La tienda: layout + portada + detalle de producto
 
-**Estado:** ⬜ Pendiente
+**Estado:** ✅ Hecha (2026-07-08) — verificada en navegador por el usuario
 **Depende de:** [02-public-endpoints.md](02-public-endpoints.md)
 
 ## Objetivo
@@ -11,15 +11,13 @@ Reemplazar el placeholder de `/store/:slug` por la tienda real de solo lectura, 
 
 `frontend/src/features/store/`:
 
-- [ ] `StoreLayout.tsx` — resuelve el slug (fetch `/public/:slug/config`), aplica `accentColor` (CSS custom property), TopBar con logo/nombre, footer con descripción; slug inexistente → página "tienda no encontrada" amigable
-- [ ] `CatalogHomePage.tsx` — fetch `/public/:slug/home` → `HomeSectionsRenderer` (el de T3, sin tocar) con `onProductClick` navegando al detalle
-- [ ] `StoreProductPage.tsx` — fetch `/public/:slug/products/:id` → `ProductDetailView` (el de T2, sin tocar): galería, talles/colores, stock online, precio efectivo. Sin `onAddToCart` (llega en T6) — el botón queda deshabilitado con su texto actual
-- [ ] Rutas: `/store/:slug` (portada) y `/store/:slug/p/:productId` (detalle), SIN `RequireAuth`
-- [ ] Estados de carga y error propios de tienda (no estética admin) en `catalog.css`
+- [x] `StoreLayout.tsx` — fetch de config pública, `--accent` como CSS custom property (topbar, botón de compra y links la usan), TopBar con logo/nombre, footer con descripción + "tienda creada con fabbric"; 404 → "Tienda no encontrada" amigable
+- [x] `CatalogHomePage.tsx` — `HomeSectionsRenderer` de T3 **sin tocar** (la respuesta pública ya es compatible), `onProductClick` navega al detalle
+- [x] `StoreProductPage.tsx` — `ProductDetailView` de T2 **sin tocar**, sin `onAddToCart` (botón deshabilitado hasta T6); producto inexistente → "no encontrado" con link de vuelta
+- [x] Rutas anidadas `/store/:slug` + `/store/:slug/p/:productId`, sin auth; placeholder de T0 eliminado
+- [x] Estilos `.store-*` en `catalog.css`; helper `publicJson` (fetch sin token) en `lib/api.ts`
 
 ## Definition of Done
 
-- [ ] Typecheck limpio; Vite compila; módulos servidos
-- [ ] `/store/demo` **en ventana de incógnito** (sin sesión) muestra la portada real con las secciones en el orden configurado
-- [ ] Click en un producto → detalle completo con selector de variantes funcionando
-- [ ] La verificación fina queda para la tarea 4
+- [x] Typecheck limpio; Vite compila y sirve los 3 módulos; `/store/demo` responde por el fallback SPA
+- [x] Verificación en navegador → tarea 4 (OK del usuario)

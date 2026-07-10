@@ -13,11 +13,17 @@ import { ZodError } from "zod";
 import { env } from "./config/env.js";
 import { AppError } from "./lib/errors.js";
 import { adminRoutes } from "./modules/admin/routes.js";
+import { catalogConfigRoutes } from "./modules/catalogConfig/routes.js";
 import { categoriesRoutes } from "./modules/categories/routes.js";
 import { collectionsRoutes } from "./modules/collections/routes.js";
 import { homeSectionsRoutes } from "./modules/homeSections/routes.js";
 import { imagesRoutes } from "./modules/images/routes.js";
+import { paymentsRoutes } from "./modules/payments/routes.js";
+import { webhookRoutes } from "./modules/payments/webhook.js";
+import { portalRoutes } from "./modules/portal/routes.js";
 import { productsRoutes } from "./modules/products/routes.js";
+import { publicRoutes } from "./modules/public/routes.js";
+import { shippingZonesRoutes } from "./modules/shippingZones/routes.js";
 import { stockRoutes } from "./modules/stock/routes.js";
 import { superadminRoutes } from "./modules/superadmin/routes.js";
 import { variantsRoutes } from "./modules/variants/routes.js";
@@ -114,6 +120,12 @@ await app.register(variantsRoutes);
 await app.register(imagesRoutes);
 await app.register(homeSectionsRoutes);
 await app.register(stockRoutes);
+await app.register(catalogConfigRoutes);
+await app.register(shippingZonesRoutes);
+await app.register(publicRoutes);
+await app.register(portalRoutes);
+await app.register(paymentsRoutes);
+await app.register(webhookRoutes);
 
 app.get("/health", { schema: { tags: ["sistema"], summary: "Health check" } }, async () => ({
   ok: true,

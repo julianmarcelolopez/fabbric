@@ -41,6 +41,20 @@ export async function apiJson<T = unknown>(path: string, init: RequestInit = {})
   return data as T;
 }
 
+/** Request a los endpoints públicos (sin auth) — los usa la tienda. */
+export async function publicJson<T = unknown>(path: string): Promise<T> {
+  const res = await fetch(`${API_URL}${path}`);
+  const data = await res.json().catch(() => null);
+  if (!res.ok) {
+    throw new ApiError(
+      res.status,
+      data?.error?.code ?? "error",
+      data?.error?.message ?? `Error ${res.status}`
+    );
+  }
+  return data as T;
+}
+
 /** Upload multipart (imágenes): sin Content-Type manual, el browser arma el boundary. */
 export async function apiUpload<T = unknown>(path: string, file: File): Promise<T> {
   const token = await accessToken();

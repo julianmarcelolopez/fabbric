@@ -22,5 +22,18 @@ export const updateLowStockThresholdSchema = z.object({
   lowStockThreshold: z.number().int().min(0),
 });
 
+// Update completo de la identidad de la tienda (T5). El logo va por multipart aparte.
+export const updateCatalogConfigSchema = z
+  .object({
+    storeName: z.string().min(1),
+    slug: slugSchema,
+    accentColor: z.string().regex(/^#[0-9a-fA-F]{6}$/, "color en formato #rrggbb"),
+    theme: z.string().min(1),
+    businessDescription: z.string().max(2000).nullable(),
+    active: z.boolean(),
+  })
+  .partial();
+
 export type CatalogConfig = z.infer<typeof catalogConfigSchema>;
 export type UpdateLowStockThresholdInput = z.infer<typeof updateLowStockThresholdSchema>;
+export type UpdateCatalogConfigInput = z.infer<typeof updateCatalogConfigSchema>;

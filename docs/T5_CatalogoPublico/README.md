@@ -23,10 +23,10 @@ Igual que T0-T4: una tarea por archivo, en orden, marcando estados al cerrar.
 
 | # | Tarea | Depende de | Estado |
 |---|-------|-----------|--------|
-| 1 | [01-catalog-config-completo.md](01-catalog-config-completo.md) — Config de tienda completa (endpoint + página admin + logo) | — | ⬜ Pendiente |
-| 2 | [02-public-endpoints.md](02-public-endpoints.md) — Endpoints públicos por slug (config, home, detalle) | 1 | ⬜ Pendiente |
-| 3 | [03-store-frontend.md](03-store-frontend.md) — La tienda: layout + portada + detalle de producto | 2 | ⬜ Pendiente |
-| 4 | [04-verificacion-final.md](04-verificacion-final.md) — Definition of Done de T5 | 1-3 | ⬜ Pendiente |
+| 1 | [01-catalog-config-completo.md](01-catalog-config-completo.md) — Config de tienda completa (endpoint + página admin + logo) | — | ✅ Hecha |
+| 2 | [02-public-endpoints.md](02-public-endpoints.md) — Endpoints públicos por slug (config, home, detalle) | 1 | ✅ Hecha |
+| 3 | [03-store-frontend.md](03-store-frontend.md) — La tienda: layout + portada + detalle de producto | 2 | ✅ Hecha |
+| 4 | [04-verificacion-final.md](04-verificacion-final.md) — Definition of Done de T5 | 1-3 | ✅ Hecha |
 
 ## Recordatorios operativos (gotchas acumulados)
 

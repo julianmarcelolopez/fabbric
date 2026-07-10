@@ -8,6 +8,8 @@ import "./catalog.css";
 // (Único estado interno: selección efímera de imagen/talle/color del visitante.)
 
 export type PdvVariant = {
+  /** presente cuando el consumidor necesita identificar la variante (ej. carrito) */
+  id?: string;
   talle: string;
   color: string;
   stockOnline: number;

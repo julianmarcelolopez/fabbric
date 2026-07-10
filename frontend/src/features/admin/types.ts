@@ -67,6 +67,26 @@ export const STATUS_LABELS: Record<ProductStatus, string> = {
   out_of_stock: "Sin stock",
 };
 
+export type ShippingZoneRow = {
+  id: string;
+  name: string;
+  cost: number;
+  freeShippingFrom: number | null;
+  active: boolean;
+};
+
+export type CatalogConfig = {
+  id: string;
+  slug: string;
+  storeName: string;
+  logoUrl: string | null;
+  accentColor: string;
+  theme: string;
+  businessDescription: string | null;
+  lowStockThreshold: number;
+  active: boolean;
+};
+
 export type StockItem = {
   variantId: string;
   productId: string;

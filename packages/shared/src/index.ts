@@ -8,3 +8,6 @@ export * from "./schemas/productImage.js";
 export * from "./schemas/homeSection.js";
 export * from "./schemas/stockMovement.js";
 export * from "./schemas/catalogConfig.js";
+export * from "./schemas/customer.js";
+export * from "./schemas/shippingZone.js";
+export * from "./schemas/order.js";

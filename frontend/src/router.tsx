@@ -1,37 +1,43 @@
-import { createBrowserRouter, Link, useParams } from "react-router-dom";
+import { createBrowserRouter, Link } from "react-router-dom";
 import { AdminLayout } from "./features/admin/AdminLayout";
 import { RequireAuth } from "./features/admin/RequireAuth";
 import { AdminHomePage } from "./features/admin/pages/AdminHomePage";
+import { CatalogConfigPage } from "./features/admin/pages/CatalogConfigPage";
 import { CategoriesPage } from "./features/admin/pages/CategoriesPage";
 import { CollectionsPage } from "./features/admin/pages/CollectionsPage";
 import { HomeSectionsPage } from "./features/admin/pages/HomeSectionsPage";
 import { LoginPage } from "./features/admin/pages/LoginPage";
 import { ProductEditPage } from "./features/admin/pages/ProductEditPage";
 import { ProductsPage } from "./features/admin/pages/ProductsPage";
+import { ShippingZonesPage } from "./features/admin/pages/ShippingZonesPage";
 import { StockPage } from "./features/admin/pages/StockPage";
+import { StoreLayout } from "./features/store/StoreLayout";
+import { CatalogHomePage } from "./features/store/pages/CatalogHomePage";
+import { CheckoutPage } from "./features/store/pages/CheckoutPage";
+import { CheckoutResultPage } from "./features/store/pages/CheckoutResultPage";
+import { MyOrdersPage } from "./features/store/pages/MyOrdersPage";
+import { OrderDetailPage } from "./features/store/pages/OrderDetailPage";
+import { StoreProductPage } from "./features/store/pages/StoreProductPage";
 
-// /store y /portal siguen siendo placeholders — se implementan en sus fases (ver docs/plan.md)
+// El portal del comprador vive dentro de cada tienda (/store/:slug/portal/*) — T6 tarea 8
 
+// Índice de DESARROLLO (T0): hub para saltar a cada portal mientras se construye.
+// En producción esta raíz sería una landing de fabbric.
 function Home() {
   return (
-    <main>
+    <main style={{ fontFamily: "system-ui, sans-serif", padding: 24 }}>
       <h1>fabbric</h1>
+      <p style={{ color: "#6b7280" }}>índice de desarrollo</p>
       <ul>
-        <li><Link to="/admin">Portal Admin</Link></li>
-        <li><Link to="/store/demo">Tienda (slug: demo)</Link></li>
-        <li><Link to="/portal">Portal Cliente</Link></li>
+        <li><Link to="/admin">Portal Admin (vendedor)</Link></li>
+        <li><Link to="/store/demo">Tienda pública (slug: demo)</Link></li>
+        <li>
+          Portal del comprador: vive dentro de cada tienda —{" "}
+          <Link to="/store/demo/portal/orders">Mis pedidos de la tienda demo</Link> (T6 tarea 8)
+        </li>
       </ul>
     </main>
   );
-}
-
-function StorePlaceholder() {
-  const { slug } = useParams();
-  return <h1>Tienda «{slug}» — placeholder (T5)</h1>;
-}
-
-function PortalPlaceholder() {
-  return <h1>Portal Cliente — placeholder (T6)</h1>;
 }
 
 export const router = createBrowserRouter([
@@ -52,8 +58,20 @@ export const router = createBrowserRouter([
       { path: "products/:id", element: <ProductEditPage /> },
       { path: "stock", element: <StockPage /> },
       { path: "home", element: <HomeSectionsPage /> },
+      { path: "shipping", element: <ShippingZonesPage /> },
+      { path: "config", element: <CatalogConfigPage /> },
     ],
   },
-  { path: "/store/:slug", element: <StorePlaceholder /> },
-  { path: "/portal", element: <PortalPlaceholder /> },
+  {
+    path: "/store/:slug",
+    element: <StoreLayout />,
+    children: [
+      { index: true, element: <CatalogHomePage /> },
+      { path: "p/:productId", element: <StoreProductPage /> },
+      { path: "checkout", element: <CheckoutPage /> },
+      { path: "checkout/result", element: <CheckoutResultPage /> },
+      { path: "portal/orders", element: <MyOrdersPage /> },
+      { path: "portal/orders/:orderId", element: <OrderDetailPage /> },
+    ],
+  },
 ]);

@@ -1,6 +1,6 @@
 # Tarea 1 — Configuración de tienda completa (endpoint + página admin + logo)
 
-**Estado:** ⬜ Pendiente
+**Estado:** ✅ Hecha (2026-07-08) — suite 11/11 PASS
 **Depende de:** — (la tabla existe desde T4)
 
 ## Objetivo
@@ -11,21 +11,26 @@ Que el vendedor configure la identidad de su tienda antes de que sea pública: n
 
 ### Shared
 
-- [ ] `updateCatalogConfigSchema` en `catalogConfig.ts`: partial de { storeName, slug, accentColor (#hex), theme, businessDescription (nullable), active }
+- [x] `updateCatalogConfigSchema` en `catalogConfig.ts`: partial de { storeName, slug, accentColor (#hex), theme, businessDescription (nullable), active }
 
-### Backend (`modules/stock/routes.ts` se renombra el grupo o va a `modules/catalogConfig/routes.ts` — decidir al implementar y documentar)
+### Backend
 
-- [ ] `PATCH /admin/catalog-config` — update completo; **cambio de slug**: validar formato + colisión global → 409 con mensaje claro ("esa URL ya está tomada por otra tienda")
-- [ ] `POST /admin/catalog-config/logo` — multipart (patrón imágenes T2): JPEG/PNG/WebP ≤ 2 MB, sube a `{orgId}/config/logo-{uuid}.{ext}`, borra el logo anterior de Storage si había, actualiza `logoUrl`
-- [ ] Swagger en ambas
+- [x] **Decisión de organización**: módulo nuevo `modules/catalogConfig/` con `routes.ts` + `service.ts`; `ensureConfig` se movió al service y el módulo de stock lo importa de ahí (el GET config y el PATCH del umbral quedan en stock, mismas rutas)
+- [x] `PATCH /admin/catalog-config` — colisión de slug global → 409 "esa URL ya está tomada por otra tienda"; formato inválido → 400
+- [x] `POST /admin/catalog-config/logo` — multipart ≤ 2 MB, path `{orgId}/config/logo-{uuid}.{ext}`, borra el logo anterior de Storage (verificado por Storage API), actualiza `logoUrl`
+- [x] Swagger en ambas (tag "config de tienda")
 
 ### Frontend
 
-- [ ] Entrada "Tienda" en el sidebar, ruta `/admin/config`
-- [ ] `CatalogConfigPage.tsx`: form con storeName, slug (con preview de la URL `/store/<slug>` y advertencia de que cambiarlo rompe links compartidos), accentColor (input color), descripción, toggle activa, y dropzone chico para el logo (con preview)
+- [x] Entrada "Tienda" en el sidebar, ruta `/admin/config`
+- [x] `CatalogConfigPage.tsx`: nombre, slug (con preview de URL y advertencia si lo cambiás), color (input color nativo), descripción, toggle activa, logo con preview y reemplazo
 
 ## Definition of Done
 
-- [ ] Suite HTTP: PATCH completo persiste; slug inválido → 400; slug tomado por otra org → 409; upload de logo funciona y reemplaza el anterior (el archivo viejo desaparece de Storage); aislamiento (otra org no ve/edita)
-- [ ] En navegador: editar nombre/color/descr + subir logo → "Guardado ✓" (verificación del usuario puede diferirse a la tarea 4)
-- [ ] Rutas en `/docs`; `tsc --noEmit` limpio
+- [x] Suite 11/11: PATCH persiste; slug inválido/color inválido → 400; slug tomado → 409; logo sube, es público, y al reemplazarlo el archivo viejo desaparece de Storage; .txt → 400; aislamiento (staff ve su propia config)
+- [ ] En navegador: se verifica junto con la tarea 4 (el flujo de la verificación final arranca configurando la tienda)
+- [x] Rutas en `/docs`; `tsc --noEmit` limpio en los tres workspaces
+
+## Notas de ejecución (2026-07-08)
+
+- La config de demo fue restaurada a sus valores tras el test; quedó un logo de prueba (1×1 px) que el usuario reemplazará por el real en la verificación final.

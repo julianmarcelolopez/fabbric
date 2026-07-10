@@ -7,41 +7,13 @@ import type { FastifyInstance } from "fastify";
 import type { ZodTypeProvider } from "fastify-type-provider-zod";
 import { z } from "zod";
 import { db } from "../../db/client.js";
-import {
-  catalogConfigs,
-  organizations,
-  products,
-  productVariants,
-  stockMovements,
-} from "../../db/schema.js";
+import { catalogConfigs, products, productVariants, stockMovements } from "../../db/schema.js";
 import { AppError } from "../../lib/errors.js";
 import { requireOrgId } from "../../lib/tenant.js";
+import { ensureConfig } from "../catalogConfig/service.js";
 
 const idParam = z.object({ id: z.string().uuid() });
 const tag = { tags: ["stock"], security: [{ bearerAuth: [] }] };
-
-/** Devuelve la config de la org, creándola con defaults si no existe (lazy). */
-async function ensureConfig(orgId: string) {
-  const [existing] = await db.select().from(catalogConfigs).where(eq(catalogConfigs.orgId, orgId));
-  if (existing) return existing;
-
-  const [org] = await db.select().from(organizations).where(eq(organizations.id, orgId));
-  if (!org) throw new AppError(404, "not_found", "Organización no encontrada");
-  try {
-    const [created] = await db
-      .insert(catalogConfigs)
-      .values({ orgId, slug: org.slug, storeName: org.name })
-      .returning();
-    return created;
-  } catch {
-    // slug de tienda es único GLOBAL: si otra org ya lo usa, degradar con sufijo
-    const [created] = await db
-      .insert(catalogConfigs)
-      .values({ orgId, slug: `${org.slug}-${orgId.slice(0, 6)}`, storeName: org.name })
-      .returning();
-    return created;
-  }
-}
 
 async function stockOverview(orgId: string) {
   const config = await ensureConfig(orgId);

@@ -1,5 +1,6 @@
 import {
   boolean,
+  index,
   integer,
   pgEnum,
   pgTable,
@@ -15,6 +16,14 @@ export const productStatus = pgEnum("product_status", ["active", "paused", "out_
 export const homeSectionRefType = pgEnum("home_section_ref_type", ["category", "collection"]);
 export const stockChannel = pgEnum("stock_channel", ["online", "local"]);
 export const stockMovementType = pgEnum("stock_movement_type", ["entrada", "venta", "ajuste", "sync"]);
+export const orderStatus = pgEnum("order_status", [
+  "pending",
+  "paid",
+  "preparing",
+  "shipped",
+  "delivered",
+  "cancelled",
+]);
 
 export const organizations = pgTable("organizations", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -198,6 +207,111 @@ export const stockMovements = pgTable("stock_movements", {
   type: stockMovementType("type").notNull(),
   delta: integer("delta").notNull(),
   note: text("note"),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+// ── Checkout (T6): compradores, envíos y órdenes ─────────────────────────────
+
+export const customers = pgTable(
+  "customers",
+  {
+    // id propio (no auth.users.id): el vínculo con Supabase Auth es googleSub,
+    // y el mismo Google account es un customer DISTINTO en cada tienda
+    id: uuid("id").primaryKey().defaultRandom(),
+    orgId: uuid("org_id")
+      .notNull()
+      .references(() => organizations.id),
+    googleSub: uuid("google_sub").notNull(),
+    email: text("email").notNull(),
+    name: text("name").notNull(),
+    phone: text("phone"),
+    address: text("address"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow()
+      .$onUpdate(() => new Date()),
+  },
+  (t) => [unique("customers_org_google_sub_unique").on(t.orgId, t.googleSub)]
+);
+
+export const shippingZones = pgTable("shipping_zones", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  orgId: uuid("org_id")
+    .notNull()
+    .references(() => organizations.id),
+  name: text("name").notNull(),
+  // Centavos, como todos los montos
+  cost: integer("cost").notNull(),
+  freeShippingFrom: integer("free_shipping_from"),
+  active: boolean("active").notNull().default(true),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .notNull()
+    .defaultNow()
+    .$onUpdate(() => new Date()),
+});
+
+export const orders = pgTable(
+  "orders",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    orgId: uuid("org_id")
+      .notNull()
+      .references(() => organizations.id),
+    // Nullable: T7 permite pedidos manuales del admin sin cliente registrado
+    customerId: uuid("customer_id").references(() => customers.id),
+    // Secuencial POR ORG — asignación transaccional con retry sobre la unique
+    orderNumber: integer("order_number").notNull(),
+    status: orderStatus("status").notNull().default("pending"),
+    // La zona puede borrarse: la orden guarda snapshot de nombre y costo
+    shippingZoneId: uuid("shipping_zone_id").references(() => shippingZones.id, {
+      onDelete: "set null",
+    }),
+    shippingZoneName: text("shipping_zone_name"),
+    shippingCost: integer("shipping_cost").notNull().default(0),
+    subtotal: integer("subtotal").notNull(),
+    total: integer("total").notNull(),
+    currency: text("currency").notNull().default("ARS"),
+    trackingNumber: text("tracking_number"),
+    mpPreferenceId: text("mp_preference_id"),
+    mpPaymentId: text("mp_payment_id"),
+    note: text("note"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow()
+      .$onUpdate(() => new Date()),
+  },
+  (t) => [
+    unique("orders_org_number_unique").on(t.orgId, t.orderNumber),
+    index("orders_org_created_idx").on(t.orgId, t.createdAt),
+  ]
+);
+
+export const orderItems = pgTable("order_items", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  orderId: uuid("order_id")
+    .notNull()
+    .references(() => orders.id, { onDelete: "cascade" }),
+  orgId: uuid("org_id")
+    .notNull()
+    .references(() => organizations.id),
+  // set null (NO cascade): el historial de ventas sobrevive a borrar el producto
+  // — por eso cada ítem lleva snapshot de nombre/talle/color/precios.
+  // productId null desde el origen = ítem personalizado/bespoke (T7).
+  productId: uuid("product_id").references(() => products.id, { onDelete: "set null" }),
+  variantId: uuid("variant_id").references(() => productVariants.id, { onDelete: "set null" }),
+  name: text("name").notNull(),
+  talle: text("talle"),
+  color: text("color"),
+  qty: integer("qty").notNull(),
+  unitPrice: integer("unit_price").notNull(),
+  // Costo al momento de la venta (patrón bordart) — alimenta ganancia en T9/T10
+  unitCostSnapshot: integer("unit_cost_snapshot"),
+  total: integer("total").notNull(),
+  // Foto/boceto de referencia para ítems personalizados (T7)
+  referenceImageUrl: text("reference_image_url"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
