@@ -1,6 +1,6 @@
 # Tarea 4 — `OrdersPage` y `OrderNewPage` (admin)
 
-**Estado:** ⬜ Pendiente
+**Estado:** 🔶 Implementada (2026-07-10) — verificación en navegador en la tarea 5
 **Depende de:** [02-endpoints-pedidos.md](02-endpoints-pedidos.md), [03-alta-manual.md](03-alta-manual.md)
 
 ## Objetivo
@@ -9,12 +9,12 @@ La pantalla de trabajo diaria del vendedor: ver ventas, avanzar estados, cargar 
 
 ## Pasos
 
-- [ ] Entrada "Pedidos" en el sidebar, rutas `/admin/orders` y `/admin/orders/new`
-- [ ] `OrdersPage.tsx`: tabla (número, fecha, cliente, tipo con badge, total, estado con badge de color) + filtros (estado, tipo, rango de fechas) + botón "Nuevo pedido"
-- [ ] Detalle (drawer o página): items con talle/color e imagen de referencia si es bespoke, costos (visibles solo acá — es admin), envío, nota, tracking editable, **botones de acción según transiciones válidas** (de `orderTransitions` compartido): "Marcar cobrado" (pending), "Preparar", "Enviar" (pide tracking), "Entregar", "Cancelar" con confirm
-- [ ] `OrderNewPage.tsx`: selector de cliente (buscador simple o "sin cliente"), agregado de ítems de catálogo (selector producto→variante + qty + canal) y bespoke (nombre, precio, costo, qty, imagen opcional con upload), zona de envío opcional, nota → crear → navega al detalle
+- [x] Entrada "Pedidos" en el sidebar; rutas `/admin/orders`, `/admin/orders/new`, `/admin/orders/:id`
+- [x] `OrdersPage.tsx`: tabla con badges de estado/tipo + filtros (estado, tipo, desde/hasta) + "Nuevo pedido"
+- [x] `OrderAdminDetailPage.tsx` (página): cliente/nota/pago MP, items con canal + costos + thumbnail clickeable de la imagen bespoke, y **acciones derivadas de `allowedTransitions`** (el server manda las opciones): Marcar cobrado (pending), Preparar, Marcar enviado (exige tracking), Marcar entregado, Cancelar con confirm; estados terminales sin botones
+- [x] `OrderNewPage.tsx`: cliente ("sin cliente" incluido — endpoint mínimo `GET /admin/customers` creado, T8 lo extiende), envío opcional (con "gratis desde" en vivo), constructor de ítems catálogo (producto→variante con stock visible por canal + qty + canal) y bespoke (nombre/precio/costo/imagen con upload), lista editable con total → crear → navega al detalle
 
 ## Definition of Done
 
-- [ ] Typecheck limpio; Vite compila
-- [ ] Verificación en navegador (junto con la tarea 5): flujo completo de gestión sobre los pedidos reales de T6 + una venta manual mixta
+- [x] Typecheck limpio; Vite compila y sirve las 3 páginas
+- [ ] Verificación en navegador → tarea 5

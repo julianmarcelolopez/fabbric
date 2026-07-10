@@ -306,6 +306,9 @@ export const orderItems = pgTable("order_items", {
   talle: text("talle"),
   color: text("color"),
   qty: integer("qty").notNull(),
+  // De qué stock sale el ítem al cobrarse: checkout online → "online";
+  // pedidos manuales (T7) eligen por ítem; bespoke → null (no toca stock)
+  channel: stockChannel("channel"),
   unitPrice: integer("unit_price").notNull(),
   // Costo al momento de la venta (patrón bordart) — alimenta ganancia en T9/T10
   unitCostSnapshot: integer("unit_cost_snapshot"),

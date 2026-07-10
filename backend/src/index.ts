@@ -16,8 +16,10 @@ import { adminRoutes } from "./modules/admin/routes.js";
 import { catalogConfigRoutes } from "./modules/catalogConfig/routes.js";
 import { categoriesRoutes } from "./modules/categories/routes.js";
 import { collectionsRoutes } from "./modules/collections/routes.js";
+import { customersRoutes } from "./modules/customers/routes.js";
 import { homeSectionsRoutes } from "./modules/homeSections/routes.js";
 import { imagesRoutes } from "./modules/images/routes.js";
+import { ordersRoutes } from "./modules/orders/routes.js";
 import { paymentsRoutes } from "./modules/payments/routes.js";
 import { webhookRoutes } from "./modules/payments/webhook.js";
 import { portalRoutes } from "./modules/portal/routes.js";
@@ -126,6 +128,8 @@ await app.register(publicRoutes);
 await app.register(portalRoutes);
 await app.register(paymentsRoutes);
 await app.register(webhookRoutes);
+await app.register(ordersRoutes);
+await app.register(customersRoutes);
 
 app.get("/health", { schema: { tags: ["sistema"], summary: "Health check" } }, async () => ({
   ok: true,

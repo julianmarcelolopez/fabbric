@@ -109,6 +109,8 @@ export async function paymentsRoutes(fastify: FastifyInstance) {
           talle: r.talle,
           color: r.color,
           qty,
+          // Checkout de la tienda = siempre stock online
+          channel: "online" as const,
           unitPrice,
           unitCostSnapshot: r.costPrice,
           total: unitPrice * qty,

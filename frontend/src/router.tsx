@@ -7,6 +7,9 @@ import { CategoriesPage } from "./features/admin/pages/CategoriesPage";
 import { CollectionsPage } from "./features/admin/pages/CollectionsPage";
 import { HomeSectionsPage } from "./features/admin/pages/HomeSectionsPage";
 import { LoginPage } from "./features/admin/pages/LoginPage";
+import { OrderAdminDetailPage } from "./features/admin/pages/OrderAdminDetailPage";
+import { OrderNewPage } from "./features/admin/pages/OrderNewPage";
+import { OrdersPage } from "./features/admin/pages/OrdersPage";
 import { ProductEditPage } from "./features/admin/pages/ProductEditPage";
 import { ProductsPage } from "./features/admin/pages/ProductsPage";
 import { ShippingZonesPage } from "./features/admin/pages/ShippingZonesPage";
@@ -57,6 +60,9 @@ export const router = createBrowserRouter([
       { path: "products", element: <ProductsPage /> },
       { path: "products/:id", element: <ProductEditPage /> },
       { path: "stock", element: <StockPage /> },
+      { path: "orders", element: <OrdersPage /> },
+      { path: "orders/new", element: <OrderNewPage /> },
+      { path: "orders/:id", element: <OrderAdminDetailPage /> },
       { path: "home", element: <HomeSectionsPage /> },
       { path: "shipping", element: <ShippingZonesPage /> },
       { path: "config", element: <CatalogConfigPage /> },

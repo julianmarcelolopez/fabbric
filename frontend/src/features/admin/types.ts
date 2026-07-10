@@ -121,6 +121,80 @@ export const MOVEMENT_TYPE_LABELS: Record<StockMovementRow["type"], string> = {
   sync: "Sync (auto)",
 };
 
+export type AdminOrderStatus = "pending" | "paid" | "preparing" | "shipped" | "delivered" | "cancelled";
+export type AdminOrderType = "catalogo" | "personalizado" | "mixto";
+
+export const ADMIN_ORDER_STATUS: Record<AdminOrderStatus, { label: string; color: string }> = {
+  pending: { label: "Pendiente de pago", color: "#b45309" },
+  paid: { label: "Pagado", color: "#15803d" },
+  preparing: { label: "En preparación", color: "#1d4ed8" },
+  shipped: { label: "Enviado", color: "#7c3aed" },
+  delivered: { label: "Entregado", color: "#374151" },
+  cancelled: { label: "Cancelado", color: "#b91c1c" },
+};
+
+export const ADMIN_ORDER_TYPE_LABELS: Record<AdminOrderType, string> = {
+  catalogo: "Catálogo",
+  personalizado: "Personalizado",
+  mixto: "Mixto",
+};
+
+export type AdminOrderRow = {
+  id: string;
+  orderNumber: number;
+  status: AdminOrderStatus;
+  total: number;
+  createdAt: string;
+  customerName: string | null;
+  customerEmail: string | null;
+  itemCount: number;
+  type: AdminOrderType;
+};
+
+export type AdminOrderItem = {
+  id: string;
+  productId: string | null;
+  variantId: string | null;
+  name: string;
+  talle: string | null;
+  color: string | null;
+  qty: number;
+  channel: "online" | "local" | null;
+  unitPrice: number;
+  unitCostSnapshot: number | null;
+  total: number;
+  referenceImageUrl: string | null;
+};
+
+export type AdminOrderDetail = {
+  id: string;
+  orderNumber: number;
+  status: AdminOrderStatus;
+  shippingZoneName: string | null;
+  shippingCost: number;
+  subtotal: number;
+  total: number;
+  currency: string;
+  trackingNumber: string | null;
+  mpPaymentId: string | null;
+  note: string | null;
+  createdAt: string;
+  customerName: string | null;
+  customerEmail: string | null;
+  customerPhone: string | null;
+  customerAddress: string | null;
+  items: AdminOrderItem[];
+  type: AdminOrderType;
+  allowedTransitions: AdminOrderStatus[];
+};
+
+export type AdminCustomerRow = {
+  id: string;
+  name: string;
+  email: string;
+  phone: string | null;
+};
+
 export type HomeSectionItem = {
   id: string;
   refType: "category" | "collection";

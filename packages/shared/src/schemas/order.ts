@@ -64,3 +64,68 @@ export type OrderStatus = z.infer<typeof orderStatusSchema>;
 export type Order = z.infer<typeof orderSchema>;
 export type OrderItem = z.infer<typeof orderItemSchema>;
 export type CheckoutInput = z.infer<typeof checkoutSchema>;
+
+// ── Máquina de estados (T7) ──────────────────────────────────────────────────
+// Fuente de verdad compartida: el backend valida, el frontend solo muestra
+// botones válidos. `paid` NO se alcanza por PATCH: llega por el webhook de MP
+// o por el endpoint de cobro manual (mark-paid).
+
+export const ORDER_TRANSITIONS: Record<OrderStatus, OrderStatus[]> = {
+  pending: ["cancelled"],
+  paid: ["preparing", "cancelled"],
+  preparing: ["shipped", "cancelled"],
+  shipped: ["delivered"],
+  delivered: [],
+  cancelled: [],
+};
+
+export function canTransition(from: OrderStatus, to: OrderStatus): boolean {
+  return ORDER_TRANSITIONS[from].includes(to);
+}
+
+export const updateOrderStatusSchema = z.object({
+  status: orderStatusSchema,
+  trackingNumber: z.string().max(100).nullable().optional(),
+});
+
+/** Clasificación derivada (patrón bordart) — nunca se persiste */
+export const orderTypeSchema = z.enum(["catalogo", "personalizado", "mixto"]);
+export type OrderType = z.infer<typeof orderTypeSchema>;
+
+export function deriveOrderType(items: { productId: string | null }[]): OrderType {
+  const withProduct = items.filter((i) => i.productId !== null).length;
+  if (withProduct === items.length) return "catalogo";
+  if (withProduct === 0) return "personalizado";
+  return "mixto";
+}
+
+export type UpdateOrderStatusInput = z.infer<typeof updateOrderStatusSchema>;
+
+// ── Alta manual de pedidos (T7): venta telefónica/presencial/bespoke ─────────
+
+/** Ítem de catálogo: precio/costo salen de la DB; el canal define de qué stock sale al cobrar */
+export const manualCatalogItemSchema = z.object({
+  variantId: z.string().uuid(),
+  qty: z.number().int().min(1).max(99),
+  channel: z.enum(["online", "local"]),
+});
+
+/** Ítem personalizado/bespoke: sin producto de catálogo, precio y costo manuales */
+export const manualBespokeItemSchema = z.object({
+  name: z.string().min(1).max(200),
+  qty: z.number().int().min(1).max(99),
+  unitPrice: z.number().int().min(0),
+  unitCost: z.number().int().min(0).nullable().optional(),
+  referenceImageUrl: z.string().url().nullable().optional(),
+});
+
+export const createManualOrderSchema = z.object({
+  customerId: z.string().uuid().nullable().optional(),
+  shippingZoneId: z.string().uuid().nullable().optional(),
+  note: z.string().max(500).nullable().optional(),
+  items: z.array(z.union([manualCatalogItemSchema, manualBespokeItemSchema])).min(1),
+});
+
+export type ManualCatalogItem = z.infer<typeof manualCatalogItemSchema>;
+export type ManualBespokeItem = z.infer<typeof manualBespokeItemSchema>;
+export type CreateManualOrderInput = z.infer<typeof createManualOrderSchema>;

@@ -1,6 +1,6 @@
 # Tarea 1 — Resend + plugin de email (con modo degradado)
 
-**Estado:** ⬜ Pendiente
+**Estado:** ✅ Hecha (2026-07-10) — email real enviado vía Resend
 **Depende de:** — (cuenta externa: usuario)
 
 ## Objetivo
@@ -16,12 +16,18 @@ Emails transaccionales al comprador en los cambios de estado del pedido. Con mod
 
 ### Backend
 
-- [ ] `env.ts`: `RESEND_API_KEY` opcional
-- [ ] `backend/src/lib/email.ts` — REST directo a Resend (sin SDK, patrón MP): `sendEmail({ to, subject, html })`; sin API key → `log.info` del contenido y listo (modo degradado)
-- [ ] Plantilla simple de cambio de estado: nombre de la tienda, número de pedido, estado nuevo (en español), tracking si hay, total
+- [x] `env.ts`: `RESEND_API_KEY` opcional + `EMAIL_FROM` (default `onboarding@resend.dev`)
+- [x] `backend/src/lib/email.ts` — REST directo (sin SDK): `sendEmail` con modo degradado; **si Resend falla, se loguea pero NO rompe el cambio de estado** (el email es efecto secundario, decisión documentada)
+- [x] `orderStatusEmail()`: plantilla con textos en español por estado (paid/preparing/shipped/delivered/cancelled), tracking y total formateado
+- [x] Script de prueba: `npx tsx scripts/test-email.ts <email>` (sirve para ambos modos)
 
 ## Definition of Done
 
-- [ ] Con `RESEND_API_KEY`: un email de prueba llega a tu casilla (verificado a mano con un script one-off)
-- [ ] Sin la key: el envío se loguea con el contenido completo y no rompe nada
-- [ ] `tsc --noEmit` limpio
+- [x] Con `RESEND_API_KEY`: email real enviado (a la casilla dueña de la cuenta)
+- [x] Sin la key: el envío se loguea completo y no rompe nada (verificado)
+- [x] Fallo de Resend manejado con gracia (probado de verdad: 403 → warning, sin crash)
+- [x] `tsc --noEmit` limpio
+
+## Limitación de Resend en modo test (documentada)
+
+Sin dominio propio verificado, Resend **solo entrega a la casilla dueña de la cuenta** (`julianmarcelolopezdev@gmail.com`). Implicación para T7: los emails a compradores reales (ej. Patricia/lopezazame) van a fallar con 403 y quedar **logueados** — que es exactamente lo que la verificación va a mirar. En producción: verificar dominio en resend.com/domains y cambiar `EMAIL_FROM`.

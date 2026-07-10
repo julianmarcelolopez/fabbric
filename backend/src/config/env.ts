@@ -23,6 +23,10 @@ const envSchema = z.object({
   // SOLO TESTS/DEV: permite pagos simulados "TESTPAY:<status>:<orderId>" en el
   // webhook sin consultar la API real de MP. JAMÁS habilitar en producción.
   MP_FAKE_PAYMENTS: z.string().optional(),
+  // Resend (T7): emails de cambio de estado. Sin key → modo degradado (se loguea)
+  RESEND_API_KEY: z.string().optional(),
+  // Remitente de los emails (dev: dominio de prueba de Resend)
+  EMAIL_FROM: z.string().default("fabbric <onboarding@resend.dev>"),
 });
 
 const parsed = envSchema.safeParse(process.env);
