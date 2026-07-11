@@ -1,6 +1,6 @@
 # Tarea 4 — `OrdersPage` y `OrderNewPage` (admin)
 
-**Estado:** 🔶 Implementada (2026-07-10) — verificación en navegador en la tarea 5
+**Estado:** ✅ Hecha (2026-07-10) — verificada en navegador por el usuario (capturas en la tarea 5)
 **Depende de:** [02-endpoints-pedidos.md](02-endpoints-pedidos.md), [03-alta-manual.md](03-alta-manual.md)
 
 ## Objetivo
@@ -17,4 +17,4 @@ La pantalla de trabajo diaria del vendedor: ver ventas, avanzar estados, cargar 
 ## Definition of Done
 
 - [x] Typecheck limpio; Vite compila y sirve las 3 páginas
-- [ ] Verificación en navegador → tarea 5
+- [x] Verificación en navegador → tarea 5 (OK del usuario)

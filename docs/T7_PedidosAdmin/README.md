@@ -21,8 +21,8 @@ Criterio de verificación de la fase (de `docs/plan.md`): *cambio de estado disp
 | 1 | [01-email-resend.md](01-email-resend.md) — Cuenta Resend (usuario) + plugin de email con modo degradado | — | ✅ Hecha |
 | 2 | [02-endpoints-pedidos.md](02-endpoints-pedidos.md) — Lista/detalle/estados/tracking/cobro manual + emails | 1 | ✅ Hecha |
 | 3 | [03-alta-manual.md](03-alta-manual.md) — POST pedido manual (catálogo + bespoke + imagen de referencia) | 2 | ✅ Hecha |
-| 4 | [04-orders-pages.md](04-orders-pages.md) — `OrdersPage` (lista+detalle+estados) y `OrderNewPage` (alta manual) | 2, 3 | 🔶 Implementada (falta navegador) |
-| 5 | [05-verificacion-final.md](05-verificacion-final.md) — Definition of Done de T7 | 1-4 | ⬜ Pendiente |
+| 4 | [04-orders-pages.md](04-orders-pages.md) — `OrdersPage` (lista+detalle+estados) y `OrderNewPage` (alta manual) | 2, 3 | ✅ Hecha |
+| 5 | [05-verificacion-final.md](05-verificacion-final.md) — Definition of Done de T7 | 1-4 | ✅ Hecha |
 
 ## Recordatorios operativos (gotchas acumulados)
 
