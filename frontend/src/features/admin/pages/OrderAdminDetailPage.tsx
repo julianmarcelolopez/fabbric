@@ -7,6 +7,7 @@ import {
   ADMIN_ORDER_TYPE_LABELS,
   type AdminOrderDetail,
   type AdminOrderStatus,
+  type AdminWallet,
 } from "../types";
 
 const ACTION_LABELS: Partial<Record<AdminOrderStatus, string>> = {
@@ -22,16 +23,25 @@ export function OrderAdminDetailPage() {
   const [error, setError] = useState<string | null>(null);
   const [tracking, setTracking] = useState("");
   const [busy, setBusy] = useState(false);
+  // Cobro manual (T9): el cobro siempre entra a una cartera activa
+  const [wallets, setWallets] = useState<AdminWallet[] | null>(null);
+  const [walletId, setWalletId] = useState("");
 
   const load = useCallback(async () => {
     try {
       const detail = await apiJson<AdminOrderDetail>(`/admin/orders/${id}`);
       setOrder(detail);
       setTracking(detail.trackingNumber ?? "");
+      if (detail.status === "pending" && wallets === null) {
+        const all = await apiJson<AdminWallet[]>("/admin/wallets");
+        const active = all.filter((w) => w.active);
+        setWallets(active);
+        if (active.length === 1) setWalletId(active[0].id);
+      }
     } catch (err) {
       setError(err instanceof ApiError ? err.message : String(err));
     }
-  }, [id]);
+  }, [id, wallets]);
 
   useEffect(() => {
     void load();
@@ -155,15 +165,38 @@ export function OrderAdminDetailPage() {
         <h2>Acciones</h2>
         {error && <p className="error">{error}</p>}
         <div className="row" style={{ alignItems: "flex-end" }}>
-          {order.status === "pending" && (
-            <button
-              className="btn primary"
-              disabled={busy}
-              onClick={() => run(() => apiJson(`/admin/orders/${id}/mark-paid`, { method: "POST" }))}
-            >
-              Marcar cobrado (venta manual)
-            </button>
-          )}
+          {order.status === "pending" &&
+            (wallets !== null && wallets.length === 0 ? (
+              <span className="muted">
+                Para cobrar necesitás una cartera activa — <Link to="/admin/finance">creala en Finanzas</Link>.
+              </span>
+            ) : (
+              <>
+                <label className="field">
+                  Cobrar a cartera
+                  <select value={walletId} onChange={(e) => setWalletId(e.target.value)}>
+                    <option value="">Elegir…</option>
+                    {(wallets ?? []).map((w) => (
+                      <option key={w.id} value={w.id}>{w.name}</option>
+                    ))}
+                  </select>
+                </label>
+                <button
+                  className="btn primary"
+                  disabled={busy || !walletId}
+                  onClick={() =>
+                    run(() =>
+                      apiJson(`/admin/orders/${id}/mark-paid`, {
+                        method: "POST",
+                        body: JSON.stringify({ walletId }),
+                      })
+                    )
+                  }
+                >
+                  Cobrar (venta manual)
+                </button>
+              </>
+            ))}
           {order.allowedTransitions.includes("shipped") && (
             <label className="field">
               N.º de seguimiento

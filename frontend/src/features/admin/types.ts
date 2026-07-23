@@ -1,11 +1,23 @@
 // Formas de las respuestas de la API admin (las fechas llegan como string ISO)
 
+// Espejo de @fabbric/shared/schemas/dashboardLayout (el admin no importa el paquete)
+export type ZoneLayout = {
+  orden: string[];
+  ocultas: string[];
+};
+
+export type DashboardLayout = {
+  stats: ZoneLayout;
+  paneles: ZoneLayout;
+};
+
 export type Me = {
   id: string;
   email: string;
   role: "super_admin" | "owner" | "staff";
   orgId: string | null;
   orgName: string | null;
+  dashboardLayout: DashboardLayout | null;
 };
 
 export type Taxonomy = {
@@ -193,6 +205,83 @@ export type AdminCustomerRow = {
   name: string;
   email: string;
   phone: string | null;
+  orderCount: number;
+  totalSpent: number;
+  lastOrderAt: string | null;
+};
+
+export type AdminCustomerOrder = {
+  id: string;
+  orderNumber: number;
+  status: AdminOrderStatus;
+  total: number;
+  createdAt: string;
+  type: AdminOrderType;
+};
+
+export type AdminCustomerDetail = {
+  id: string;
+  name: string;
+  email: string;
+  phone: string | null;
+  address: string | null;
+  createdAt: string;
+  orders: AdminCustomerOrder[];
+};
+
+// ── Finanzas (T9) ─────────────────────────────────────────────────────────────
+
+export type AdminWallet = {
+  id: string;
+  name: string;
+  icon: string | null;
+  color: string | null;
+  initialBalance: number;
+  active: boolean;
+  balance: number;
+  movementCount: number;
+};
+
+export type MovementType = "income" | "expense";
+
+export type AdminMovementRow = {
+  id: string;
+  walletId: string;
+  walletName: string;
+  walletColor: string | null;
+  type: MovementType;
+  amount: number;
+  category: string | null;
+  description: string | null;
+  date: string;
+  orderId: string | null;
+  orderNumber: number | null;
+  createdAt: string;
+};
+
+export type FinanceSummary = {
+  from: string;
+  to: string;
+  ingresos: number;
+  egresos: number;
+  balance: number;
+  gananciaBruta: number;
+  gananciaNeta: number;
+};
+
+// Espejo de @fabbric/shared (el admin no importa el paquete): rubros sugeridos
+// de bordart — texto libre en la DB, esto solo alimenta el datalist.
+export const SUGGESTED_CATEGORIES: Record<MovementType, string[]> = {
+  income: ["Venta", "Anticipo", "Devolución", "Otro ingreso"],
+  expense: [
+    "Tela / Material", "Insumos", "Mano de obra", "Publicidad",
+    "Envíos", "Impuestos", "Alquiler", "Servicios", "Otro egreso",
+  ],
+};
+
+export const MOVEMENT_TYPE_UI: Record<MovementType, { label: string; sign: string; color: string }> = {
+  income: { label: "Ingreso", sign: "+", color: "#15803d" },
+  expense: { label: "Egreso", sign: "−", color: "#b91c1c" },
 };
 
 export type HomeSectionItem = {
@@ -205,4 +294,52 @@ export type HomeSectionItem = {
   refSlug: string | null;
   refActive: boolean;
   products: { id: string; name: string; price: number; imageUrl: string | null }[];
+};
+
+// ── Métricas / Dashboard (T10) ────────────────────────────────────────────
+
+export type MetricsStats = {
+  pedidosMes: number;
+  ingresos: number;
+  egresos: number;
+  balance: number;
+  gananciaBruta: number;
+  gananciaNeta: number;
+  clientesNuevos: number;
+  porCobrar: number;
+  ticketPromedio: number;
+};
+
+export type UltimoPedido = {
+  id: string;
+  orderNumber: number;
+  status: AdminOrderStatus;
+  total: number;
+  createdAt: string;
+  customerName: string | null;
+};
+
+export type TopProducto = {
+  name: string;
+  qty: number;
+  importe: number;
+};
+
+export type QtyImporte = { qty: number; importe: number };
+
+export type MonthlyPoint = { year: number; month: number; ingresos: number; egresos: number };
+
+export type MetricsPanels = {
+  ultimosPedidos: UltimoPedido[];
+  masVendidos: TopProducto[];
+  catalogoVsPersonalizado: { catalogo: QtyImporte; personalizado: QtyImporte };
+  ventasPorCanal: { online: QtyImporte; local: QtyImporte; sinCanal: QtyImporte };
+  ingresosEgresosMensual: MonthlyPoint[];
+};
+
+export type MetricsOverview = {
+  from: string;
+  to: string;
+  stats: MetricsStats;
+  paneles: MetricsPanels;
 };

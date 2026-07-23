@@ -16,9 +16,11 @@ Criterio de verificación de la fase (de `docs/plan.md`): *el cliente de Fase 6 
 
 | # | Tarea | Depende de | Estado |
 |---|-------|-----------|--------|
-| 1 | [01-endpoints-clientes.md](01-endpoints-clientes.md) — Lista con métricas + detalle con historial | — | ⬜ Pendiente |
-| 2 | [02-customers-page.md](02-customers-page.md) — `CustomersPage` (tabla + detalle con historial clickeable) | 1 | ⬜ Pendiente |
-| 3 | [03-verificacion-final.md](03-verificacion-final.md) — Definition of Done de T8 | 1-2 | ⬜ Pendiente |
+| 1 | [01-endpoints-clientes.md](01-endpoints-clientes.md) — Lista con métricas + detalle con historial | — | ✅ Completada |
+| 2 | [02-customers-page.md](02-customers-page.md) — `CustomersPage` (tabla + detalle con historial clickeable) | 1 | ✅ Completada |
+| 3 | [03-verificacion-final.md](03-verificacion-final.md) — Definition of Done de T8 | 1-2 | ✅ Completada |
+
+**Fase completa (2026-07-10).** Verificada en navegador con los datos reales de T6/T7 (Patricia: 3 pedidos, $73.000). Commit sugerido: `feat: t8 clientes admin`.
 
 ## Recordatorios operativos (gotchas acumulados)
 

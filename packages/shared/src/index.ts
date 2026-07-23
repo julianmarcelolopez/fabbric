@@ -11,3 +11,6 @@ export * from "./schemas/catalogConfig.js";
 export * from "./schemas/customer.js";
 export * from "./schemas/shippingZone.js";
 export * from "./schemas/order.js";
+export * from "./schemas/wallet.js";
+export * from "./schemas/financialMovement.js";
+export * from "./schemas/dashboardLayout.js";

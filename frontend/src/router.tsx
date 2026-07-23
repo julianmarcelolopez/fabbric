@@ -1,10 +1,13 @@
 import { createBrowserRouter, Link } from "react-router-dom";
 import { AdminLayout } from "./features/admin/AdminLayout";
 import { RequireAuth } from "./features/admin/RequireAuth";
-import { AdminHomePage } from "./features/admin/pages/AdminHomePage";
 import { CatalogConfigPage } from "./features/admin/pages/CatalogConfigPage";
 import { CategoriesPage } from "./features/admin/pages/CategoriesPage";
 import { CollectionsPage } from "./features/admin/pages/CollectionsPage";
+import { CustomerDetailPage } from "./features/admin/pages/CustomerDetailPage";
+import { CustomersPage } from "./features/admin/pages/CustomersPage";
+import { DashboardPage } from "./features/admin/pages/DashboardPage";
+import { FinanzasPage } from "./features/admin/pages/FinanzasPage";
 import { HomeSectionsPage } from "./features/admin/pages/HomeSectionsPage";
 import { LoginPage } from "./features/admin/pages/LoginPage";
 import { OrderAdminDetailPage } from "./features/admin/pages/OrderAdminDetailPage";
@@ -54,7 +57,7 @@ export const router = createBrowserRouter([
       </RequireAuth>
     ),
     children: [
-      { index: true, element: <AdminHomePage /> },
+      { index: true, element: <DashboardPage /> },
       { path: "categories", element: <CategoriesPage /> },
       { path: "collections", element: <CollectionsPage /> },
       { path: "products", element: <ProductsPage /> },
@@ -63,6 +66,9 @@ export const router = createBrowserRouter([
       { path: "orders", element: <OrdersPage /> },
       { path: "orders/new", element: <OrderNewPage /> },
       { path: "orders/:id", element: <OrderAdminDetailPage /> },
+      { path: "customers", element: <CustomersPage /> },
+      { path: "customers/:id", element: <CustomerDetailPage /> },
+      { path: "finance", element: <FinanzasPage /> },
       { path: "home", element: <HomeSectionsPage /> },
       { path: "shipping", element: <ShippingZonesPage /> },
       { path: "config", element: <CatalogConfigPage /> },

@@ -3,6 +3,7 @@ import {
   canTransition,
   createManualOrderSchema,
   deriveOrderType,
+  markPaidSchema,
   ORDER_TRANSITIONS,
   orderTypeSchema,
   orderStatusSchema,
@@ -29,6 +30,7 @@ import { orderStatusEmail, sendEmail } from "../../lib/email.js";
 import { AppError } from "../../lib/errors.js";
 import { requireOrgId } from "../../lib/tenant.js";
 import { ensureConfig } from "../catalogConfig/service.js";
+import { recordOrderCharge, requireActiveWallet } from "../finance/service.js";
 
 const idParam = z.object({ id: z.string().uuid() });
 const tag = { tags: ["pedidos (admin)"], security: [{ bearerAuth: [] }] };
@@ -410,16 +412,21 @@ export async function ordersRoutes(fastify: FastifyInstance) {
       schema: {
         ...tag,
         summary:
-          "Cobro manual (venta fuera de MP): pending → paid + descuento de stock por canal (movimientos `venta`)",
+          "Cobro manual (venta fuera de MP): pending → paid + descuento de stock por canal (movimientos `venta`) + ingreso vinculado en la cartera elegida",
         params: idParam,
+        body: markPaidSchema,
       },
     },
     async (request) => {
       const orgId = requireOrgId(request);
       const { id } = request.params;
+      const { walletId } = request.body;
 
-      // NOTA T9: acá se va a crear además el financial_movement vinculado
-      // (regla bordart "cobrado antes de completado") — decisión escalonada.
+      // Cartera inválida/ajena/inactiva → 400 SIN tocar el pedido
+      await requireActiveWallet(orgId, walletId);
+
+      // Regla bordart "cobrado antes de completado" (T9): el cobro crea el
+      // movimiento financiero vinculado, en la MISMA transacción que el estado.
       const result = await db.transaction(async (tx) => {
         const [order] = await tx
           .select()
@@ -433,6 +440,14 @@ export async function ordersRoutes(fastify: FastifyInstance) {
           .set({ status: "paid" })
           .where(eq(orders.id, id))
           .returning();
+
+        await recordOrderCharge(tx, {
+          orgId,
+          walletId,
+          orderId: order.id,
+          orderNumber: order.orderNumber,
+          amount: order.total,
+        });
 
         // Descuento de stock por ítem de catálogo, en SU canal (venta manual)
         const items = await tx.select().from(orderItems).where(eq(orderItems.orderId, id));

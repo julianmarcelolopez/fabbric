@@ -7,6 +7,7 @@ import { env } from "../../config/env.js";
 import { db } from "../../db/client.js";
 import { orderItems, orders, productVariants, stockMovements } from "../../db/schema.js";
 import { AppError } from "../../lib/errors.js";
+import { ensureMpWallet, recordOrderCharge } from "../finance/service.js";
 import { getPayment } from "./service.js";
 
 // Webhook de Mercado Pago — paranoia por diseño (regla del plan):
@@ -123,6 +124,18 @@ export async function webhookRoutes(fastify: FastifyInstance) {
           .update(orders)
           .set({ status: "paid", mpPaymentId: payment.id })
           .where(eq(orders.id, order.id));
+
+        // T9: el cobro online también deja rastro financiero — cartera
+        // "Mercado Pago" lazy + ingreso vinculado (idempotente por pedido)
+        const mpWallet = await ensureMpWallet(tx, order.orgId);
+        await recordOrderCharge(tx, {
+          orgId: order.orgId,
+          walletId: mpWallet.id,
+          orderId: order.id,
+          orderNumber: order.orderNumber,
+          amount: order.total,
+          viaMp: true,
+        });
 
         // Descuento de stock online con movimientos sync (uno por ítem con variante viva)
         const items = await tx.select().from(orderItems).where(eq(orderItems.orderId, order.id));

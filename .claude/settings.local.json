@@ -6,7 +6,9 @@
       "Read(//c/projects/bordart-admin/**)",
       "Bash(find src/app/actions -type f)",
       "Read(//c/projects/bordart-admin/src/app/**)",
-      "Read(//c/projects/bordart-admin/src/lib/**)"
+      "Read(//c/projects/bordart-admin/src/lib/**)",
+      "PowerShell(Stop-Process -Id 19256 -Force)",
+      "PowerShell(Get-NetTCPConnection -LocalPort 5173 -ErrorAction SilentlyContinue)"
     ]
   }
 }

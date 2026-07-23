@@ -36,6 +36,20 @@
       "when": 1783712974901,
       "tag": "0004_order_item_channel",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1783867082269,
+      "tag": "0005_finanzas",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1783874853038,
+      "tag": "0006_dashboard_layout",
+      "breakpoints": true
     }
   ]
 }

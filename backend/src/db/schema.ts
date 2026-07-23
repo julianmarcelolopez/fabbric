@@ -1,7 +1,10 @@
+import type { DashboardLayout } from "@fabbric/shared";
 import {
   boolean,
+  date,
   index,
   integer,
+  jsonb,
   pgEnum,
   pgTable,
   primaryKey,
@@ -24,6 +27,7 @@ export const orderStatus = pgEnum("order_status", [
   "delivered",
   "cancelled",
 ]);
+export const movementType = pgEnum("movement_type", ["income", "expense"]);
 
 export const organizations = pgTable("organizations", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -40,6 +44,8 @@ export const adminUsers = pgTable("admin_users", {
   orgId: uuid("org_id").references(() => organizations.id),
   email: text("email").notNull().unique(),
   role: adminRole("role").notNull(),
+  // Layout del dashboard POR USUARIO (T10, patrón bordart) — null = default
+  dashboardLayout: jsonb("dashboard_layout").$type<DashboardLayout>(),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
@@ -319,6 +325,58 @@ export const orderItems = pgTable("order_items", {
 });
 
 // ── Configuración de tienda (nace en T4 por lowStockThreshold; T5 la completa) ─
+
+// ── Finanzas (T9): carteras + movimientos — patrón bordart ────────────────────
+// Saldo de cartera = initialBalance + Σ income − Σ expense: SIEMPRE calculado,
+// jamás persistido (mismo principio que el stock: nunca setear, solo mover).
+
+export const wallets = pgTable(
+  "wallets",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    orgId: uuid("org_id")
+      .notNull()
+      .references(() => organizations.id),
+    name: text("name").notNull(),
+    icon: text("icon"),
+    color: text("color"),
+    // Centavos; fijo al crear — los ajustes posteriores son movimientos
+    initialBalance: integer("initial_balance").notNull().default(0),
+    // Sin DELETE de carteras: solo se desactivan (los movimientos las referencian)
+    active: boolean("active").notNull().default(true),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow()
+      .$onUpdate(() => new Date()),
+  },
+  (t) => [unique("wallets_org_name_unique").on(t.orgId, t.name)]
+);
+
+export const financialMovements = pgTable(
+  "financial_movements",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    orgId: uuid("org_id")
+      .notNull()
+      .references(() => organizations.id),
+    walletId: uuid("wallet_id")
+      .notNull()
+      .references(() => wallets.id),
+    type: movementType("type").notNull(),
+    // Siempre positivo (centavos): el signo lo da `type`
+    amount: integer("amount").notNull(),
+    // Texto libre con rubros sugeridos en la UI (no enum: cada tienda tiene los suyos)
+    category: text("category"),
+    description: text("description"),
+    // Fecha CONTABLE (sin hora): el reporte mensual agrupa por esto, no por createdAt
+    date: date("date").notNull(),
+    // Cobro de un pedido => vinculado e IMBORRABLE (regla bordart)
+    orderId: uuid("order_id").references(() => orders.id),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("financial_movements_org_date_idx").on(t.orgId, t.date)]
+);
 
 export const catalogConfigs = pgTable("catalog_configs", {
   id: uuid("id").primaryKey().defaultRandom(),

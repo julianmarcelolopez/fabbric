@@ -88,6 +88,13 @@ export const updateOrderStatusSchema = z.object({
   trackingNumber: z.string().max(100).nullable().optional(),
 });
 
+// Cobro manual (T9): "cobrado antes de completado" — el cobro siempre entra a
+// una cartera, y eso crea el movimiento financiero vinculado al pedido.
+export const markPaidSchema = z.object({
+  walletId: z.string().uuid(),
+});
+export type MarkPaidInput = z.infer<typeof markPaidSchema>;
+
 /** Clasificación derivada (patrón bordart) — nunca se persiste */
 export const orderTypeSchema = z.enum(["catalogo", "personalizado", "mixto"]);
 export type OrderType = z.infer<typeof orderTypeSchema>;

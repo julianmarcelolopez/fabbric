@@ -76,6 +76,8 @@ export function AdminLayout() {
         <NavLink to="/admin/products">Productos</NavLink>
         <NavLink to="/admin/stock">Stock</NavLink>
         <NavLink to="/admin/orders">Pedidos</NavLink>
+        <NavLink to="/admin/customers">Clientes</NavLink>
+        <NavLink to="/admin/finance">Finanzas</NavLink>
         <NavLink to="/admin/home">Home</NavLink>
         <NavLink to="/admin/shipping">Envíos</NavLink>
         <NavLink to="/admin/config">Tienda</NavLink>
