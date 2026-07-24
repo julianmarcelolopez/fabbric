@@ -106,6 +106,10 @@ export const products = pgTable("products", {
   price: integer("price").notNull(),
   // Costo interno — nunca se expone en endpoints públicos
   costPrice: integer("cost_price"),
+  // Precio anterior, para mostrar tachado (T11) — solo si es mayor que price; público
+  compareAtPrice: integer("compare_at_price"),
+  // Marca de reventa o propia, texto libre sugerido (T12) — público
+  brand: text("brand"),
   status: productStatus("status").notNull().default("active"),
   visibleInCatalog: boolean("visible_in_catalog").notNull().default(true),
   sortOrder: integer("sort_order").notNull().default(0),

@@ -89,7 +89,14 @@ export async function publicRoutes(fastify: FastifyInstance) {
       const [catProducts, colProducts] = await Promise.all([
         catIds.length
           ? db
-              .select({ id: products.id, name: products.name, price: products.price, groupId: products.categoryId })
+              .select({
+                id: products.id,
+                name: products.name,
+                price: products.price,
+                compareAtPrice: products.compareAtPrice,
+                brand: products.brand,
+                groupId: products.categoryId,
+              })
               .from(products)
               .where(and(productFilter, inArray(products.categoryId, catIds)))
               .orderBy(asc(products.sortOrder), asc(products.name))
@@ -100,6 +107,8 @@ export async function publicRoutes(fastify: FastifyInstance) {
                 id: products.id,
                 name: products.name,
                 price: products.price,
+                compareAtPrice: products.compareAtPrice,
+                brand: products.brand,
                 groupId: productCollections.collectionId,
               })
               .from(productCollections)
@@ -129,7 +138,14 @@ export async function publicRoutes(fastify: FastifyInstance) {
         const items = pool
           .filter((p) => p.groupId === section.refId)
           .slice(0, 8)
-          .map((p) => ({ id: p.id, name: p.name, price: p.price, imageUrl: imageOf(p.id) }));
+          .map((p) => ({
+            id: p.id,
+            name: p.name,
+            price: p.price,
+            compareAtPrice: p.compareAtPrice,
+            brand: p.brand,
+            imageUrl: imageOf(p.id),
+          }));
         return [
           {
             id: section.id,
@@ -188,6 +204,8 @@ export async function publicRoutes(fastify: FastifyInstance) {
           name: products.name,
           description: products.description,
           price: products.price,
+          compareAtPrice: products.compareAtPrice,
+          brand: products.brand,
           status: products.status,
         })
         .from(products)

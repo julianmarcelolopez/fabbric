@@ -70,7 +70,14 @@ export async function homeSectionsRoutes(fastify: FastifyInstance) {
       const [catProducts, colProducts] = await Promise.all([
         catIds.length
           ? db
-              .select({ id: products.id, name: products.name, price: products.price, groupId: products.categoryId })
+              .select({
+                id: products.id,
+                name: products.name,
+                price: products.price,
+                compareAtPrice: products.compareAtPrice,
+                brand: products.brand,
+                groupId: products.categoryId,
+              })
               .from(products)
               .where(
                 and(
@@ -87,6 +94,8 @@ export async function homeSectionsRoutes(fastify: FastifyInstance) {
                 id: products.id,
                 name: products.name,
                 price: products.price,
+                compareAtPrice: products.compareAtPrice,
+                brand: products.brand,
                 groupId: productCollections.collectionId,
               })
               .from(productCollections)
@@ -122,7 +131,14 @@ export async function homeSectionsRoutes(fastify: FastifyInstance) {
         const sectionProducts = pool
           .filter((p) => p.groupId === section.refId)
           .slice(0, PRODUCTS_PER_SECTION)
-          .map((p) => ({ id: p.id, name: p.name, price: p.price, imageUrl: imageOf(p.id) }));
+          .map((p) => ({
+            id: p.id,
+            name: p.name,
+            price: p.price,
+            compareAtPrice: p.compareAtPrice,
+            brand: p.brand,
+            imageUrl: imageOf(p.id),
+          }));
 
         return {
           id: section.id,

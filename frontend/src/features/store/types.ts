@@ -15,6 +15,8 @@ export type PublicProductDetail = {
   name: string;
   description: string;
   price: number;
+  compareAtPrice: number | null;
+  brand: string | null;
   status: "active" | "out_of_stock";
   images: { id: string; url: string; sortOrder: number }[];
   variants: {

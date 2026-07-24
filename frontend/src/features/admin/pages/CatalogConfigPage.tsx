@@ -158,11 +158,11 @@ export function CatalogConfigPage() {
           <button className="btn" onClick={() => fileRef.current?.click()} disabled={uploading}>
             {uploading ? "Subiendo…" : config.logoUrl ? "Reemplazar logo" : "Subir logo"}
           </button>
-          <span className="muted">JPEG/PNG/WebP, máx 2 MB</span>
+          <span className="muted">JPEG/PNG/WebP/SVG, máx 2 MB</span>
           <input
             ref={fileRef}
             type="file"
-            accept="image/jpeg,image/png,image/webp"
+            accept="image/jpeg,image/png,image/webp,image/svg+xml"
             hidden
             onChange={(e) => {
               const f = e.target.files?.[0];

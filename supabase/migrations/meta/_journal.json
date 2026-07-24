@@ -50,6 +50,20 @@
       "when": 1783874853038,
       "tag": "0006_dashboard_layout",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1784899628389,
+      "tag": "0007_product_compare_at_price",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1784912230164,
+      "tag": "0008_product_brand",
+      "breakpoints": true
     }
   ]
 }

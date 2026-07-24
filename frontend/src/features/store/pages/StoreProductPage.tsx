@@ -56,6 +56,8 @@ export function StoreProductPage() {
         name={product.name}
         description={product.description}
         price={product.price}
+        compareAtPrice={product.compareAtPrice}
+        brand={product.brand}
         images={product.images}
         variants={product.variants}
         onAddToCart={(variant) => {

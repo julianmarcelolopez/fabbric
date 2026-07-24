@@ -5,6 +5,9 @@ export const productStatusSchema = z.enum(["active", "paused", "out_of_stock"]);
 // Precios en centavos (enteros ≥ 0) — el frontend formatea a pesos
 const priceCents = z.number().int().min(0);
 
+// Marca: texto libre sugerido (no taxonomía propia), misma cota que financialMovement.category
+const brandText = z.string().min(1).max(60);
+
 export const productSchema = z.object({
   id: z.string().uuid(),
   orgId: z.string().uuid(),
@@ -14,6 +17,9 @@ export const productSchema = z.object({
   price: priceCents,
   // Costo interno: solo visible en el admin, nunca en endpoints públicos
   costPrice: priceCents.nullable(),
+  // Precio anterior, para mostrar tachado — a diferencia de costPrice, SÍ es público
+  compareAtPrice: priceCents.nullable(),
+  brand: brandText.nullable(),
   status: productStatusSchema,
   visibleInCatalog: z.boolean(),
   sortOrder: z.number().int(),
@@ -27,6 +33,8 @@ export const createProductSchema = z.object({
   description: z.string().default(""),
   price: priceCents,
   costPrice: priceCents.nullable().optional(),
+  compareAtPrice: priceCents.nullable().optional(),
+  brand: brandText.nullable().optional(),
   status: productStatusSchema.default("active"),
   visibleInCatalog: z.boolean().default(true),
   sortOrder: z.number().int().default(0),
@@ -39,6 +47,8 @@ export const updateProductSchema = z
     description: z.string(),
     price: priceCents,
     costPrice: priceCents.nullable(),
+    compareAtPrice: priceCents.nullable(),
+    brand: brandText.nullable(),
     status: productStatusSchema,
     visibleInCatalog: z.boolean(),
     sortOrder: z.number().int(),

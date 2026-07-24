@@ -54,6 +54,8 @@ export type ProductBase = {
   description: string;
   price: number;
   costPrice: number | null;
+  compareAtPrice: number | null;
+  brand: string | null;
   status: ProductStatus;
   visibleInCatalog: boolean;
   sortOrder: number;
@@ -78,6 +80,9 @@ export const STATUS_LABELS: Record<ProductStatus, string> = {
   paused: "Pausado",
   out_of_stock: "Sin stock",
 };
+
+// Marcas sugeridas para el datalist — texto libre en la DB, esto no restringe
+export const SUGGESTED_BRANDS = ["Taverniti", "Bross", "Adidas", "Puma", "Eliathi Modas"];
 
 export type ShippingZoneRow = {
   id: string;
@@ -293,7 +298,14 @@ export type HomeSectionItem = {
   refName: string | null;
   refSlug: string | null;
   refActive: boolean;
-  products: { id: string; name: string; price: number; imageUrl: string | null }[];
+  products: {
+    id: string;
+    name: string;
+    price: number;
+    compareAtPrice: number | null;
+    brand: string | null;
+    imageUrl: string | null;
+  }[];
 };
 
 // ── Métricas / Dashboard (T10) ────────────────────────────────────────────

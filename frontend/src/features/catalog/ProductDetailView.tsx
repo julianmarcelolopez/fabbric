@@ -21,13 +21,25 @@ type Props = {
   description: string;
   /** precio base en centavos */
   price: number;
+  /** precio anterior en centavos, tachado si es mayor que price — no aplica si hay priceOverride de variante */
+  compareAtPrice?: number | null;
+  brand?: string | null;
   images: { url: string }[];
   variants: PdvVariant[];
   /** la tienda real (T5) pasa el handler; el preview lo deja deshabilitado */
   onAddToCart?: (variant: PdvVariant) => void;
 };
 
-export function ProductDetailView({ name, description, price, images, variants, onAddToCart }: Props) {
+export function ProductDetailView({
+  name,
+  description,
+  price,
+  compareAtPrice,
+  brand,
+  images,
+  variants,
+  onAddToCart,
+}: Props) {
   const [imgIndex, setImgIndex] = useState(0);
   const [talle, setTalle] = useState<string | null>(null);
   const [color, setColor] = useState<string | null>(null);
@@ -37,6 +49,8 @@ export function ProductDetailView({ name, description, price, images, variants, 
   const selected = variants.find((v) => v.talle === talle && v.color === color) ?? null;
 
   const effectivePrice = selected?.priceOverride ?? price;
+  // El tachado es sobre el precio base — si la variante pisa el precio, no se combinan
+  const hasDiscount = !selected?.priceOverride && compareAtPrice != null && compareAtPrice > price;
   const mainImage = images[Math.min(imgIndex, Math.max(images.length - 1, 0))];
 
   return (
@@ -63,8 +77,12 @@ export function ProductDetailView({ name, description, price, images, variants, 
       </div>
 
       <div className="pdv-info">
+        {brand && <p className="pdv-brand">{brand}</p>}
         <h3>{name || "Producto sin nombre"}</h3>
-        <p className="pdv-price">{formatPrice(effectivePrice)}</p>
+        <p className="pdv-price">
+          {hasDiscount && <span className="pdv-price-original">{formatPrice(compareAtPrice!)}</span>}
+          {formatPrice(effectivePrice)}
+        </p>
 
         {talles.length > 0 && (
           <>

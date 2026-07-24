@@ -92,7 +92,13 @@ export function StoreLayout() {
         <div className="store" style={{ "--accent": config.accentColor } as CSSProperties}>
           <header className="store-topbar">
             <Link to={`/store/${slug}`} className="store-brand">
-              {config.logoUrl && <img src={config.logoUrl} alt="" />}
+              {config.logoUrl ? (
+                <img src={config.logoUrl} alt="" />
+              ) : (
+                <span className="store-brand-badge" aria-hidden="true">
+                  {config.storeName.trim().charAt(0).toUpperCase() || "?"}
+                </span>
+              )}
               <span>{config.storeName}</span>
             </Link>
             <span className="store-topbar-spacer" />

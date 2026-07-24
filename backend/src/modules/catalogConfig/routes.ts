@@ -18,6 +18,9 @@ const ALLOWED_TYPES: Record<string, string> = {
   "image/jpeg": "jpg",
   "image/png": "png",
   "image/webp": "webp",
+  // SVG es seguro acá: se sirve como archivo estático y se consume vía <img src>,
+  // los navegadores no ejecutan scripts embebidos en ese contexto (a diferencia de inline)
+  "image/svg+xml": "svg",
 };
 
 /** Extrae el path de Storage desde una URL pública del bucket (para borrar el logo viejo). */
@@ -75,7 +78,7 @@ export async function catalogConfigRoutes(fastify: FastifyInstance) {
       ...auth,
       schema: {
         ...tag,
-        summary: "Subir/reemplazar el logo de la tienda (multipart, JPEG/PNG/WebP, máx 2 MB)",
+        summary: "Subir/reemplazar el logo de la tienda (multipart, JPEG/PNG/WebP/SVG, máx 2 MB)",
         consumes: ["multipart/form-data"],
       },
     },
@@ -86,7 +89,7 @@ export async function catalogConfigRoutes(fastify: FastifyInstance) {
       const file = await request.file();
       if (!file) throw new AppError(400, "validation", "Falta el archivo (campo multipart)");
       const ext = ALLOWED_TYPES[file.mimetype];
-      if (!ext) throw new AppError(400, "invalid_file_type", "Solo JPEG, PNG o WebP");
+      if (!ext) throw new AppError(400, "invalid_file_type", "Solo JPEG, PNG, WebP o SVG");
       const buffer = await file.toBuffer();
       if (buffer.length > LOGO_MAX_BYTES) {
         throw new AppError(400, "file_too_large", "El logo no puede superar los 2 MB");

@@ -15,7 +15,14 @@ export type HsrSection = {
   refName: string | null;
   visible: boolean;
   refActive: boolean;
-  products: { id: string; name: string; price: number; imageUrl: string | null }[];
+  products: {
+    id: string;
+    name: string;
+    price: number;
+    compareAtPrice?: number | null;
+    brand?: string | null;
+    imageUrl: string | null;
+  }[];
 };
 
 type Props = {
@@ -43,6 +50,8 @@ export function HomeSectionsRenderer({ sections, onProductClick }: Props) {
                 key={p.id}
                 name={p.name}
                 price={p.price}
+                compareAtPrice={p.compareAtPrice}
+                brand={p.brand}
                 imageUrl={p.imageUrl}
                 onClick={onProductClick ? () => onProductClick(p.id) : undefined}
               />

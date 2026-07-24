@@ -5,13 +5,21 @@ import { centsToPesosInput, pesosToCents } from "../../../lib/money";
 import { ProductDetailView } from "../../catalog/ProductDetailView";
 import { ImageDropzone } from "../components/ImageDropzone";
 import { VariantEditor } from "../components/VariantEditor";
-import { STATUS_LABELS, type ProductDetail, type ProductStatus, type Taxonomy } from "../types";
+import {
+  STATUS_LABELS,
+  SUGGESTED_BRANDS,
+  type ProductDetail,
+  type ProductStatus,
+  type Taxonomy,
+} from "../types";
 
 type Form = {
   name: string;
   description: string;
   price: string;
   costPrice: string;
+  compareAtPrice: string;
+  brand: string;
   categoryId: string;
   status: ProductStatus;
   visibleInCatalog: boolean;
@@ -46,6 +54,8 @@ export function ProductEditPage() {
           description: detail.description,
           price: centsToPesosInput(detail.price),
           costPrice: centsToPesosInput(detail.costPrice),
+          compareAtPrice: centsToPesosInput(detail.compareAtPrice),
+          brand: detail.brand ?? "",
           categoryId: detail.categoryId,
           status: detail.status,
           visibleInCatalog: detail.visibleInCatalog,
@@ -76,6 +86,13 @@ export function ProductEditPage() {
       setError("Costo inválido");
       return;
     }
+    const compareAtPrice = form.compareAtPrice.trim() === "" ? null : pesosToCents(form.compareAtPrice);
+    if (form.compareAtPrice.trim() !== "" && compareAtPrice === null) {
+      setError("Precio anterior inválido");
+      return;
+    }
+    // El schema exige min(1): un campo vacío se manda como null, nunca ""
+    const brand = form.brand.trim() === "" ? null : form.brand.trim();
     setSaving(true);
     try {
       await apiJson(`/admin/products/${id}`, {
@@ -85,6 +102,8 @@ export function ProductEditPage() {
           description: form.description,
           price,
           costPrice,
+          compareAtPrice,
+          brand,
           categoryId: form.categoryId,
           status: form.status,
           visibleInCatalog: form.visibleInCatalog,
@@ -117,6 +136,8 @@ export function ProductEditPage() {
   // Preview en vivo: alimentado por el ESTADO DEL FORMULARIO, no por la API —
   // cada tecla se refleja al instante, sin guardar primero (patrón Bordart).
   const previewPrice = pesosToCents(form.price) ?? product.price;
+  const previewCompareAtPrice =
+    form.compareAtPrice.trim() === "" ? null : pesosToCents(form.compareAtPrice);
 
   return (
     <>
@@ -133,6 +154,21 @@ export function ProductEditPage() {
           <label className="field" style={{ flex: 2, minWidth: 220 }}>
             Nombre
             <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required />
+          </label>
+          <label className="field">
+            Marca
+            <input
+              value={form.brand}
+              onChange={(e) => setForm({ ...form, brand: e.target.value })}
+              list="product-suggested-brands"
+              maxLength={60}
+              placeholder="opcional"
+            />
+            <datalist id="product-suggested-brands">
+              {SUGGESTED_BRANDS.map((b) => (
+                <option key={b} value={b} />
+              ))}
+            </datalist>
           </label>
           <label className="field">
             Categoría
@@ -175,6 +211,16 @@ export function ProductEditPage() {
               value={form.costPrice}
               onChange={(e) => setForm({ ...form, costPrice: e.target.value })}
               placeholder="—"
+              inputMode="decimal"
+            />
+          </label>
+          <label className="field">
+            Precio anterior ($)
+            <input
+              style={{ width: 110 }}
+              value={form.compareAtPrice}
+              onChange={(e) => setForm({ ...form, compareAtPrice: e.target.value })}
+              placeholder="opcional, para mostrar tachado"
               inputMode="decimal"
             />
           </label>
@@ -240,6 +286,8 @@ export function ProductEditPage() {
             name={form.name}
             description={form.description}
             price={previewPrice}
+            compareAtPrice={previewCompareAtPrice}
+            brand={form.brand.trim() === "" ? null : form.brand}
             images={product.images}
             variants={product.variants}
           />
