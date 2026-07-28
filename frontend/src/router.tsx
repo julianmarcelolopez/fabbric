@@ -1,4 +1,4 @@
-import { createBrowserRouter, Link } from "react-router-dom";
+import { createBrowserRouter, Navigate } from "react-router-dom";
 import { AdminLayout } from "./features/admin/AdminLayout";
 import { RequireAuth } from "./features/admin/RequireAuth";
 import { CatalogConfigPage } from "./features/admin/pages/CatalogConfigPage";
@@ -28,27 +28,10 @@ import { StoreProductPage } from "./features/store/pages/StoreProductPage";
 
 // El portal del comprador vive dentro de cada tienda (/store/:slug/portal/*) — T6 tarea 8
 
-// Índice de DESARROLLO (T0): hub para saltar a cada portal mientras se construye.
-// En producción esta raíz sería una landing de fabbric.
-function Home() {
-  return (
-    <main style={{ fontFamily: "system-ui, sans-serif", padding: 24 }}>
-      <h1>fabbric</h1>
-      <p style={{ color: "#6b7280" }}>índice de desarrollo</p>
-      <ul>
-        <li><Link to="/admin">Portal Admin (vendedor)</Link></li>
-        <li><Link to="/store/demo">Tienda pública (slug: demo)</Link></li>
-        <li>
-          Portal del comprador: vive dentro de cada tienda —{" "}
-          <Link to="/store/demo/portal/orders">Mis pedidos de la tienda demo</Link> (T6 tarea 8)
-        </li>
-      </ul>
-    </main>
-  );
-}
-
 export const router = createBrowserRouter([
-  { path: "/", element: <Home /> },
+  // Redirect relativo (no hardcodea dominio): funciona igual en local y en cualquier
+  // deploy. Para la demo de Eliathi Modas, la raíz cae directo en su tienda.
+  { path: "/", element: <Navigate to="/store/eliathi-modas" replace /> },
   { path: "/admin/login", element: <LoginPage /> },
   {
     path: "/admin",
