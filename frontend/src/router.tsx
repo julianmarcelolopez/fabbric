@@ -15,6 +15,7 @@ import { OrderNewPage } from "./features/admin/pages/OrderNewPage";
 import { OrdersPage } from "./features/admin/pages/OrdersPage";
 import { ProductEditPage } from "./features/admin/pages/ProductEditPage";
 import { ProductsPage } from "./features/admin/pages/ProductsPage";
+import { SettingsPage } from "./features/admin/pages/SettingsPage";
 import { ShippingZonesPage } from "./features/admin/pages/ShippingZonesPage";
 import { StockPage } from "./features/admin/pages/StockPage";
 import { StoreLayout } from "./features/store/StoreLayout";
@@ -72,6 +73,7 @@ export const router = createBrowserRouter([
       { path: "home", element: <HomeSectionsPage /> },
       { path: "shipping", element: <ShippingZonesPage /> },
       { path: "config", element: <CatalogConfigPage /> },
+      { path: "settings", element: <SettingsPage /> },
     ],
   },
   {

@@ -396,6 +396,13 @@ export const catalogConfigs = pgTable("catalog_configs", {
   accentColor: text("accent_color").notNull().default("#111827"),
   theme: text("theme").notNull().default("light"),
   businessDescription: text("business_description"),
+  // Header/footer personalizables (T14) — todos opcionales
+  bannerUrl: text("banner_url"),
+  whatsapp: text("whatsapp"),
+  instagram: text("instagram"),
+  email: text("email"),
+  address: text("address"),
+  businessHours: text("business_hours"),
   lowStockThreshold: integer("low_stock_threshold").notNull().default(3),
   active: boolean("active").notNull().default(true),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),

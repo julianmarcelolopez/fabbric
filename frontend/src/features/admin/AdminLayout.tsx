@@ -81,6 +81,7 @@ export function AdminLayout() {
         <NavLink to="/admin/home">Home</NavLink>
         <NavLink to="/admin/shipping">Envíos</NavLink>
         <NavLink to="/admin/config">Tienda</NavLink>
+        <NavLink to="/admin/settings">Configuración</NavLink>
         <div className="spacer" />
         <div className="who">
           {me.email}

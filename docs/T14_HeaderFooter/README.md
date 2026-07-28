@@ -17,9 +17,9 @@ Criterio de verificación (de `docs/plan_2.md`): *desde `CatalogConfigPage` se s
 
 | # | Tarea | Depende de | Estado |
 |---|-------|-----------|--------|
-| 1 | [01-schema-y-endpoints.md](01-schema-y-endpoints.md) — columnas nuevas en `catalog_configs`, migración, endpoint de upload de banner | — | ⬜ Pendiente |
-| 2 | [02-banner-y-footer-ui.md](02-banner-y-footer-ui.md) — `CatalogConfigPage` (banner + campos) y `StoreLayout` (banner, footer, compartir) | 1 | ⬜ Pendiente |
-| 3 | [03-verificacion-final.md](03-verificacion-final.md) — Definition of Done de T14 | 1-2 | ⬜ Pendiente |
+| 1 | [01-schema-y-endpoints.md](01-schema-y-endpoints.md) — columnas nuevas en `catalog_configs`, migración, endpoint de upload de banner | — | ✅ Completada |
+| 2 | [02-banner-y-footer-ui.md](02-banner-y-footer-ui.md) — `CatalogConfigPage` (banner + campos) y `StoreLayout` (banner, footer, compartir) | 1 | ✅ Completada |
+| 3 | [03-verificacion-final.md](03-verificacion-final.md) — Definition of Done de T14 | 1-2 | ✅ Completada |
 
 ## Recordatorios operativos
 

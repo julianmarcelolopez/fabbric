@@ -1,6 +1,6 @@
 # Tarea 3 — Definition of Done de T14
 
-**Estado:** ⬜ Pendiente
+**Estado:** ✅ Completada (2026-07-24)
 **Depende de:** tareas 1 a 2
 
 ## Objetivo
@@ -9,16 +9,16 @@ Cerrar T14 con el criterio de `docs/plan_2.md`: *desde `CatalogConfigPage` se su
 
 ## Checklist final (usuario, en navegador)
 
-- [ ] Subir un banner → aparece arriba de la topbar en `/store/:slug`.
-- [ ] Cargar WhatsApp/Instagram/mail/dirección/horario → aparecen como links/texto en el footer.
-- [ ] Sin banner ni datos cargados, la tienda se ve igual que antes (sin huecos ni errores).
-- [ ] El botón "Compartir" funciona (comparte o copia el link).
-- [ ] Consola limpia; typecheck limpio en los 3 workspaces.
+- [x] Subir un banner → aparece arriba de la topbar en `/store/:slug`, sin romper el layout.
+- [x] Cargar WhatsApp/Instagram/mail/dirección/horario → aparecen correctamente en el footer.
+- [x] Sin banner ni datos cargados, la tienda se ve igual que antes.
+- [x] El botón "Compartir" funciona.
+- [x] Consola limpia; typecheck limpio en los 3 workspaces.
 
-## Resultado
+## Resultado (2026-07-24)
 
-_(completar al verificar)_
+Verificado en navegador por el usuario sin problemas ("listo perfecto"). **Criterio de la fase cumplido.**
 
 ## Al cerrar
 
-- [ ] Actualizar README de T14 + memoria; sugerir commit (`feat: t14 header y footer personalizables`).
+- [x] Actualizar README de T14 + memoria; sugerir commit (`feat: t14 header y footer personalizables`).

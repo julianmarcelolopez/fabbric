@@ -1,6 +1,6 @@
 # Tarea 2 — Definition of Done de T15
 
-**Estado:** ⬜ Pendiente
+**Estado:** ✅ Completada (2026-07-28)
 **Depende de:** tarea 1
 
 ## Objetivo
@@ -9,16 +9,17 @@ Cerrar T15 con el criterio de `docs/plan_2.md`: *la sección muestra las tabs Us
 
 ## Checklist final (usuario, en navegador)
 
-- [ ] "Configuración" aparece en el sidebar y navega a la sección nueva.
-- [ ] Tab Usuario muestra email, rol y organización correctos (comparar contra el usuario logueado).
-- [ ] Tab Integraciones existe (aunque sea placeholder hasta T16) y no rompe la navegación entre tabs.
-- [ ] Consola limpia; typecheck limpio en los 3 workspaces.
+- [x] "Configuración" aparece en el sidebar y navega a la sección nueva.
+- [x] Tab Usuario muestra email, rol y organización correctos.
+- [x] Cambiar contraseña funciona (verificado también de punta a punta por API real en la tarea 1).
+- [x] Tab Integraciones existe (placeholder hasta T16) y no rompe la navegación entre tabs.
+- [x] Consola limpia; typecheck limpio en los 3 workspaces.
 
-## Resultado
+## Resultado (2026-07-28)
 
-_(completar al verificar)_
+Verificado en navegador por el usuario ("ok esta correcto"). **Criterio de la fase cumplido.**
 
 ## Al cerrar
 
-- [ ] Actualizar README de T15 + memoria; sugerir commit (`feat: t15 configuracion, tab usuario`).
+- [x] Actualizar README de T15 + memoria; sugerir commit (`feat: t15 configuracion, tab usuario`).
 - Siguiente: **T16 — Integraciones (Mercado Pago propia)**, que se monta sobre este shell.

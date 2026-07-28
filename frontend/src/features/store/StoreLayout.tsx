@@ -16,6 +16,31 @@ function CartButton() {
   );
 }
 
+function ShareButton({ storeName }: { storeName: string }) {
+  const [copied, setCopied] = useState(false);
+
+  async function share() {
+    const url = window.location.href;
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: storeName, url });
+      } catch {
+        // usuario canceló el share nativo — no es un error
+      }
+      return;
+    }
+    await navigator.clipboard.writeText(url);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  }
+
+  return (
+    <button className="store-auth-btn" onClick={() => void share()}>
+      {copied ? "¡Copiado!" : "🔗 Compartir"}
+    </button>
+  );
+}
+
 function CustomerMenu({ slug }: { slug: string }) {
   const { me, loading, signInWithGoogle, signOut } = useCustomerAuth();
   if (loading) return null;
@@ -90,6 +115,7 @@ export function StoreLayout() {
     <CustomerAuthProvider slug={slug!}>
       <CartProvider slug={slug!}>
         <div className="store" style={{ "--accent": config.accentColor } as CSSProperties}>
+          {config.bannerUrl && <img className="store-banner" src={config.bannerUrl} alt="" />}
           <header className="store-topbar">
             <Link to={`/store/${slug}`} className="store-brand">
               {config.logoUrl ? (
@@ -102,6 +128,7 @@ export function StoreLayout() {
               <span>{config.storeName}</span>
             </Link>
             <span className="store-topbar-spacer" />
+            <ShareButton storeName={config.storeName} />
             <CartButton />
             <CustomerMenu slug={slug!} />
           </header>
@@ -110,6 +137,23 @@ export function StoreLayout() {
           </main>
           <footer className="store-footer">
             {config.businessDescription && <p>{config.businessDescription}</p>}
+            {(config.whatsapp || config.instagram || config.email || config.address || config.businessHours) && (
+              <div className="store-footer-links">
+                {config.whatsapp && (
+                  <a href={`https://wa.me/${config.whatsapp.replace(/\D/g, "")}`} target="_blank" rel="noreferrer">
+                    WhatsApp
+                  </a>
+                )}
+                {config.instagram && (
+                  <a href={config.instagram} target="_blank" rel="noreferrer">
+                    Instagram
+                  </a>
+                )}
+                {config.email && <a href={`mailto:${config.email}`}>{config.email}</a>}
+                {config.address && <span>{config.address}</span>}
+                {config.businessHours && <span>{config.businessHours}</span>}
+              </div>
+            )}
             <p className="store-powered">tienda creada con fabbric</p>
           </footer>
           <CartDrawer slug={slug!} />

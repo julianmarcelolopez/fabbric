@@ -38,6 +38,12 @@ export async function publicRoutes(fastify: FastifyInstance) {
         accentColor: config.accentColor,
         theme: config.theme,
         businessDescription: config.businessDescription,
+        bannerUrl: config.bannerUrl,
+        whatsapp: config.whatsapp,
+        instagram: config.instagram,
+        email: config.email,
+        address: config.address,
+        businessHours: config.businessHours,
       };
     }
   );

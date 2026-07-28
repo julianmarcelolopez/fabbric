@@ -16,8 +16,8 @@ Criterio de verificación (de `docs/plan_2.md`): *la sección muestra las tabs U
 
 | # | Tarea | Depende de | Estado |
 |---|-------|-----------|--------|
-| 1 | [01-settings-page-tab-usuario.md](01-settings-page-tab-usuario.md) — `SettingsPage.tsx` con navegación por tabs, ruteo, tab Usuario | — | ⬜ Pendiente |
-| 2 | [02-verificacion-final.md](02-verificacion-final.md) — Definition of Done de T15 | 1 | ⬜ Pendiente |
+| 1 | [01-settings-page-tab-usuario.md](01-settings-page-tab-usuario.md) — `SettingsPage.tsx` con navegación por tabs, ruteo, tab Usuario | — | ✅ Completada |
+| 2 | [02-verificacion-final.md](02-verificacion-final.md) — Definition of Done de T15 | 1 | ✅ Completada |
 
 ## Recordatorios operativos
 

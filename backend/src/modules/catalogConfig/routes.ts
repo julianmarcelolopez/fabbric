@@ -123,4 +123,56 @@ export async function catalogConfigRoutes(fastify: FastifyInstance) {
       return row;
     }
   );
+
+  app.post(
+    "/admin/catalog-config/banner",
+    {
+      ...auth,
+      schema: {
+        ...tag,
+        summary: "Subir/reemplazar el banner de portada de la tienda (multipart, JPEG/PNG/WebP/SVG, máx 2 MB)",
+        consumes: ["multipart/form-data"],
+      },
+    },
+    async (request) => {
+      const orgId = requireOrgId(request);
+      const config = await ensureConfig(orgId);
+
+      const file = await request.file();
+      if (!file) throw new AppError(400, "validation", "Falta el archivo (campo multipart)");
+      const ext = ALLOWED_TYPES[file.mimetype];
+      if (!ext) throw new AppError(400, "invalid_file_type", "Solo JPEG, PNG, WebP o SVG");
+      const buffer = await file.toBuffer();
+      if (buffer.length > LOGO_MAX_BYTES) {
+        throw new AppError(400, "file_too_large", "El banner no puede superar los 2 MB");
+      }
+
+      const storagePath = `${orgId}/config/banner-${randomUUID()}.${ext}`;
+      const uploaded = await supabaseAdmin.storage
+        .from(BUCKET)
+        .upload(storagePath, buffer, { contentType: file.mimetype });
+      if (uploaded.error) {
+        throw new AppError(502, "storage_error", `Storage: ${uploaded.error.message}`);
+      }
+      const { data: pub } = supabaseAdmin.storage.from(BUCKET).getPublicUrl(storagePath);
+
+      // Borrar el banner anterior (best-effort — un huérfano es tolerable)
+      if (config.bannerUrl) {
+        const oldPath = storagePathFromUrl(config.bannerUrl);
+        if (oldPath) {
+          const removed = await supabaseAdmin.storage.from(BUCKET).remove([oldPath]);
+          if (removed.error) {
+            request.log.warn(`No se pudo borrar el banner anterior: ${removed.error.message}`);
+          }
+        }
+      }
+
+      const [row] = await db
+        .update(catalogConfigs)
+        .set({ bannerUrl: pub.publicUrl })
+        .where(eq(catalogConfigs.orgId, orgId))
+        .returning();
+      return row;
+    }
+  );
 }

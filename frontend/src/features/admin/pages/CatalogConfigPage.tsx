@@ -7,6 +7,11 @@ type Form = {
   slug: string;
   accentColor: string;
   businessDescription: string;
+  whatsapp: string;
+  instagram: string;
+  email: string;
+  address: string;
+  businessHours: string;
   active: boolean;
 };
 
@@ -17,7 +22,9 @@ export function CatalogConfigPage() {
   const [saved, setSaved] = useState(false);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [uploadingBanner, setUploadingBanner] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+  const bannerFileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     apiJson<CatalogConfig>("/admin/catalog-config")
@@ -28,6 +35,11 @@ export function CatalogConfigPage() {
           slug: c.slug,
           accentColor: c.accentColor,
           businessDescription: c.businessDescription ?? "",
+          whatsapp: c.whatsapp ?? "",
+          instagram: c.instagram ?? "",
+          email: c.email ?? "",
+          address: c.address ?? "",
+          businessHours: c.businessHours ?? "",
           active: c.active,
         });
       })
@@ -48,6 +60,11 @@ export function CatalogConfigPage() {
           slug: form.slug,
           accentColor: form.accentColor,
           businessDescription: form.businessDescription.trim() || null,
+          whatsapp: form.whatsapp.trim() || null,
+          instagram: form.instagram.trim() || null,
+          email: form.email.trim() || null,
+          address: form.address.trim() || null,
+          businessHours: form.businessHours.trim() || null,
           active: form.active,
         }),
       });
@@ -70,6 +87,19 @@ export function CatalogConfigPage() {
       setError(err instanceof ApiError ? err.message : String(err));
     } finally {
       setUploading(false);
+    }
+  }
+
+  async function uploadBanner(file: File) {
+    setError(null);
+    setUploadingBanner(true);
+    try {
+      const updated = await apiUpload<CatalogConfig>("/admin/catalog-config/banner", file);
+      setConfig(updated);
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : String(err));
+    } finally {
+      setUploadingBanner(false);
     }
   }
 
@@ -140,6 +170,59 @@ export function CatalogConfigPage() {
           />
         </label>
 
+        <p className="muted" style={{ margin: "0 0 4px", fontWeight: 600 }}>
+          Contacto y horario (aparecen en el pie de la tienda)
+        </p>
+        <div className="row" style={{ marginBottom: 12 }}>
+          <label className="field">
+            WhatsApp
+            <input
+              value={form.whatsapp}
+              onChange={(e) => setForm({ ...form, whatsapp: e.target.value })}
+              placeholder="+54 9 11 2233-4455"
+              maxLength={20}
+            />
+          </label>
+          <label className="field">
+            Instagram
+            <input
+              value={form.instagram}
+              onChange={(e) => setForm({ ...form, instagram: e.target.value })}
+              placeholder="https://instagram.com/tu_tienda"
+              maxLength={100}
+            />
+          </label>
+          <label className="field">
+            Mail de contacto
+            <input
+              type="email"
+              value={form.email}
+              onChange={(e) => setForm({ ...form, email: e.target.value })}
+              placeholder="contacto@tutienda.com"
+            />
+          </label>
+        </div>
+        <div className="row" style={{ marginBottom: 12 }}>
+          <label className="field" style={{ flex: 1, minWidth: 220 }}>
+            Dirección
+            <input
+              value={form.address}
+              onChange={(e) => setForm({ ...form, address: e.target.value })}
+              placeholder="Av. Falsa 123, Almirante Brown"
+              maxLength={200}
+            />
+          </label>
+          <label className="field" style={{ flex: 1, minWidth: 220 }}>
+            Horario
+            <input
+              value={form.businessHours}
+              onChange={(e) => setForm({ ...form, businessHours: e.target.value })}
+              placeholder="Lun a Vie 9 a 18hs"
+              maxLength={200}
+            />
+          </label>
+        </div>
+
         {error && <p className="error">{error}</p>}
         {saved && <p className="success">Guardado ✓</p>}
         <button className="btn primary" type="submit" disabled={saving}>
@@ -167,6 +250,32 @@ export function CatalogConfigPage() {
             onChange={(e) => {
               const f = e.target.files?.[0];
               if (f) void uploadLogo(f);
+              e.target.value = "";
+            }}
+          />
+        </div>
+      </div>
+
+      <div className="card">
+        <h2>Banner de portada</h2>
+        <div className="row" style={{ alignItems: "center" }}>
+          {config.bannerUrl ? (
+            <img src={config.bannerUrl} alt="banner" style={{ width: 160, height: 60, objectFit: "cover", border: "1px solid #e5e7eb", borderRadius: 8, background: "#fff" }} />
+          ) : (
+            <span className="muted">Sin banner todavía</span>
+          )}
+          <button className="btn" onClick={() => bannerFileRef.current?.click()} disabled={uploadingBanner}>
+            {uploadingBanner ? "Subiendo…" : config.bannerUrl ? "Reemplazar banner" : "Subir banner"}
+          </button>
+          <span className="muted">JPEG/PNG/WebP/SVG, máx 2 MB — se muestra arriba del encabezado de la tienda</span>
+          <input
+            ref={bannerFileRef}
+            type="file"
+            accept="image/jpeg,image/png,image/webp,image/svg+xml"
+            hidden
+            onChange={(e) => {
+              const f = e.target.files?.[0];
+              if (f) void uploadBanner(f);
               e.target.value = "";
             }}
           />

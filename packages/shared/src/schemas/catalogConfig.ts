@@ -11,6 +11,12 @@ export const catalogConfigSchema = z.object({
   accentColor: z.string().regex(/^#[0-9a-fA-F]{6}$/),
   theme: z.string(),
   businessDescription: z.string().nullable(),
+  bannerUrl: z.string().url().nullable(),
+  whatsapp: z.string().nullable(),
+  instagram: z.string().nullable(),
+  email: z.string().nullable(),
+  address: z.string().nullable(),
+  businessHours: z.string().nullable(),
   lowStockThreshold: z.number().int().min(0),
   active: z.boolean(),
   createdAt: z.coerce.date(),
@@ -23,6 +29,8 @@ export const updateLowStockThresholdSchema = z.object({
 });
 
 // Update completo de la identidad de la tienda (T5). El logo va por multipart aparte.
+// bannerUrl (T14) tampoco entra acá por el mismo motivo: se setea solo vía su
+// propio endpoint multipart, nunca como URL arbitraria por este PATCH.
 export const updateCatalogConfigSchema = z
   .object({
     storeName: z.string().min(1),
@@ -30,6 +38,12 @@ export const updateCatalogConfigSchema = z
     accentColor: z.string().regex(/^#[0-9a-fA-F]{6}$/, "color en formato #rrggbb"),
     theme: z.string().min(1),
     businessDescription: z.string().max(2000).nullable(),
+    // Perfil de tienda (T14) — para wa.me/<numero>; la limpieza de formato es del frontend
+    whatsapp: z.string().min(6).max(20).nullable(),
+    instagram: z.string().min(1).max(100).nullable(),
+    email: z.string().email().nullable(),
+    address: z.string().min(1).max(200).nullable(),
+    businessHours: z.string().min(1).max(200).nullable(),
     active: z.boolean(),
   })
   .partial();
