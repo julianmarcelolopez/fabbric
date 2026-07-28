@@ -86,7 +86,9 @@ app.setErrorHandler((err, request, reply) => {
 });
 
 await app.register(cors, {
-  origin: ["http://localhost:5173"],
+  // FRONTEND_URL ya existe para las back_urls de MP (default http://localhost:5173
+  // en dev) — se reusa acá para no mantener el origen permitido por duplicado.
+  origin: [env.FRONTEND_URL],
   // El default de @fastify/cors solo permite GET/HEAD/POST en el preflight —
   // sin esto, PATCH/PUT/DELETE fallan desde el navegador (no desde tests Node)
   methods: ["GET", "HEAD", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
