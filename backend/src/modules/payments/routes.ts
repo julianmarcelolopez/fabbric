@@ -11,7 +11,9 @@ import {
   productVariants,
   shippingZones,
 } from "../../db/schema.js";
+import { decrypt } from "../../lib/crypto.js";
 import { AppError } from "../../lib/errors.js";
+import { ensureConfig } from "../catalogConfig/service.js";
 import { createPreference } from "./service.js";
 
 const slugParam = z.object({ slug: z.string().min(1) });
@@ -159,6 +161,11 @@ export async function paymentsRoutes(fastify: FastifyInstance) {
         else throw err;
       }
 
+      // Mercado Pago propia de la org, si la configuró (T16) — si no, createPreference
+      // usa el token de plataforma exactamente igual que siempre (ver la nota ahí).
+      const config = await ensureConfig(orgId);
+      const accessToken = config.mpAccessToken ? decrypt(config.mpAccessToken) : undefined;
+
       // Preferencia de MP (fuera de la tx — llamada externa). Si falla, la orden
       // pending queda sin preferencia (inofensiva) y respondemos 502.
       const { preferenceId, initPoint } = await createPreference({
@@ -173,6 +180,7 @@ export async function paymentsRoutes(fastify: FastifyInstance) {
           currency_id: "ARS",
         })),
         shippingCost,
+        accessToken,
       });
 
       const [updated] = await db

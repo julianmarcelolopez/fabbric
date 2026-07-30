@@ -403,6 +403,10 @@ export const catalogConfigs = pgTable("catalog_configs", {
   email: text("email"),
   address: text("address"),
   businessHours: text("business_hours"),
+  // Mercado Pago propia de la org (T16) — cifradas (ver lib/crypto.ts), nunca
+  // en texto plano; nunca en updateCatalogConfigSchema, se setean aparte
+  mpAccessToken: text("mp_access_token"),
+  mpWebhookSecret: text("mp_webhook_secret"),
   lowStockThreshold: integer("low_stock_threshold").notNull().default(3),
   active: boolean("active").notNull().default(true),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),

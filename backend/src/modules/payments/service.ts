@@ -21,8 +21,22 @@ export async function createPreference(input: {
   slug: string;
   items: PreferenceItem[];
   shippingCost: number; // centavos
+  /** Token de MP propio de la org (T16), ya desencriptado. undefined = usar el de plataforma. */
+  accessToken?: string;
 }): Promise<{ preferenceId: string; initPoint: string }> {
   const resultUrl = `${env.FRONTEND_URL}/store/${input.slug}/checkout/result`;
+
+  // Dos ramas explícitas, a propósito (no una unificada con fallback interno):
+  // si la org NO tiene MP propio, este bloque es idéntico al de antes de T16 —
+  // cero cambios de comportamiento para el camino que ya está en producción.
+  const notificationUrl = input.accessToken
+    ? env.MP_WEBHOOK_URL
+      ? `${env.MP_WEBHOOK_URL}/webhooks/mercadopago/${input.slug}`
+      : undefined
+    : env.MP_WEBHOOK_URL
+      ? `${env.MP_WEBHOOK_URL}/webhooks/mercadopago`
+      : undefined;
+
   const body: Record<string, unknown> = {
     items: input.items,
     // El envío viaja como ítem más (Checkout Pro no tiene campo de envío custom simple)
@@ -45,16 +59,14 @@ export async function createPreference(input: {
     // MP rechaza auto_return con URLs http/localhost (probado): solo en prod (https).
     // En dev el comprador vuelve manualmente; en producción el redirect es automático.
     ...(env.FRONTEND_URL.startsWith("https://") ? { auto_return: "approved" } : {}),
-    ...(env.MP_WEBHOOK_URL
-      ? { notification_url: `${env.MP_WEBHOOK_URL}/webhooks/mercadopago` }
-      : {}),
+    ...(notificationUrl ? { notification_url: notificationUrl } : {}),
     metadata: { order_id: input.orderId, order_number: input.orderNumber, store: input.slug },
   };
 
   const res = await fetch(`${MP_API}/checkout/preferences`, {
     method: "POST",
     headers: {
-      Authorization: `Bearer ${env.MP_ACCESS_TOKEN}`,
+      Authorization: `Bearer ${input.accessToken ?? env.MP_ACCESS_TOKEN}`,
       "Content-Type": "application/json",
       // Idempotencia del lado de MP ante reintentos de red
       "X-Idempotency-Key": input.orderId,
@@ -73,13 +85,17 @@ export async function createPreference(input: {
 }
 
 /** Consulta el pago REAL a la API de MP — el webhook jamás confía en su payload. */
-export async function getPayment(paymentId: string): Promise<{
+export async function getPayment(
+  paymentId: string,
+  /** Token de MP propio de la org (T16), ya desencriptado. undefined = usar el de plataforma. */
+  accessToken?: string
+): Promise<{
   id: string;
   status: string;
   externalReference: string | null;
 }> {
   const res = await fetch(`${MP_API}/v1/payments/${paymentId}`, {
-    headers: { Authorization: `Bearer ${env.MP_ACCESS_TOKEN}` },
+    headers: { Authorization: `Bearer ${accessToken ?? env.MP_ACCESS_TOKEN}` },
   });
   const data = (await res.json().catch(() => null)) as {
     id?: number;

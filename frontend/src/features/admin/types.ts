@@ -108,6 +108,9 @@ export type CatalogConfig = {
   businessHours: string | null;
   lowStockThreshold: number;
   active: boolean;
+  /** Enmascarado (····3421) si hay uno guardado — nunca el valor real (T16) */
+  mpAccessToken: string | null;
+  mpWebhookSecret: string | null;
 };
 
 export type StockItem = {

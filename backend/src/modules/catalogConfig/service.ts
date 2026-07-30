@@ -1,6 +1,7 @@
 import { eq } from "drizzle-orm";
 import { db } from "../../db/client.js";
 import { catalogConfigs, organizations } from "../../db/schema.js";
+import { decrypt } from "../../lib/crypto.js";
 import { AppError } from "../../lib/errors.js";
 
 /**
@@ -41,4 +42,25 @@ export async function ensureConfig(orgId: string) {
       .returning();
     return created;
   }
+}
+
+function maskSecret(encrypted: string | null): string | null {
+  if (!encrypted) return null;
+  return `····${decrypt(encrypted).slice(-4)}`;
+}
+
+/**
+ * Enmascara mpAccessToken/mpWebhookSecret antes de mandar la config al admin —
+ * NUNCA devolver la fila cruda de `ensureConfig` en una respuesta HTTP (T16).
+ * Usar en los 5 puntos que responden la config: GET, PATCH general, upload de
+ * logo, upload de banner, y el PATCH de integración de MP.
+ */
+export function toAdminConfig<T extends { mpAccessToken: string | null; mpWebhookSecret: string | null }>(
+  config: T
+): T {
+  return {
+    ...config,
+    mpAccessToken: maskSecret(config.mpAccessToken),
+    mpWebhookSecret: maskSecret(config.mpWebhookSecret),
+  };
 }

@@ -71,6 +71,13 @@
       "when": 1784919286426,
       "tag": "0009_catalog_config_header_footer",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1785288030104,
+      "tag": "0010_catalog_config_mp_integration",
+      "breakpoints": true
     }
   ]
 }

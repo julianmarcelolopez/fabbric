@@ -1,7 +1,8 @@
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { useOutletContext } from "react-router-dom";
+import { ApiError, apiJson } from "../../../lib/api";
 import { supabase } from "../../../lib/supabaseClient";
-import type { Me } from "../types";
+import type { CatalogConfig, Me } from "../types";
 
 type Tab = "usuario" | "integraciones";
 
@@ -67,6 +68,139 @@ function ChangePasswordForm() {
   );
 }
 
+function IntegracionesTab() {
+  const [config, setConfig] = useState<CatalogConfig | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [accessToken, setAccessToken] = useState("");
+  const [webhookSecret, setWebhookSecret] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [saved, setSaved] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    apiJson<CatalogConfig>("/admin/catalog-config")
+      .then(setConfig)
+      .catch((err) => setLoadError(err instanceof ApiError ? err.message : String(err)));
+  }, []);
+
+  async function connect(e: FormEvent) {
+    e.preventDefault();
+    setError(null);
+    setSaved(false);
+    setSubmitting(true);
+    try {
+      const updated = await apiJson<CatalogConfig>("/admin/catalog-config/mp-integration", {
+        method: "PATCH",
+        body: JSON.stringify({ mpAccessToken: accessToken, mpWebhookSecret: webhookSecret }),
+      });
+      setConfig(updated);
+      setAccessToken("");
+      setWebhookSecret("");
+      setSaved(true);
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : String(err));
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  async function disconnect() {
+    setError(null);
+    setSaved(false);
+    setSubmitting(true);
+    try {
+      const updated = await apiJson<CatalogConfig>("/admin/catalog-config/mp-integration", {
+        method: "PATCH",
+        body: JSON.stringify({ mpAccessToken: null, mpWebhookSecret: null }),
+      });
+      setConfig(updated);
+      setSaved(true);
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : String(err));
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  function copyWebhookUrl(url: string) {
+    void navigator.clipboard.writeText(url).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  }
+
+  if (!config) {
+    return (
+      <div className="card">
+        <h2>Integraciones</h2>
+        {loadError ? <p className="error">{loadError}</p> : <p className="muted">Cargando…</p>}
+      </div>
+    );
+  }
+
+  const webhookUrl = `${import.meta.env.VITE_API_URL}/webhooks/mercadopago/${config.slug}`;
+  const connected = config.mpAccessToken !== null;
+
+  return (
+    <div className="card">
+      <h2>Mercado Pago</h2>
+      <p className="muted" style={{ marginTop: 0 }}>
+        Por defecto los cobros de tu tienda se procesan con la cuenta de Mercado Pago de fabbric.
+        Si preferís cobrar directo a tu propia cuenta, conectá acá tus credenciales.
+      </p>
+
+      <label className="field" style={{ maxWidth: 480, marginBottom: 12 }}>
+        URL de notificaciones (pegala en tu aplicación de Mercado Pago, sección Webhooks)
+        <div className="row" style={{ alignItems: "center" }}>
+          <input value={webhookUrl} readOnly style={{ flex: 1 }} />
+          <button type="button" className="btn" onClick={() => copyWebhookUrl(webhookUrl)}>
+            {copied ? "Copiado ✓" : "Copiar"}
+          </button>
+        </div>
+      </label>
+
+      {connected ? (
+        <>
+          <p>
+            Estado: <strong>Conectado</strong> — token <code>{config.mpAccessToken}</code>
+          </p>
+          <button className="btn" onClick={disconnect} disabled={submitting}>
+            {submitting ? "Desconectando…" : "Desconectar"}
+          </button>
+        </>
+      ) : (
+        <form onSubmit={connect} className="row" style={{ alignItems: "flex-end", flexWrap: "wrap" }}>
+          <label className="field" style={{ flex: 1, minWidth: 240 }}>
+            Access Token
+            <input
+              value={accessToken}
+              onChange={(e) => setAccessToken(e.target.value)}
+              placeholder="APP_USR-..."
+              required
+            />
+          </label>
+          <label className="field" style={{ flex: 1, minWidth: 240 }}>
+            Webhook Secret
+            <input
+              value={webhookSecret}
+              onChange={(e) => setWebhookSecret(e.target.value)}
+              placeholder="Clave secreta de firma"
+              required
+            />
+          </label>
+          <button className="btn primary" type="submit" disabled={submitting}>
+            {submitting ? "Conectando…" : "Conectar"}
+          </button>
+        </form>
+      )}
+
+      {error && <p className="error">{error}</p>}
+      {saved && <p className="success">Guardado ✓</p>}
+    </div>
+  );
+}
+
 export function SettingsPage() {
   const me = useOutletContext<Me>();
   const [tab, setTab] = useState<Tab>("usuario");
@@ -112,12 +246,7 @@ export function SettingsPage() {
         </>
       )}
 
-      {tab === "integraciones" && (
-        <div className="card">
-          <h2>Integraciones</h2>
-          <p className="muted">Próximamente.</p>
-        </div>
-      )}
+      {tab === "integraciones" && <IntegracionesTab />}
     </>
   );
 }

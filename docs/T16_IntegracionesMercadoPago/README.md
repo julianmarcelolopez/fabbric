@@ -14,7 +14,8 @@ Hoy hay un único secreto de plataforma (`MP_WEBHOOK_SECRET`, en `.env`) que val
 
 - **Enfoque elegido: token pegado a mano + URL de webhook por org.** Edgar entra al panel de Desarrolladores de Mercado Pago **con su propia cuenta**, genera su access token y su webhook secret, y los pega en la tab Integraciones. Copia la URL de webhook que le mostramos (`/webhooks/mercadopago/<slug>`) a la config de notificaciones de SU aplicación de Mercado Pago.
 - **Explícitamente NO se construye OAuth/modo marketplace** en esta demo — eso implicaría un flujo de conexión sin fricción (botón, redirect, sin copiar nada) pero requiere mucho más trabajo (redirect/callback/refresh tokens) y posiblemente aprobación de Mercado Pago como marketplace. Queda anotado en "Fuera de alcance" de `docs/plan_2.md`.
-- **Fallback siempre disponible**: una org que no configura nada propio sigue cobrando con el token de plataforma, exactamente como funciona hoy — esta fase no puede romper el comportamiento actual para ninguna otra org.
+- **Camino conservador, no "unificado con fallback"** (decisión tomada 2026-07-28, con la demo ya en producción con plata real): se evaluó que todas las órdenes pasen por la ruta nueva y ésta haga fallback interno al token/secreto de plataforma cuando la org no configuró nada — funcionalmente equivalente, pero es tocar un flujo que ya funciona en producción. Se descartó. En cambio: para una org sin configuración propia, **el código no cambia ni un carácter** respecto a hoy — ni la ruta, ni la URL de notificación, ni el token. La ruta nueva y el token propio son un camino aparte que solo se activa si la org configuró algo. Ver el detalle en la tarea 2.
+- **Cifrado: AES-256-GCM con el módulo `crypto` nativo de Node** (decisión cerrada, ver tarea 1) — sin dependencias nuevas, mismo criterio que "sin SDK de MP". Clave nueva en `ENCRYPTION_KEY` (env), opcional para no romper deployments que no usan esta feature.
 - **El token nunca se devuelve completo** desde el GET admin, solo enmascarado — y se guarda cifrado.
 - Depende de **T15** porque la tab Integraciones se monta sobre el shell de tabs que arma esa fase.
 
@@ -22,17 +23,18 @@ Hoy hay un único secreto de plataforma (`MP_WEBHOOK_SECRET`, en `.env`) que val
 
 | # | Tarea | Depende de | Estado |
 |---|-------|-----------|--------|
-| 1 | [01-schema-y-tokens.md](01-schema-y-tokens.md) — columnas cifradas en `catalog_configs`, migración, PATCH/GET enmascarado | T15 | ⬜ Pendiente |
-| 2 | [02-webhook-por-org.md](02-webhook-por-org.md) — ruta `/webhooks/mercadopago/:slug`, resolución de secreto/token por org, `createPreference`/`getPayment` con fallback | 1 | ⬜ Pendiente |
-| 3 | [03-tab-integraciones-ui.md](03-tab-integraciones-ui.md) — formulario, URL de webhook a copiar, botón desconectar | 1 | ⬜ Pendiente |
-| 4 | [04-verificacion-final.md](04-verificacion-final.md) — Definition of Done de T16 | 1-3 | ⬜ Pendiente |
+| 1 | [01-schema-y-tokens.md](01-schema-y-tokens.md) — columnas cifradas en `catalog_configs`, migración, PATCH/GET enmascarado | T15 | ✅ Completada |
+| 2 | [02-webhook-por-org.md](02-webhook-por-org.md) — ruta `/webhooks/mercadopago/:slug` como camino aparte (no toca el global); `createPreference`/`getPayment` con token opcional | 1 | ✅ Completada |
+| 3 | [03-tab-integraciones-ui.md](03-tab-integraciones-ui.md) — formulario, URL de webhook a copiar, botón desconectar | 1 | ✅ Completada |
+| 4 | [04-verificacion-final.md](04-verificacion-final.md) — Definition of Done de T16 | 1-3 | ⬜ Pendiente — falta cuenta de prueba de MP + `ENCRYPTION_KEY` en EasyPanel |
 
 ## Recordatorios operativos
 
-- Migración: mismo procedimiento que las anteriores (`db:generate` + `db:migrate`, nunca `db:push`). Si se hace en la misma sesión que T14 (que también agrega columnas a `catalog_configs`), evaluar si conviene combinar migraciones.
-- **Cifrado**: definir con qué mecanismo se cifran `mpAccessToken`/`mpWebhookSecret` en reposo antes de empezar la tarea 1 — no guardar en texto plano.
+- Migración: mismo procedimiento que las anteriores (`db:generate` + `db:migrate`, nunca `db:push`).
+- `ENCRYPTION_KEY` tiene que estar cargada en EasyPanel (backend) antes de probar esta feature en el deploy real — sin ella, guardar/leer credenciales de MP tira error.
 - Documentar (fuera del código, como instructivo para Edgar) los pasos que tiene que hacer él en el panel de Desarrolladores de Mercado Pago: crear su aplicación, copiar el access token, configurar la URL de notificaciones con el secreto que MP le genera.
-- Probar con una **cuenta de prueba** de Mercado Pago (no la cuenta real de Edgar) antes de dar la fase por cerrada.
+- Probar con una **cuenta de prueba** de Mercado Pago — nunca con la org real de Eliathi Modas, que ya está en producción cobrando con el token de plataforma.
+- La demo ya está deployada y públicamente alcanzable — la prueba del webhook real con MP ya no necesita túnel de cloudflared como en dev.
 
 ## Próximo paso al cerrar T16
 

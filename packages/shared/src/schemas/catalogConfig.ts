@@ -17,6 +17,11 @@ export const catalogConfigSchema = z.object({
   email: z.string().nullable(),
   address: z.string().nullable(),
   businessHours: z.string().nullable(),
+  // Mercado Pago propia de la org (T16): acá representan lo que devuelve el GET
+  // admin — el valor YA enmascarado (ej. "····3421"), nunca el token real ni
+  // cifrado. Ver updateMpIntegrationSchema para cómo se setean.
+  mpAccessToken: z.string().nullable(),
+  mpWebhookSecret: z.string().nullable(),
   lowStockThreshold: z.number().int().min(0),
   active: z.boolean(),
   createdAt: z.coerce.date(),
@@ -48,6 +53,16 @@ export const updateCatalogConfigSchema = z
   })
   .partial();
 
+// Conectar/desconectar Mercado Pago propia (T16) — endpoint aparte del PATCH
+// general, mismo motivo que logoUrl/bannerUrl: nunca se mezclan con datos de
+// texto libre. Se guardan los dos juntos (o se limpian los dos juntos con
+// "Desconectar") — no tiene sentido tener token sin secret o viceversa.
+export const updateMpIntegrationSchema = z.object({
+  mpAccessToken: z.string().min(1).max(300).nullable(),
+  mpWebhookSecret: z.string().min(1).max(300).nullable(),
+});
+
 export type CatalogConfig = z.infer<typeof catalogConfigSchema>;
 export type UpdateLowStockThresholdInput = z.infer<typeof updateLowStockThresholdSchema>;
 export type UpdateCatalogConfigInput = z.infer<typeof updateCatalogConfigSchema>;
+export type UpdateMpIntegrationInput = z.infer<typeof updateMpIntegrationSchema>;

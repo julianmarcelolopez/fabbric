@@ -27,6 +27,10 @@ const envSchema = z.object({
   RESEND_API_KEY: z.string().optional(),
   // Remitente de los emails (dev: dominio de prueba de Resend)
   EMAIL_FROM: z.string().default("fabbric <onboarding@resend.dev>"),
+  // Cifrado de credenciales de MP por org (T16) — 32 bytes en base64, ej.
+  // `openssl rand -base64 32`. Opcional para no romper deployments que no
+  // usan Integraciones; lib/crypto.ts tira error explícito si falta al usarla.
+  ENCRYPTION_KEY: z.string().optional(),
 });
 
 const parsed = envSchema.safeParse(process.env);

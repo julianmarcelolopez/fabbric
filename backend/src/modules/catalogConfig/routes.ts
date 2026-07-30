@@ -1,14 +1,15 @@
 import { randomUUID } from "node:crypto";
-import { updateCatalogConfigSchema } from "@fabbric/shared";
+import { updateCatalogConfigSchema, updateMpIntegrationSchema } from "@fabbric/shared";
 import { and, eq, ne } from "drizzle-orm";
 import type { FastifyInstance } from "fastify";
 import type { ZodTypeProvider } from "fastify-type-provider-zod";
 import { db } from "../../db/client.js";
 import { catalogConfigs } from "../../db/schema.js";
+import { encrypt } from "../../lib/crypto.js";
 import { AppError } from "../../lib/errors.js";
 import { supabaseAdmin } from "../../lib/supabaseAdmin.js";
 import { requireOrgId } from "../../lib/tenant.js";
-import { ensureConfig } from "./service.js";
+import { ensureConfig, toAdminConfig } from "./service.js";
 
 const tag = { tags: ["config de tienda"], security: [{ bearerAuth: [] }] };
 
@@ -68,7 +69,7 @@ export async function catalogConfigRoutes(fastify: FastifyInstance) {
         .set(input)
         .where(eq(catalogConfigs.orgId, orgId))
         .returning();
-      return row;
+      return toAdminConfig(row);
     }
   );
 
@@ -120,7 +121,7 @@ export async function catalogConfigRoutes(fastify: FastifyInstance) {
         .set({ logoUrl: pub.publicUrl })
         .where(eq(catalogConfigs.orgId, orgId))
         .returning();
-      return row;
+      return toAdminConfig(row);
     }
   );
 
@@ -172,7 +173,35 @@ export async function catalogConfigRoutes(fastify: FastifyInstance) {
         .set({ bannerUrl: pub.publicUrl })
         .where(eq(catalogConfigs.orgId, orgId))
         .returning();
-      return row;
+      return toAdminConfig(row);
+    }
+  );
+
+  app.patch(
+    "/admin/catalog-config/mp-integration",
+    {
+      ...auth,
+      schema: {
+        ...tag,
+        summary:
+          "Conectar/desconectar Mercado Pago propia de la org (T16) — token+secret cifrados en reposo",
+        body: updateMpIntegrationSchema,
+      },
+    },
+    async (request) => {
+      const orgId = requireOrgId(request);
+      await ensureConfig(orgId);
+      const { mpAccessToken, mpWebhookSecret } = request.body;
+
+      const [row] = await db
+        .update(catalogConfigs)
+        .set({
+          mpAccessToken: mpAccessToken ? encrypt(mpAccessToken) : null,
+          mpWebhookSecret: mpWebhookSecret ? encrypt(mpWebhookSecret) : null,
+        })
+        .where(eq(catalogConfigs.orgId, orgId))
+        .returning();
+      return toAdminConfig(row);
     }
   );
 }

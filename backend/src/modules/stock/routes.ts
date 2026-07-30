@@ -10,7 +10,7 @@ import { db } from "../../db/client.js";
 import { catalogConfigs, products, productVariants, stockMovements } from "../../db/schema.js";
 import { AppError } from "../../lib/errors.js";
 import { requireOrgId } from "../../lib/tenant.js";
-import { ensureConfig } from "../catalogConfig/service.js";
+import { ensureConfig, toAdminConfig } from "../catalogConfig/service.js";
 
 const idParam = z.object({ id: z.string().uuid() });
 const tag = { tags: ["stock"], security: [{ bearerAuth: [] }] };
@@ -156,7 +156,7 @@ export async function stockRoutes(fastify: FastifyInstance) {
       ...auth,
       schema: { ...tag, summary: "Configuración de la tienda (se crea con defaults si no existe)" },
     },
-    async (request) => ensureConfig(requireOrgId(request))
+    async (request) => toAdminConfig(await ensureConfig(requireOrgId(request)))
   );
 
   app.patch(
