@@ -32,7 +32,7 @@ Mismo alcance que T18: sin cambios de arquitectura de datos que no sean estricta
 | 7 | [07-mi-tienda-unificado.md](07-mi-tienda-unificado.md) — Home + Config de tienda en una pantalla | 2 | 01-flujo-critico.md (mejora estructural), 03-catalogo-publico.md 🟡 | ✅ Completa |
 | 8 | [08-alto-producto-pasos.md](08-alto-producto-pasos.md) — alta de producto en pasos guiados | 2 | 01-flujo-critico.md 🔴 (los dos hallazgos) | ✅ Completa |
 | 9 | [09-tablas-mobile-scroll.md](09-tablas-mobile-scroll.md) — scroll horizontal en tablas del admin | 3 | 05-mobile.md 🔴 (inferido, no observado) | ✅ Completa |
-| 10 | [10-buscador-catalogo.md](10-buscador-catalogo.md) — búsqueda/paginación en la tienda pública | 3 | 03-catalogo-publico.md 🔴 | ⬜ Pendiente |
+| 10 | [10-buscador-catalogo.md](10-buscador-catalogo.md) — búsqueda/paginación en la tienda pública | 3 | 03-catalogo-publico.md 🔴 | ✅ Completa |
 
 ## Cómo trabajamos esta carpeta
 
