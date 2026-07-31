@@ -9,9 +9,11 @@ type Props = {
   endpoint: string;
   /** singular para textos, ej. "categoría" */
   noun: string;
+  /** true cuando se embebe como tab de otra pantalla (T19) — evita un <h1> duplicado */
+  hideTitle?: boolean;
 };
 
-export function TaxonomyManager({ title, endpoint, noun }: Props) {
+export function TaxonomyManager({ title, endpoint, noun, hideTitle }: Props) {
   const [items, setItems] = useState<Taxonomy[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [name, setName] = useState("");
@@ -53,7 +55,7 @@ export function TaxonomyManager({ title, endpoint, noun }: Props) {
 
   return (
     <>
-      <h1>{title}</h1>
+      {!hideTitle && <h1>{title}</h1>}
 
       <div className="card">
         <h2>Nueva {noun}</h2>
@@ -93,6 +95,7 @@ export function TaxonomyManager({ title, endpoint, noun }: Props) {
       ) : items.length === 0 ? (
         <p className="muted">Todavía no hay {noun}s.</p>
       ) : (
+        <div className="table-scroll">
         <table className="grid">
           <thead>
             <tr>
@@ -180,6 +183,7 @@ export function TaxonomyManager({ title, endpoint, noun }: Props) {
             )}
           </tbody>
         </table>
+        </div>
       )}
     </>
   );

@@ -57,6 +57,7 @@ export function CustomerDetailPage() {
       {customer.orders.length === 0 ? (
         <p className="muted">Sin pedidos todavía.</p>
       ) : (
+        <div className="table-scroll">
         <table className="grid">
           <thead>
             <tr>
@@ -88,6 +89,7 @@ export function CustomerDetailPage() {
             })}
           </tbody>
         </table>
+        </div>
       )}
     </>
   );

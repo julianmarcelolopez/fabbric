@@ -21,6 +21,7 @@ import { financeRoutes } from "./modules/finance/routes.js";
 import { metricsRoutes } from "./modules/metrics/routes.js";
 import { homeSectionsRoutes } from "./modules/homeSections/routes.js";
 import { imagesRoutes } from "./modules/images/routes.js";
+import { onboardingRoutes } from "./modules/onboarding/routes.js";
 import { ordersRoutes } from "./modules/orders/routes.js";
 import { paymentsRoutes } from "./modules/payments/routes.js";
 import { webhookRoutes } from "./modules/payments/webhook.js";
@@ -136,6 +137,7 @@ await app.register(ordersRoutes);
 await app.register(customersRoutes);
 await app.register(financeRoutes);
 await app.register(metricsRoutes);
+await app.register(onboardingRoutes);
 
 app.get("/health", { schema: { tags: ["sistema"], summary: "Health check" } }, async () => ({
   ok: true,

@@ -8,6 +8,7 @@
     "build": "tsc",
     "start": "node dist/index.js",
     "db:seed": "tsx scripts/seed.ts",
+    "db:backfill-home-sections": "tsx scripts/backfill-home-sections.ts",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:push": "drizzle-kit push",

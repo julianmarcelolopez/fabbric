@@ -56,6 +56,7 @@ export function CustomersPage() {
           {search.trim() ? "Sin resultados para la búsqueda." : "Todavía no hay clientes (se crean al comprar en la tienda o desde un pedido manual)."}
         </p>
       ) : (
+        <div className="table-scroll">
         <table className="grid">
           <thead>
             <tr>
@@ -92,6 +93,7 @@ export function CustomersPage() {
             ))}
           </tbody>
         </table>
+        </div>
       )}
     </>
   );

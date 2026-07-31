@@ -110,7 +110,8 @@ export function VariantEditor({ productId, variants, onChange }: Props) {
       </p>
       {error && <p className="error">{error}</p>}
       {variants.length > 0 && (
-        <table className="grid" style={{ marginBottom: 12 }}>
+        <div className="table-scroll" style={{ marginBottom: 12 }}>
+        <table className="grid">
           <thead>
             <tr>
               <th>Talle</th>
@@ -128,6 +129,7 @@ export function VariantEditor({ productId, variants, onChange }: Props) {
             ))}
           </tbody>
         </table>
+        </div>
       )}
       <form onSubmit={add} className="row">
         <label className="field">

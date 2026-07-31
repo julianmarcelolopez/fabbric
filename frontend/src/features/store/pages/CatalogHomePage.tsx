@@ -23,6 +23,7 @@ export function CatalogHomePage() {
     <HomeSectionsRenderer
       sections={sections}
       onProductClick={(productId) => navigate(`/store/${slug}/p/${productId}`)}
+      storeSlug={slug}
     />
   );
 }

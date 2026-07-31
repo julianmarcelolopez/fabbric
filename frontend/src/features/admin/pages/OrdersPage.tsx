@@ -83,6 +83,7 @@ export function OrdersPage() {
       ) : rows.length === 0 ? (
         <p className="muted">Sin pedidos con estos filtros.</p>
       ) : (
+        <div className="table-scroll">
         <table className="grid">
           <thead>
             <tr>
@@ -118,6 +119,7 @@ export function OrdersPage() {
             })}
           </tbody>
         </table>
+        </div>
       )}
     </>
   );

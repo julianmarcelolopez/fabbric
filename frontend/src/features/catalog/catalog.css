@@ -102,6 +102,15 @@
 .hsr-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 14px; }
 .hsr-empty { color: #6b7280; font-size: 14px; text-align: center; padding: 24px 0; }
 
+/* T19/10: link "Ver todos" junto al título de sección + página de categoría paginada */
+.hsr-section-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.hsr-viewall { font-size: 13px; color: var(--accent, #111827); text-decoration: none; white-space: nowrap; }
+.hsr-viewall:hover { text-decoration: underline; }
+.category-page { display: grid; gap: 16px; }
+.category-page-empty { color: #6b7280; font-size: 14px; text-align: center; padding: 24px 0; }
+.hsr-pagination { display: flex; align-items: center; justify-content: center; gap: 16px; margin-top: 8px; }
+.category-page-pagelabel { font-size: 13px; color: #6b7280; }
+
 .pcard { display: grid; gap: 8px; text-decoration: none; color: inherit; }
 .pcard img, .pcard .pcard-ph { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 10px; background: #f3f4f6; border: 1px solid #e5e7eb; }
 .pcard .pcard-ph { display: flex; align-items: center; justify-content: center; color: #9ca3af; font-size: 12px; }

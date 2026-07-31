@@ -7,6 +7,7 @@ import { db } from "../../db/client.js";
 import { categories, homeSections, products } from "../../db/schema.js";
 import { AppError } from "../../lib/errors.js";
 import { requireOrgId } from "../../lib/tenant.js";
+import { ensureCategoryHomeSection } from "../homeSections/service.js";
 
 const idParam = z.object({ id: z.string().uuid() });
 const tag = { tags: ["categorías"], security: [{ bearerAuth: [] }] };
@@ -41,7 +42,14 @@ export async function categoriesRoutes(fastify: FastifyInstance) {
       if (dup) {
         throw new AppError(409, "conflict", `Ya existe una categoría con slug "${input.slug}"`);
       }
-      const [row] = await db.insert(categories).values({ ...input, orgId }).returning();
+      // T19/06: la categoría nace ya visible en el home — sin este paso, el hallazgo
+      // más grave de T18 (producto cargado pero invisible en la tienda) queda resuelto
+      // de raíz. "Mi tienda" pasa a ser para reordenar/ocultar, no para el alta inicial.
+      const row = await db.transaction(async (tx) => {
+        const [cat] = await tx.insert(categories).values({ ...input, orgId }).returning();
+        await ensureCategoryHomeSection(tx, orgId, cat.id);
+        return cat;
+      });
       reply.status(201);
       return row;
     }

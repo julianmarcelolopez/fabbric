@@ -364,3 +364,11 @@ export type MetricsOverview = {
   stats: MetricsStats;
   paneles: MetricsPanels;
 };
+
+// T19/03
+export type OnboardingStatus = {
+  hasCategory: boolean;
+  hasProductWithVariant: boolean;
+  hasActiveShippingZone: boolean;
+  hasMercadoPago: boolean;
+};

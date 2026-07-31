@@ -293,6 +293,7 @@ export function OrderNewPage() {
         {items.length === 0 ? (
           <p className="muted">Todavía no agregaste ítems.</p>
         ) : (
+          <div className="table-scroll">
           <table className="grid">
             <thead>
               <tr><th>Ítem</th><th>Cant.</th><th>Precio</th><th>Total</th><th></th></tr>
@@ -319,6 +320,7 @@ export function OrderNewPage() {
               ))}
             </tbody>
           </table>
+          </div>
         )}
         <p style={{ textAlign: "right", margin: "10px 0 0" }}>
           Envío: {shipping === 0 ? "—" : formatPrice(shipping)} · <strong>Total: {formatPrice(subtotal + shipping)}</strong>

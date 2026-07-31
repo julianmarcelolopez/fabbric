@@ -121,6 +121,7 @@ export function OrderAdminDetailPage() {
 
       <div className="card">
         <h2>Ítems</h2>
+        <div className="table-scroll">
         <table className="grid">
           <thead>
             <tr>
@@ -155,6 +156,7 @@ export function OrderAdminDetailPage() {
             ))}
           </tbody>
         </table>
+        </div>
         <p style={{ textAlign: "right", margin: "10px 0 0" }}>
           Envío{order.shippingZoneName ? ` (${order.shippingZoneName})` : ""}:{" "}
           {order.shippingCost === 0 ? "—" : formatPrice(order.shippingCost)} · <strong>Total: {formatPrice(order.total)}</strong>

@@ -8,7 +8,39 @@ import {
   MOVEMENT_TYPE_UI,
   type Me,
   type MetricsOverview,
+  type OnboardingStatus,
+  type ShippingZoneRow,
 } from "../types";
+
+type ChecklistItem = { label: string; done: boolean; to: string; linkLabel: string; optional?: boolean };
+
+function OnboardingBanner({ status }: { status: OnboardingStatus }) {
+  const items: ChecklistItem[] = [
+    { label: "Crear una categoría", done: status.hasCategory, to: "/admin/products?tab=categorias", linkLabel: "Crear" },
+    { label: "Cargar tu primer producto (con variante)", done: status.hasProductWithVariant, to: "/admin/products", linkLabel: "Cargar" },
+    { label: "Configurar una zona de envío", done: status.hasActiveShippingZone, to: "/admin/shipping", linkLabel: "Configurar" },
+    { label: "Conectar Mercado Pago", done: status.hasMercadoPago, to: "/admin/settings", linkLabel: "Conectar", optional: true },
+  ];
+  return (
+    <div className="onboarding-banner">
+      <h2>🚀 Completá estos pasos para empezar a vender</h2>
+      <div className="onboarding-list">
+        {items.map((item) => (
+          <div className="onboarding-item" key={item.label}>
+            <span className={`onboarding-check${item.done ? " done" : ""}`}>{item.done ? "✓" : ""}</span>
+            <span className={`onboarding-label${item.done ? " done" : ""}`}>{item.label}</span>
+            {item.optional && <span className="onboarding-tag">Recomendado</span>}
+            {!item.done && (
+              <Link className="onboarding-link" to={item.to}>
+                {item.linkLabel} →
+              </Link>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 function currentMonth(): string {
   // Mes contable AR (en-CA => YYYY-MM-DD)
@@ -30,6 +62,8 @@ export function DashboardPage() {
   const me = useOutletContext<Me>();
   const [month, setMonth] = useState(currentMonth());
   const [overview, setOverview] = useState<MetricsOverview | null>(null);
+  const [shippingZones, setShippingZones] = useState<ShippingZoneRow[] | null>(null);
+  const [onboarding, setOnboarding] = useState<OnboardingStatus | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
@@ -46,6 +80,23 @@ export function DashboardPage() {
   useEffect(() => {
     void load();
   }, [load]);
+
+  useEffect(() => {
+    // T19/05: consulta directa a /admin/shipping-zones, sin esperar un endpoint
+    // consolidado de estado de la org — no crítico, si falla no bloquea el dashboard.
+    if (!me.orgId) return;
+    apiJson<ShippingZoneRow[]>("/admin/shipping-zones")
+      .then(setShippingZones)
+      .catch(() => {});
+  }, [me.orgId]);
+
+  useEffect(() => {
+    // T19/03: checklist de arranque — no crítico, si falla no bloquea el dashboard.
+    if (!me.orgId) return;
+    apiJson<OnboardingStatus>("/admin/onboarding-status")
+      .then(setOnboarding)
+      .catch(() => {});
+  }, [me.orgId]);
 
   if (!me.orgId) {
     // Super admin: sin org, sin métricas — placeholder simple
@@ -114,6 +165,7 @@ export function DashboardPage() {
         paneles.ultimosPedidos.length === 0 ? (
           <p className="muted">Sin pedidos todavía.</p>
         ) : (
+          <div className="table-scroll">
           <table className="grid">
             <tbody>
               {paneles.ultimosPedidos.map((o) => (
@@ -126,6 +178,7 @@ export function DashboardPage() {
               ))}
             </tbody>
           </table>
+          </div>
         ),
     },
     {
@@ -135,6 +188,7 @@ export function DashboardPage() {
         paneles.masVendidos.length === 0 ? (
           <p className="muted">Sin ventas cobradas este mes.</p>
         ) : (
+          <div className="table-scroll">
           <table className="grid">
             <tbody>
               {paneles.masVendidos.map((p) => (
@@ -146,6 +200,7 @@ export function DashboardPage() {
               ))}
             </tbody>
           </table>
+          </div>
         ),
     },
     {
@@ -224,6 +279,13 @@ export function DashboardPage() {
     },
   ];
 
+  const noActiveShippingZone = shippingZones !== null && shippingZones.filter((z) => z.active).length === 0;
+  // T19/03: el banner desaparece apenas los primeros 3 pasos están completos —
+  // Mercado Pago queda como "Recomendado", no bloquea que el banner se oculte.
+  const onboardingPending =
+    onboarding !== null &&
+    !(onboarding.hasCategory && onboarding.hasProductWithVariant && onboarding.hasActiveShippingZone);
+
   return (
     <>
       <div className="row" style={{ alignItems: "flex-end", justifyContent: "space-between" }}>
@@ -233,6 +295,13 @@ export function DashboardPage() {
           <input type="month" value={month} onChange={(e) => e.target.value && setMonth(e.target.value)} />
         </label>
       </div>
+      {onboardingPending && onboarding && <OnboardingBanner status={onboarding} />}
+      {noActiveShippingZone && (
+        <div className="alert-warning">
+          ⚠️ Tu tienda todavía no puede recibir pagos — falta configurar al menos una zona de envío.{" "}
+          <Link to="/admin/shipping">Configurar envíos →</Link>
+        </div>
+      )}
       <DashboardCustomizable initialLayout={me.dashboardLayout} stats={statCards} paneles={panelCards} />
     </>
   );

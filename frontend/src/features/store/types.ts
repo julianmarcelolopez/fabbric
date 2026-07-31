@@ -38,3 +38,20 @@ export type StoreContext = {
   slug: string;
   config: PublicStoreConfig;
 };
+
+// T19/10
+export type PublicCategoryProducts = {
+  category: { name: string; slug: string };
+  products: {
+    id: string;
+    name: string;
+    price: number;
+    compareAtPrice: number | null;
+    brand: string | null;
+    imageUrl: string | null;
+  }[];
+  page: number;
+  pageSize: number;
+  totalCount: number;
+  totalPages: number;
+};

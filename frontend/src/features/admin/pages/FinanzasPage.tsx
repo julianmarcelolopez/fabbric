@@ -384,6 +384,7 @@ export function FinanzasPage() {
       ) : movements.length === 0 ? (
         <p className="muted">Sin movimientos en este mes.</p>
       ) : (
+        <div className="table-scroll">
         <table className="grid">
           <thead>
             <tr>
@@ -448,6 +449,7 @@ export function FinanzasPage() {
             })}
           </tbody>
         </table>
+        </div>
       )}
     </>
   );

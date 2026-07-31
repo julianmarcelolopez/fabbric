@@ -98,6 +98,7 @@ export function ShippingZonesPage() {
       ) : zones.length === 0 ? (
         <p className="muted">Sin zonas todavía — el checkout necesita al menos una activa.</p>
       ) : (
+        <div className="table-scroll">
         <table className="grid">
           <thead>
             <tr>
@@ -185,6 +186,7 @@ export function ShippingZonesPage() {
             )}
           </tbody>
         </table>
+        </div>
       )}
     </>
   );

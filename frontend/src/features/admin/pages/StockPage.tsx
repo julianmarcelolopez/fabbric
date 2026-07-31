@@ -93,7 +93,8 @@ function History({ variantId, onError }: { variantId: string; onError: (m: strin
   if (movements === null) return <p className="muted">Cargando historial…</p>;
   if (movements.length === 0) return <p className="muted">Sin movimientos todavía (el stock inicial del alta no genera movimiento).</p>;
   return (
-    <table className="grid" style={{ margin: "8px 0" }}>
+    <div className="table-scroll" style={{ margin: "8px 0" }}>
+    <table className="grid">
       <thead>
         <tr><th>Fecha</th><th>Tipo</th><th>Canal</th><th>Delta</th><th>Nota</th></tr>
       </thead>
@@ -111,10 +112,16 @@ function History({ variantId, onError }: { variantId: string; onError: (m: strin
         ))}
       </tbody>
     </table>
+    </div>
   );
 }
 
-export function StockPage() {
+type Props = {
+  /** true cuando se embebe como tab de Productos (T19) — evita un <h1> duplicado */
+  embedded?: boolean;
+};
+
+export function StockPage({ embedded }: Props = {}) {
   const [data, setData] = useState<StockOverview | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [onlyCritical, setOnlyCritical] = useState(false);
@@ -159,7 +166,7 @@ export function StockPage() {
 
   return (
     <>
-      <h1>Stock</h1>
+      {!embedded && <h1>Stock</h1>}
 
       <div className="card">
         <div className="row" style={{ alignItems: "center", justifyContent: "space-between" }}>
@@ -184,6 +191,7 @@ export function StockPage() {
       ) : items.length === 0 ? (
         <p className="muted">{onlyCritical ? "Sin variantes críticas 🎉" : "No hay variantes — creá productos con variantes primero."}</p>
       ) : (
+        <div className="table-scroll">
         <table className="grid">
           <thead>
             <tr>
@@ -255,6 +263,7 @@ export function StockPage() {
             ))}
           </tbody>
         </table>
+        </div>
       )}
     </>
   );

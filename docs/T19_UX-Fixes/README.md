@@ -21,18 +21,18 @@ Mismo alcance que T18: sin cambios de arquitectura de datos que no sean estricta
 
 ## Lista de tareas
 
-| # | Tarea | Sprint | Referencia T18 |
-|---|---|---|---|
-| 1 | [01-sidebar-rediseno.md](01-sidebar-rediseno.md) — sidebar agrupado + estado de la tienda | 1 | 02-panel-admin.md, 05-mobile.md 🔴 |
-| 2 | [02-productos-con-tabs.md](02-productos-con-tabs.md) — Categorías/Colecciones/Stock como tabs de Productos | 1 | 01-flujo-critico.md (mejora estructural) |
-| 3 | [03-dashboard-onboarding.md](03-dashboard-onboarding.md) — checklist de arranque en el Dashboard | 1 | 01-flujo-critico.md 🟢 |
-| 4 | [04-aviso-sin-variantes.md](04-aviso-sin-variantes.md) — aviso inline en la ficha de producto | 1 | 01-flujo-critico.md 🔴 |
-| 5 | [05-aviso-zona-envio.md](05-aviso-zona-envio.md) — alerta en el Dashboard | 1 | 02-panel-admin.md 🔴 |
-| 6 | [06-auto-home-section.md](06-auto-home-section.md) — crear la sección del home automáticamente | 1 | 01-flujo-critico.md 🔴 |
-| 7 | [07-mi-tienda-unificado.md](07-mi-tienda-unificado.md) — Home + Config de tienda en una pantalla | 2 | 01-flujo-critico.md (mejora estructural), 03-catalogo-publico.md 🟡 |
-| 8 | [08-alto-producto-pasos.md](08-alto-producto-pasos.md) — alta de producto en pasos guiados | 2 | 01-flujo-critico.md 🔴 (los dos hallazgos) |
-| 9 | [09-tablas-mobile-scroll.md](09-tablas-mobile-scroll.md) — scroll horizontal en tablas del admin | 3 | 05-mobile.md 🔴 (inferido, no observado) |
-| 10 | [10-buscador-catalogo.md](10-buscador-catalogo.md) — búsqueda/paginación en la tienda pública | 3 | 03-catalogo-publico.md 🔴 |
+| # | Tarea | Sprint | Referencia T18 | Estado |
+|---|---|---|---|---|
+| 1 | [01-sidebar-rediseno.md](01-sidebar-rediseno.md) — sidebar agrupado + estado de la tienda | 1 | 02-panel-admin.md, 05-mobile.md 🔴 | ✅ Completa |
+| 2 | [02-productos-con-tabs.md](02-productos-con-tabs.md) — Categorías/Colecciones/Stock como tabs de Productos | 1 | 01-flujo-critico.md (mejora estructural) | ✅ Completa |
+| 3 | [03-dashboard-onboarding.md](03-dashboard-onboarding.md) — checklist de arranque en el Dashboard | 1 | 01-flujo-critico.md 🟢 | ✅ Completa |
+| 4 | [04-aviso-sin-variantes.md](04-aviso-sin-variantes.md) — aviso inline en la ficha de producto | 1 | 01-flujo-critico.md 🔴 | ✅ Completa |
+| 5 | [05-aviso-zona-envio.md](05-aviso-zona-envio.md) — alerta en el Dashboard | 1 | 02-panel-admin.md 🔴 | ✅ Completa |
+| 6 | [06-auto-home-section.md](06-auto-home-section.md) — crear la sección del home automáticamente | 1 | 01-flujo-critico.md 🔴 | ✅ Completa |
+| 7 | [07-mi-tienda-unificado.md](07-mi-tienda-unificado.md) — Home + Config de tienda en una pantalla | 2 | 01-flujo-critico.md (mejora estructural), 03-catalogo-publico.md 🟡 | ✅ Completa |
+| 8 | [08-alto-producto-pasos.md](08-alto-producto-pasos.md) — alta de producto en pasos guiados | 2 | 01-flujo-critico.md 🔴 (los dos hallazgos) | ✅ Completa |
+| 9 | [09-tablas-mobile-scroll.md](09-tablas-mobile-scroll.md) — scroll horizontal en tablas del admin | 3 | 05-mobile.md 🔴 (inferido, no observado) | ✅ Completa |
+| 10 | [10-buscador-catalogo.md](10-buscador-catalogo.md) — búsqueda/paginación en la tienda pública | 3 | 03-catalogo-publico.md 🔴 | ⬜ Pendiente |
 
 ## Cómo trabajamos esta carpeta
 
