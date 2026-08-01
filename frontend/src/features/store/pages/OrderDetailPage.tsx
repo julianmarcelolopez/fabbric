@@ -6,7 +6,7 @@ import { useCustomerAuth } from "../CustomerAuthContext";
 import type { StoreContext } from "../types";
 import { ORDER_STATUS_LABELS, type OrderStatusPublic } from "./MyOrdersPage";
 
-type OrderDetail = {
+export type OrderDetail = {
   id: string;
   orderNumber: number;
   status: OrderStatusPublic;

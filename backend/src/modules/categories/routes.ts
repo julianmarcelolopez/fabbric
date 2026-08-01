@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import { createCategorySchema, updateCategorySchema } from "@fabbric/shared";
 import { and, asc, eq } from "drizzle-orm";
 import type { FastifyInstance } from "fastify";
@@ -6,6 +7,8 @@ import { z } from "zod";
 import { db } from "../../db/client.js";
 import { categories, homeSections, products } from "../../db/schema.js";
 import { AppError } from "../../lib/errors.js";
+import { ALLOWED_IMAGE_TYPES, IMAGE_BUCKET, IMAGE_MAX_BYTES, storagePathFromUrl } from "../../lib/imageUpload.js";
+import { supabaseAdmin } from "../../lib/supabaseAdmin.js";
 import { requireOrgId } from "../../lib/tenant.js";
 import { ensureCategoryHomeSection } from "../homeSections/service.js";
 
@@ -84,6 +87,64 @@ export async function categoriesRoutes(fastify: FastifyInstance) {
         .where(and(eq(categories.id, id), eq(categories.orgId, orgId)))
         .returning();
       if (!row) throw new AppError(404, "not_found", "Categoría no encontrada");
+      return row;
+    }
+  );
+
+  app.post(
+    "/admin/categories/:id/image",
+    {
+      ...auth,
+      schema: {
+        ...tag,
+        summary: "Subir/reemplazar la imagen de la categoría (multipart, JPEG/PNG/WebP/SVG, máx 2 MB)",
+        params: idParam,
+        consumes: ["multipart/form-data"],
+      },
+    },
+    async (request) => {
+      const orgId = requireOrgId(request);
+      const { id } = request.params;
+      const [category] = await db
+        .select()
+        .from(categories)
+        .where(and(eq(categories.id, id), eq(categories.orgId, orgId)));
+      if (!category) throw new AppError(404, "not_found", "Categoría no encontrada");
+
+      const file = await request.file();
+      if (!file) throw new AppError(400, "validation", "Falta el archivo (campo multipart)");
+      const ext = ALLOWED_IMAGE_TYPES[file.mimetype];
+      if (!ext) throw new AppError(400, "invalid_file_type", "Solo JPEG, PNG, WebP o SVG");
+      const buffer = await file.toBuffer();
+      if (buffer.length > IMAGE_MAX_BYTES) {
+        throw new AppError(400, "file_too_large", "La imagen no puede superar los 2 MB");
+      }
+
+      const storagePath = `${orgId}/categories/${id}-${randomUUID()}.${ext}`;
+      const uploaded = await supabaseAdmin.storage
+        .from(IMAGE_BUCKET)
+        .upload(storagePath, buffer, { contentType: file.mimetype });
+      if (uploaded.error) {
+        throw new AppError(502, "storage_error", `Storage: ${uploaded.error.message}`);
+      }
+      const { data: pub } = supabaseAdmin.storage.from(IMAGE_BUCKET).getPublicUrl(storagePath);
+
+      // Borrar la imagen anterior (best-effort — un huérfano es tolerable)
+      if (category.imageUrl) {
+        const oldPath = storagePathFromUrl(category.imageUrl);
+        if (oldPath) {
+          const removed = await supabaseAdmin.storage.from(IMAGE_BUCKET).remove([oldPath]);
+          if (removed.error) {
+            request.log.warn(`No se pudo borrar la imagen anterior: ${removed.error.message}`);
+          }
+        }
+      }
+
+      const [row] = await db
+        .update(categories)
+        .set({ imageUrl: pub.publicUrl })
+        .where(eq(categories.id, id))
+        .returning();
       return row;
     }
   );

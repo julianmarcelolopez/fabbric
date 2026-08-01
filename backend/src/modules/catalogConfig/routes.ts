@@ -7,29 +7,16 @@ import { db } from "../../db/client.js";
 import { catalogConfigs } from "../../db/schema.js";
 import { encrypt } from "../../lib/crypto.js";
 import { AppError } from "../../lib/errors.js";
+import { ALLOWED_IMAGE_TYPES, IMAGE_BUCKET, IMAGE_MAX_BYTES, storagePathFromUrl } from "../../lib/imageUpload.js";
 import { supabaseAdmin } from "../../lib/supabaseAdmin.js";
 import { requireOrgId } from "../../lib/tenant.js";
 import { ensureConfig, toAdminConfig } from "./service.js";
 
 const tag = { tags: ["config de tienda"], security: [{ bearerAuth: [] }] };
 
-const BUCKET = "product-images";
-const LOGO_MAX_BYTES = 2 * 1024 * 1024;
-const ALLOWED_TYPES: Record<string, string> = {
-  "image/jpeg": "jpg",
-  "image/png": "png",
-  "image/webp": "webp",
-  // SVG es seguro acá: se sirve como archivo estático y se consume vía <img src>,
-  // los navegadores no ejecutan scripts embebidos en ese contexto (a diferencia de inline)
-  "image/svg+xml": "svg",
-};
-
-/** Extrae el path de Storage desde una URL pública del bucket (para borrar el logo viejo). */
-function storagePathFromUrl(url: string): string | null {
-  const marker = `/object/public/${BUCKET}/`;
-  const idx = url.indexOf(marker);
-  return idx === -1 ? null : decodeURIComponent(url.slice(idx + marker.length));
-}
+const BUCKET = IMAGE_BUCKET;
+const LOGO_MAX_BYTES = IMAGE_MAX_BYTES;
+const ALLOWED_TYPES = ALLOWED_IMAGE_TYPES;
 
 export async function catalogConfigRoutes(fastify: FastifyInstance) {
   const app = fastify.withTypeProvider<ZodTypeProvider>();

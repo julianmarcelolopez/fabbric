@@ -24,6 +24,9 @@ export type Taxonomy = {
   id: string;
   name: string;
   slug: string;
+  // T21/01 — imagen real de categoría/colección; null = tienda pública usa
+  // el placeholder de color de T20/04-05.
+  imageUrl: string | null;
   active: boolean;
 };
 

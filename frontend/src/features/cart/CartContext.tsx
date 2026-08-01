@@ -16,6 +16,8 @@ export type CartItem = {
   productId: string;
   variantId: string;
   name: string;
+  /** T20/07 — para mostrarla en el drawer/checkout, mismo criterio del resto de T20 */
+  brand: string | null;
   talle: string;
   color: string;
   /** centavos — informativo, el server recalcula */

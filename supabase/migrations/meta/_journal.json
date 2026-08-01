@@ -78,6 +78,13 @@
       "when": 1785288030104,
       "tag": "0010_catalog_config_mp_integration",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1785606689848,
+      "tag": "0011_category_collection_image",
+      "breakpoints": true
     }
   ]
 }

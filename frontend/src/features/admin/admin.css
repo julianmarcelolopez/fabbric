@@ -171,6 +171,12 @@ input[type="checkbox"] { width: 16px; height: 16px; }
 .preview-pane { position: sticky; top: 16px; background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px; }
 .preview-pane h2 { font-size: 16px; margin: 0 0 4px; }
 .preview-pane .pdv { grid-template-columns: 1fr; }
+/* T20/06: .pdv-gallery es sticky (top:88) para la tienda real, donde queda
+   pegada al lado de una columna de info larga (2 columnas). Acá el preview
+   fuerza 1 columna (galería e info apiladas) — el sticky ahí hace que la
+   galería quede flotando encima del talle/cantidad/carrito mientras esos
+   scrollean debajo. Se desactiva solo en este contexto. */
+.preview-pane .pdv-gallery { position: static; }
 @media (max-width: 1100px) {
   .editor-split { grid-template-columns: 1fr; }
   .preview-pane { position: static; }

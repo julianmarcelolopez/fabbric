@@ -16,6 +16,7 @@ import { SettingsPage } from "./features/admin/pages/SettingsPage";
 import { ShippingZonesPage } from "./features/admin/pages/ShippingZonesPage";
 import { StoreLayout } from "./features/store/StoreLayout";
 import { CategoryPage } from "./features/store/pages/CategoryPage";
+import { CategoriesIndexPage } from "./features/store/pages/CategoriesIndexPage";
 import { CatalogHomePage } from "./features/store/pages/CatalogHomePage";
 import { CheckoutPage } from "./features/store/pages/CheckoutPage";
 import { CheckoutResultPage } from "./features/store/pages/CheckoutResultPage";
@@ -65,7 +66,9 @@ export const router = createBrowserRouter([
     element: <StoreLayout />,
     children: [
       { index: true, element: <CatalogHomePage /> },
+      { path: "categorias", element: <CategoriesIndexPage /> },
       { path: "c/:categorySlug", element: <CategoryPage /> },
+      { path: "col/:collectionSlug", element: <CategoryPage mode="collection" /> },
       { path: "p/:productId", element: <StoreProductPage /> },
       { path: "checkout", element: <CheckoutPage /> },
       { path: "checkout/result", element: <CheckoutResultPage /> },

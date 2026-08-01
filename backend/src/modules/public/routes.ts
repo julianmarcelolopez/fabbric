@@ -23,6 +23,7 @@ import { resolveStoreBySlug as resolveStore } from "../catalogConfig/service.js"
 const slugParam = z.object({ slug: z.string().min(1) });
 const slugIdParam = z.object({ slug: z.string().min(1), id: z.string().uuid() });
 const slugCategoryParam = z.object({ slug: z.string().min(1), categorySlug: z.string().min(1) });
+const slugCollectionParam = z.object({ slug: z.string().min(1), collectionSlug: z.string().min(1) });
 const pageQuery = z.object({ page: z.coerce.number().int().min(1).default(1) });
 const tag = { tags: ["público"] };
 
@@ -80,13 +81,13 @@ export async function publicRoutes(fastify: FastifyInstance) {
       const [cats, cols] = await Promise.all([
         catIds.length
           ? db
-              .select({ id: categories.id, name: categories.name, slug: categories.slug })
+              .select({ id: categories.id, name: categories.name, slug: categories.slug, imageUrl: categories.imageUrl })
               .from(categories)
               .where(and(eq(categories.orgId, orgId), eq(categories.active, true), inArray(categories.id, catIds)))
           : [],
         colIds.length
           ? db
-              .select({ id: collections.id, name: collections.name, slug: collections.slug })
+              .select({ id: collections.id, name: collections.name, slug: collections.slug, imageUrl: collections.imageUrl })
               .from(collections)
               .where(and(eq(collections.orgId, orgId), eq(collections.active, true), inArray(collections.id, colIds)))
           : [],
@@ -161,6 +162,9 @@ export async function publicRoutes(fastify: FastifyInstance) {
             id: section.id,
             refName: ref.name,
             refSlug: ref.slug,
+            // T21/01 — imagen real de categoría/colección; null = el frontend
+            // sigue usando el placeholder de color de T20/04-05.
+            refImageUrl: ref.imageUrl,
             refType: section.refType,
             // Compatibilidad directa con HomeSectionsRenderer (ya viene filtrado)
             visible: true,
@@ -193,7 +197,7 @@ export async function publicRoutes(fastify: FastifyInstance) {
       const { page } = request.query;
 
       const [category] = await db
-        .select({ id: categories.id, name: categories.name, slug: categories.slug })
+        .select({ id: categories.id, name: categories.name, slug: categories.slug, imageUrl: categories.imageUrl })
         .from(categories)
         .where(and(eq(categories.orgId, orgId), eq(categories.slug, categorySlug), eq(categories.active, true)));
       if (!category) throw new AppError(404, "not_found", "Categoría no encontrada");
@@ -236,7 +240,79 @@ export async function publicRoutes(fastify: FastifyInstance) {
       const imageOf = (id: string) => firstImages.find((i) => i.productId === id)?.url ?? null;
 
       return {
-        category: { name: category.name, slug: category.slug },
+        category: { name: category.name, slug: category.slug, imageUrl: category.imageUrl },
+        products: rows.map((p) => ({ ...p, imageUrl: imageOf(p.id) })),
+        page,
+        pageSize: CATEGORY_PAGE_SIZE,
+        totalCount,
+        totalPages: Math.max(1, Math.ceil(totalCount / CATEGORY_PAGE_SIZE)),
+      };
+    }
+  );
+
+  app.get(
+    "/public/:slug/collections/:collectionSlug/products",
+    {
+      schema: {
+        ...tag,
+        summary: "Todos los productos de una colección, paginados (T21/02) — mismo contrato que categorías",
+        params: slugCollectionParam,
+        querystring: pageQuery,
+      },
+    },
+    async (request) => {
+      const config = await resolveStore(request.params.slug);
+      const orgId = config.orgId;
+      const { collectionSlug } = request.params;
+      const { page } = request.query;
+
+      const [collection] = await db
+        .select({ id: collections.id, name: collections.name, slug: collections.slug, imageUrl: collections.imageUrl })
+        .from(collections)
+        .where(and(eq(collections.orgId, orgId), eq(collections.slug, collectionSlug), eq(collections.active, true)));
+      if (!collection) throw new AppError(404, "not_found", "Colección no encontrada");
+
+      // Mismo contrato public-safe que categorías: visibles, no pausados
+      const productFilter = and(
+        eq(products.orgId, orgId),
+        eq(productCollections.collectionId, collection.id),
+        eq(products.visibleInCatalog, true),
+        ne(products.status, "paused")
+      );
+
+      const [{ totalCount }] = await db
+        .select({ totalCount: count() })
+        .from(productCollections)
+        .innerJoin(products, eq(productCollections.productId, products.id))
+        .where(productFilter);
+
+      const rows = await db
+        .select({
+          id: products.id,
+          name: products.name,
+          price: products.price,
+          compareAtPrice: products.compareAtPrice,
+          brand: products.brand,
+        })
+        .from(productCollections)
+        .innerJoin(products, eq(productCollections.productId, products.id))
+        .where(productFilter)
+        .orderBy(asc(products.sortOrder), asc(products.name))
+        .limit(CATEGORY_PAGE_SIZE)
+        .offset((page - 1) * CATEGORY_PAGE_SIZE);
+
+      const productIds = rows.map((p) => p.id);
+      const firstImages = productIds.length
+        ? await db
+            .select({ productId: productImages.productId, url: productImages.url })
+            .from(productImages)
+            .where(inArray(productImages.productId, productIds))
+            .orderBy(asc(productImages.sortOrder))
+        : [];
+      const imageOf = (id: string) => firstImages.find((i) => i.productId === id)?.url ?? null;
+
+      return {
+        collection: { name: collection.name, slug: collection.slug, imageUrl: collection.imageUrl },
         products: rows.map((p) => ({ ...p, imageUrl: imageOf(p.id) })),
         page,
         pageSize: CATEGORY_PAGE_SIZE,
@@ -292,8 +368,13 @@ export async function publicRoutes(fastify: FastifyInstance) {
           compareAtPrice: products.compareAtPrice,
           brand: products.brand,
           status: products.status,
+          // T20/06: para armar "también te puede gustar" (misma categoría) sin
+          // agregar un endpoint nuevo — reusa /categories/:categorySlug/products.
+          categorySlug: categories.slug,
+          categoryName: categories.name,
         })
         .from(products)
+        .innerJoin(categories, eq(products.categoryId, categories.id))
         .where(
           and(
             eq(products.id, id),

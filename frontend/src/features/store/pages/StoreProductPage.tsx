@@ -1,9 +1,12 @@
 import { useEffect, useState } from "react";
-import { Link, useOutletContext, useParams } from "react-router-dom";
+import { Link, useNavigate, useOutletContext, useParams } from "react-router-dom";
 import { ApiError, publicJson } from "../../../lib/api";
+import { formatPrice } from "../../../lib/money";
 import { useCart } from "../../cart/CartContext";
 import { ProductDetailView } from "../../catalog/ProductDetailView";
-import type { PublicProductDetail, StoreContext } from "../types";
+import type { PublicCategoryProducts, PublicProductDetail, StoreContext } from "../types";
+
+type ShippingZone = { id: string; name: string; cost: number; freeShippingFrom: number | null };
 
 type State =
   | { status: "loading" }
@@ -12,16 +15,30 @@ type State =
   | { status: "error"; message: string };
 
 export function StoreProductPage() {
-  const { slug } = useOutletContext<StoreContext>();
+  const { slug, config } = useOutletContext<StoreContext>();
   const { productId } = useParams<{ productId: string }>();
+  const navigate = useNavigate();
   const [state, setState] = useState<State>({ status: "loading" });
+  const [related, setRelated] = useState<PublicCategoryProducts["products"]>([]);
+  const [shippingZones, setShippingZones] = useState<ShippingZone[] | null>(null);
   const cart = useCart();
 
   useEffect(() => {
     let cancelled = false;
+    setState({ status: "loading" });
+    setRelated([]);
     publicJson<PublicProductDetail>(`/public/${slug}/products/${productId}`)
       .then((product) => {
-        if (!cancelled) setState({ status: "ok", product });
+        if (cancelled) return;
+        setState({ status: "ok", product });
+        // T20/06 — "también te puede gustar": otros productos de la misma
+        // categoría, reusando el endpoint paginado de la tarea 05 (sin
+        // endpoint nuevo), excluyendo el producto actual, máximo 4.
+        publicJson<PublicCategoryProducts>(`/public/${slug}/categories/${product.categorySlug}/products?page=1`)
+          .then((data) => {
+            if (!cancelled) setRelated(data.products.filter((p) => p.id !== product.id).slice(0, 4));
+          })
+          .catch(() => {});
       })
       .catch((err) => {
         if (cancelled) return;
@@ -32,6 +49,12 @@ export function StoreProductPage() {
       cancelled = true;
     };
   }, [slug, productId]);
+
+  useEffect(() => {
+    publicJson<ShippingZone[]>(`/public/${slug}/shipping-zones`)
+      .then(setShippingZones)
+      .catch(() => {});
+  }, [slug]);
 
   if (state.status === "loading") return <p className="store-message">Cargando…</p>;
   if (state.status === "not-found") {
@@ -47,11 +70,44 @@ export function StoreProductPage() {
   if (state.status === "error") return <p className="store-message">{state.message}</p>;
 
   const { product } = state;
+  const whatsappHref = config.whatsapp ? `https://wa.me/${config.whatsapp.replace(/\D/g, "")}` : null;
+  const cheapestZone = (shippingZones ?? []).slice().sort((a, b) => a.cost - b.cost)[0];
+  const shippingSummary = cheapestZone
+    ? cheapestZone.cost === 0
+      ? `Envío gratis a ${cheapestZone.name}`
+      : `Envío a ${cheapestZone.name} desde ${formatPrice(cheapestZone.cost)}`
+    : null;
+
+  function addToCart(variant: { id?: string; talle: string; color: string; priceOverride: number | null; stockOnline: number }, qty: number) {
+    if (!variant.id) return;
+    cart.add(
+      {
+        productId: product.id,
+        variantId: variant.id,
+        name: product.name,
+        brand: product.brand,
+        talle: variant.talle,
+        color: variant.color,
+        unitPrice: variant.priceOverride ?? product.price,
+        imageUrl: product.images[0]?.url ?? null,
+        stockOnline: variant.stockOnline,
+      },
+      qty
+    );
+  }
+
   return (
-    <>
-      <p className="store-back">
-        <Link to={`/store/${slug}`}>← Volver</Link>
-      </p>
+    <div className="pdv-page">
+      <div className="breadcrumb-bar">
+        <div className="breadcrumb">
+          <Link to={`/store/${slug}`}>Inicio</Link>
+          <span className="breadcrumb-sep">›</span>
+          <Link to={`/store/${slug}/c/${product.categorySlug}`}>{product.categoryName}</Link>
+          <span className="breadcrumb-sep">›</span>
+          <span className="breadcrumb-current">{product.name}</span>
+        </div>
+      </div>
+
       <ProductDetailView
         name={product.name}
         description={product.description}
@@ -60,20 +116,19 @@ export function StoreProductPage() {
         brand={product.brand}
         images={product.images}
         variants={product.variants}
-        onAddToCart={(variant) => {
-          if (!variant.id) return;
-          cart.add({
-            productId: product.id,
-            variantId: variant.id,
-            name: product.name,
-            talle: variant.talle,
-            color: variant.color,
-            unitPrice: variant.priceOverride ?? product.price,
-            imageUrl: product.images[0]?.url ?? null,
-            stockOnline: variant.stockOnline,
-          });
+        onAddToCart={addToCart}
+        onBuyNow={(variant, qty) => {
+          addToCart(variant, qty);
+          navigate(`/store/${slug}/checkout`);
         }}
+        whatsappHref={whatsappHref}
+        shippingSummary={shippingSummary}
+        address={config.address}
+        businessHours={config.businessHours}
+        related={related}
+        relatedCategoryName={product.categoryName}
+        onRelatedClick={(id) => navigate(`/store/${slug}/p/${id}`)}
       />
-    </>
+    </div>
   );
 }

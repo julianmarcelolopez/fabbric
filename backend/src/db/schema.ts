@@ -61,6 +61,9 @@ export const categories = pgTable(
       .references(() => organizations.id),
     name: text("name").notNull(),
     slug: text("slug").notNull(),
+    // T21/01 — imagen real de la categoría (tienda pública, T20); null = sigue
+    // usando el placeholder de color de T20/04-05.
+    imageUrl: text("image_url"),
     sortOrder: integer("sort_order").notNull().default(0),
     active: boolean("active").notNull().default(true),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
@@ -82,6 +85,8 @@ export const collections = pgTable(
       .references(() => organizations.id),
     name: text("name").notNull(),
     slug: text("slug").notNull(),
+    // T21/01 — mismo criterio que categories.imageUrl
+    imageUrl: text("image_url"),
     active: boolean("active").notNull().default(true),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true })

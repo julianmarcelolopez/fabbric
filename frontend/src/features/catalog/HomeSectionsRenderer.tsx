@@ -15,6 +15,8 @@ export type HsrSection = {
   id: string;
   refName: string | null;
   refSlug?: string | null;
+  /** T21/01 — imagen real de categoría/colección; null = placeholder de color (T20/04-05) */
+  refImageUrl?: string | null;
   refType?: "category" | "collection";
   visible: boolean;
   refActive: boolean;

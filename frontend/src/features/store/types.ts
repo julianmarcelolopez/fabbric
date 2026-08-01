@@ -24,6 +24,9 @@ export type PublicProductDetail = {
   compareAtPrice: number | null;
   brand: string | null;
   status: "active" | "out_of_stock";
+  // T20/06: para "también te puede gustar" (misma categoría, sin endpoint nuevo)
+  categorySlug: string;
+  categoryName: string;
   images: { id: string; url: string; sortOrder: number }[];
   variants: {
     id: string;
@@ -41,7 +44,7 @@ export type StoreContext = {
 
 // T19/10
 export type PublicCategoryProducts = {
-  category: { name: string; slug: string };
+  category: { name: string; slug: string; imageUrl: string | null };
   products: {
     id: string;
     name: string;
@@ -50,6 +53,17 @@ export type PublicCategoryProducts = {
     brand: string | null;
     imageUrl: string | null;
   }[];
+  page: number;
+  pageSize: number;
+  totalCount: number;
+  totalPages: number;
+};
+
+// T21/02 — mismo contrato que PublicCategoryProducts, solo cambia la clave
+// del grupo (collection en vez de category)
+export type PublicCollectionProducts = {
+  collection: { name: string; slug: string; imageUrl: string | null };
+  products: PublicCategoryProducts["products"];
   page: number;
   pageSize: number;
   totalCount: number;

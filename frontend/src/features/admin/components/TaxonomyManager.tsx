@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useState, type FormEvent } from "react";
-import { ApiError, apiJson } from "../../../lib/api";
+import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
+import { ApiError, apiJson, apiUpload } from "../../../lib/api";
 import { slugify } from "../../../lib/slug";
 import type { Taxonomy } from "../types";
 
@@ -20,6 +20,11 @@ export function TaxonomyManager({ title, endpoint, noun, hideTitle }: Props) {
   const [slug, setSlug] = useState("");
   const [slugTouched, setSlugTouched] = useState(false);
   const [editing, setEditing] = useState<{ id: string; name: string; slug: string } | null>(null);
+  // T21/01 — subida de imagen: un solo input file oculto compartido por toda la
+  // tabla, "pendingId" recuerda a qué fila apunta el próximo archivo elegido.
+  const [uploadingId, setUploadingId] = useState<string | null>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
+  const pendingId = useRef<string | null>(null);
 
   const load = useCallback(async () => {
     try {
@@ -40,6 +45,19 @@ export function TaxonomyManager({ title, endpoint, noun, hideTitle }: Props) {
       await load();
     } catch (err) {
       setError(err instanceof ApiError ? err.message : String(err));
+    }
+  }
+
+  async function uploadImage(itemId: string, file: File) {
+    setError(null);
+    setUploadingId(itemId);
+    try {
+      await apiUpload(`${endpoint}/${itemId}/image`, file);
+      await load();
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : String(err));
+    } finally {
+      setUploadingId(null);
     }
   }
 
@@ -99,6 +117,7 @@ export function TaxonomyManager({ title, endpoint, noun, hideTitle }: Props) {
         <table className="grid">
           <thead>
             <tr>
+              <th>Imagen</th>
               <th>Nombre</th>
               <th>Slug</th>
               <th>Activa</th>
@@ -109,6 +128,16 @@ export function TaxonomyManager({ title, endpoint, noun, hideTitle }: Props) {
             {items.map((item) =>
               editing?.id === item.id ? (
                 <tr key={item.id}>
+                  <td>
+                    <ImageCell
+                      item={item}
+                      uploading={uploadingId === item.id}
+                      onPick={() => {
+                        pendingId.current = item.id;
+                        fileRef.current?.click();
+                      }}
+                    />
+                  </td>
                   <td>
                     <input
                       value={editing.name}
@@ -144,6 +173,16 @@ export function TaxonomyManager({ title, endpoint, noun, hideTitle }: Props) {
                 </tr>
               ) : (
                 <tr key={item.id}>
+                  <td>
+                    <ImageCell
+                      item={item}
+                      uploading={uploadingId === item.id}
+                      onPick={() => {
+                        pendingId.current = item.id;
+                        fileRef.current?.click();
+                      }}
+                    />
+                  </td>
                   <td>{item.name}</td>
                   <td className="muted">{item.slug}</td>
                   <td>
@@ -185,6 +224,48 @@ export function TaxonomyManager({ title, endpoint, noun, hideTitle }: Props) {
         </table>
         </div>
       )}
+
+      <input
+        ref={fileRef}
+        type="file"
+        accept="image/jpeg,image/png,image/webp,image/svg+xml"
+        hidden
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          const id = pendingId.current;
+          if (file && id) void uploadImage(id, file);
+          e.target.value = "";
+        }}
+      />
     </>
+  );
+}
+
+function ImageCell({
+  item,
+  uploading,
+  onPick,
+}: {
+  item: Taxonomy;
+  uploading: boolean;
+  onPick: () => void;
+}) {
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+      {item.imageUrl ? (
+        <img
+          src={item.imageUrl}
+          alt=""
+          style={{ width: 40, height: 40, objectFit: "cover", borderRadius: 6, border: "1px solid #e5e7eb" }}
+        />
+      ) : (
+        <span className="muted" style={{ fontSize: 12 }}>
+          Sin imagen
+        </span>
+      )}
+      <button type="button" className="btn small" onClick={onPick} disabled={uploading}>
+        {uploading ? "Subiendo…" : item.imageUrl ? "Cambiar" : "Subir"}
+      </button>
+    </div>
   );
 }

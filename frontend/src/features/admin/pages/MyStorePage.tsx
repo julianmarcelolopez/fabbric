@@ -407,6 +407,10 @@ export function MyStorePage() {
                 Tienda activa (visible al público)
               </label>
             </div>
+            <p className="muted" style={{ margin: "-6px 0 12px" }}>
+              El color de acento se usa en los botones de compra, links activos y detalles de toda la
+              tienda — cambialo y vas a ver el resultado reflejado ahí mismo.
+            </p>
 
             <label className="field" style={{ marginBottom: 4, maxWidth: 320 }}>
               URL de la tienda (slug)
