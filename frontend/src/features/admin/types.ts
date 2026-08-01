@@ -109,6 +109,13 @@ export type CatalogConfig = {
   email: string | null;
   address: string | null;
   businessHours: string | null;
+  // T21/03 — null = la tienda pública autogenera el texto desde zonas de envío
+  announcementText: string | null;
+  // T21/04 — null = mid-banner del home sin overlay ni texto (T20/03)
+  midBannerTitle: string | null;
+  midBannerSubtitle: string | null;
+  // T21/06 — null = la ficha de producto sigue derivando a WhatsApp (T20/06)
+  returnPolicy: string | null;
   lowStockThreshold: number;
   active: boolean;
   /** Enmascarado (····3421) si hay uno guardado — nunca el valor real (T16) */

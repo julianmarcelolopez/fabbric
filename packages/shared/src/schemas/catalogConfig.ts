@@ -17,6 +17,13 @@ export const catalogConfigSchema = z.object({
   email: z.string().nullable(),
   address: z.string().nullable(),
   businessHours: z.string().nullable(),
+  // T21/03 — null = autogenerado desde zonas de envío (StoreLayout.tsx)
+  announcementText: z.string().nullable(),
+  // T21/04 — null = mid-banner del home sin overlay ni texto (T20/03)
+  midBannerTitle: z.string().nullable(),
+  midBannerSubtitle: z.string().nullable(),
+  // T21/06 — null = la ficha de producto sigue derivando a WhatsApp (T20/06)
+  returnPolicy: z.string().nullable(),
   // Mercado Pago propia de la org (T16): acá representan lo que devuelve el GET
   // admin — el valor YA enmascarado (ej. "····3421"), nunca el token real ni
   // cifrado. Ver updateMpIntegrationSchema para cómo se setean.
@@ -49,6 +56,14 @@ export const updateCatalogConfigSchema = z
     email: z.string().email().nullable(),
     address: z.string().min(1).max(200).nullable(),
     businessHours: z.string().min(1).max(200).nullable(),
+    // T21/03 — límite de 120: lo que entra bien en una línea del announcement
+    // bar en mobile sin romper el layout (decisión del usuario).
+    announcementText: z.string().max(120).nullable(),
+    // T21/04 — límites del usuario (60 título / 120 subtítulo)
+    midBannerTitle: z.string().max(60).nullable(),
+    midBannerSubtitle: z.string().max(120).nullable(),
+    // T21/06 — mismo límite que businessDescription (texto libre más largo)
+    returnPolicy: z.string().max(2000).nullable(),
     active: z.boolean(),
   })
   .partial();

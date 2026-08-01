@@ -1,5 +1,7 @@
 # 05 — Filtros y orden reales en la página de categoría
 
+**Estado:** ✅ Completa (2026-08-01)
+
 ## Qué se implementa
 
 Parámetros de filtro (talle, color, marca) y de orden en el endpoint paginado de productos de categoría, y la conexión de la sidebar de filtros que T20/05 dejó construida visualmente pero deshabilitada.
@@ -45,3 +47,20 @@ Fila "Sort/filtros funcionales en categoría" de la tabla de `docs/T20_UX-Store/
 
 - Independiente de `01`, `02`, `03`, `04`, `06`, `07` — pero es **la tarea más compleja de T21**, la única que toca la lógica de un endpoint existente en vez de solo agregar campos.
 - Mismo criterio de "no inventar": si "más vendidos" no tiene una fuente de datos razonable a mano en este endpoint, no se implementa con un criterio inventado (ej. orden aleatorio disfrazado) — se dejan las opciones de sort que sí tienen un cálculo real y se documenta la omisión.
+
+## Resultado
+
+**Backend** (`backend/src/modules/public/routes.ts`): `productListQuery` (Zod, extiende el `pageQuery` de siempre) agrega `talle`/`color`/`marca`/`precioMin`/`precioMax`/`sort`, todos opcionales. Tres helpers compartidos por categorías y colecciones:
+- `variantMatchCondition(talle, color)`: cuando se pasan los dos juntos, exige que **una misma variante** cumpla ambos (`exists` correlacionado sobre `product_variants`, con `stockOnline > 0`) — no "alguna variante con ese talle" + "alguna con ese color" por separado, que sería un resultado distinto y menos útil (decisión del usuario, criterio de "disponible" del punto 4).
+- `extraFilterConditions`: arma talle/color + `marca` (`eq(products.brand, ...)`) + rango de precio (`gte`/`lte` sobre `products.price` únicamente, **sin `priceOverride`** — limitación conocida, documentada como tal).
+- `resolveSort`: `precio_asc`/`precio_desc`/`nuevos` (`createdAt` desc); sin sort → el orden de siempre (`sortOrder, name`). "Más vendidos" quedó afuera — sin un join a `order_items` no hay una fuente de datos razonable a este nivel, se documenta como omisión en vez de simularlo.
+
+`availableFilters` (`{talles, colores, marcas}`) se calcula con el **`scopeFilter` sin los filtros ya aplicados** (decisión del usuario: refleja toda la categoría/colección, no lo que queda tras filtrar) — talles/colores requieren `stockOnline > 0` en al menos una variante, marcas no (es un atributo del producto, no de la variante). Los dos endpoints (categoría de T19/10 y colección de `02`) ganaron exactamente el mismo tratamiento — mismos helpers, mismo shape de respuesta.
+
+**Frontend** (`CategoryPage.tsx`, reescrito): sidebar de filtros (`talle-chips`, `color-dots`, rango de precio, `marca` como chips de selección única — **no checkboxes como el mockup**, porque el backend acepta una sola marca por request y un checkbox multi-select prometería algo que no hace) + sort real conectado. Los filtros viven en estado local ("draft", feedback instantáneo al clickear) que se sincroniza a la URL (mismo patrón que `page`) con **debounce de 300ms** — un `useEffect` con `setTimeout` que solo dispara después del último cambio, con guard para no re-disparar en el mount inicial. El fetch de datos depende de los valores YA en la URL (post-debounce), no del draft, así que solo se dispara un request por ráfaga de cambios, no uno por click. `goToPage` pasó de reemplazar todos los params a mergear sobre los existentes (antes perdía los filtros al cambiar de página). Cambiar de categoría/colección resetea todos los filtros. Se agregó "Limpiar filtros" cuando hay alguno activo.
+
+Se extrajo `colorSwatchStyle`/el diccionario de nombres→hex de `ProductDetailView.tsx` a un módulo compartido (`frontend/src/features/catalog/colorSwatch.ts`) para reusarlo en los `color-dot` de la sidebar sin duplicar el diccionario.
+
+**Verificación real con datos controlados** (`backend/t21-05-filters.mjs`, queda en el repo sin trackear): categoría temporal con 3 productos de variantes/precios/marcas conocidos (A: MarcaA $100 talle M/Rojo stock 5 + talle L/Rojo **stock 0**; B: MarcaB $200 talle M/Azul stock 3; C: MarcaA $300 talle S/Rojo stock 2) — permite predecir exactamente qué debería devolver cada filtro. 20/20 checks en verde, incluyendo los casos más delicados: `talle=M&color=Rojo` devuelve solo A (no la unión de "algún M" + "algún Rojo"), `talle=L` devuelve 0 productos (la única variante L no tiene stock), `availableFilters.talles` incluye S pero no L aunque el filtro activo sea `talle=M`, los 3 sorts en el orden correcto, y filtros combinados (marca+precio) devolviendo la intersección correcta. Sin residuos en la DB al terminar.
+
+`tsc --noEmit` limpio en `backend/` y `frontend/`; `vite build` limpio. **Pendiente**: verificación visual del usuario combinando filtros en el navegador — la lógica de datos ya está probada exhaustivamente, falta confirmar la experiencia real (debounce percibido, chips reflejando el estado, sidebar en mobile).

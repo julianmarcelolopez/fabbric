@@ -125,6 +125,7 @@ export function StoreProductPage() {
         shippingSummary={shippingSummary}
         address={config.address}
         businessHours={config.businessHours}
+        returnPolicy={config.returnPolicy}
         related={related}
         relatedCategoryName={product.categoryName}
         onRelatedClick={(id) => navigate(`/store/${slug}/p/${id}`)}

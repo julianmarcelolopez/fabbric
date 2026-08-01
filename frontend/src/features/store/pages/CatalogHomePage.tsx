@@ -78,12 +78,38 @@ function CategoriesGrid({ sections, slug }: { sections: PublicHomeSection[]; slu
   );
 }
 
-function MidBanner({ bannerUrl, slug }: { bannerUrl: string | null; slug: string }) {
+function MidBanner({
+  bannerUrl,
+  title,
+  subtitle,
+  slug,
+}: {
+  bannerUrl: string | null;
+  title: string | null;
+  subtitle: string | null;
+  slug: string;
+}) {
+  // T21/04: título propio del admin tiene prioridad — se superpone al banner
+  // real (con overlay para legibilidad) o, si no hay bannerUrl, sobre el
+  // fondo navy liso. El subtítulo solo se muestra si también hay título.
+  if (title) {
+    return (
+      <Link
+        to={`/store/${slug}/categorias`}
+        className="home-mid-banner has-text"
+        style={bannerUrl ? { backgroundImage: `url(${bannerUrl})` } : undefined}
+      >
+        <div className="home-mid-banner-inner">
+          <h2 className="home-mid-banner-title">{title}</h2>
+          {subtitle && <p className="home-mid-banner-sub">{subtitle}</p>}
+        </div>
+      </Link>
+    );
+  }
+
   if (bannerUrl) {
-    // T20/03: el banner real de la org ya trae su propio mensaje promocional
-    // "horneado" en la imagen — se muestra tal cual, sin texto superpuesto
-    // que compita o duplique lo que ya dice la imagen. Todo el banner es
-    // clickeable hacia el catálogo.
+    // T20/03: sin título propio, el banner real de la org se muestra tal
+    // cual, sin overlay ni texto — ver Resultado de la tarea 04 (T21).
     return (
       <Link
         to={`/store/${slug}/categorias`}
@@ -137,7 +163,12 @@ export function CatalogHomePage() {
           storeSlug={slug}
         />
       </div>
-      <MidBanner bannerUrl={config.bannerUrl} slug={slug} />
+      <MidBanner
+        bannerUrl={config.bannerUrl}
+        title={config.midBannerTitle}
+        subtitle={config.midBannerSubtitle}
+        slug={slug}
+      />
     </div>
   );
 }

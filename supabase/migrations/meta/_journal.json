@@ -85,6 +85,27 @@
       "when": 1785606689848,
       "tag": "0011_category_collection_image",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1785613033108,
+      "tag": "0012_announcement_text",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1785615295410,
+      "tag": "0013_mid_banner_text",
+      "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1785617844140,
+      "tag": "0014_return_policy",
+      "breakpoints": true
     }
   ]
 }

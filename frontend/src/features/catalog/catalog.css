@@ -305,6 +305,22 @@
 .home-mid-banner-btn { display: inline-flex; align-items: center; gap: 8px; border: 1px solid rgba(255, 255, 255, 0.5); color: var(--white); padding: 12px 26px; font-size: 12px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; text-decoration: none; transition: all 0.2s; }
 .home-mid-banner-btn:hover { background: var(--white); color: var(--navy); border-color: var(--white); }
 
+/* T21/04: título/subtítulo propios del admin superpuestos al banner real.
+   ::before pinta encima del background-image del propio elemento (pero
+   debajo de los hijos reales como .home-mid-banner-inner) — a diferencia de
+   la imagen de categoría (T21/01, un <img> hermano), acá alcanza con el
+   pseudo-elemento, sin necesitar un scrim como nodo real. */
+.home-mid-banner.has-text { justify-content: flex-start; }
+.home-mid-banner.has-text::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to right, rgba(30, 42, 74, 0.85) 0%, rgba(30, 42, 74, 0.4) 60%, rgba(30, 42, 74, 0.1) 100%);
+}
+.home-mid-banner.has-text .home-mid-banner-inner { position: relative; margin: 0; padding: 40px 48px; text-align: left; }
+.home-mid-banner.has-text .home-mid-banner-title { font-family: var(--tenant-font-display); font-size: clamp(40px, 5vw, 48px); font-weight: 300; color: var(--white); margin: 0 0 12px; }
+.home-mid-banner-sub { font-family: var(--font-body); font-size: 15px; font-weight: 300; color: var(--white); opacity: 0.8; margin: 0; max-width: 420px; }
+
 /* ── T20/04: página índice "Categorías" ── */
 .categories-index { display: flex; flex-direction: column; flex: 1; }
 
@@ -388,10 +404,8 @@
 .toolbar { background: var(--white); border-bottom: 1px solid var(--gray); position: sticky; top: 72px; z-index: 90; width: 100vw; margin: 0 calc(50% - 50vw); }
 .toolbar-inner { max-width: 1200px; margin: 0 auto; padding: 0 32px; display: flex; align-items: center; justify-content: space-between; height: 52px; gap: 16px; }
 .result-count { font-size: 12px; color: var(--muted); white-space: nowrap; }
-/* T20/05: select deshabilitado a propósito — ordenar de verdad requiere un
-   parámetro de sort en el endpoint (fuera de alcance de T20). Mejor
-   deshabilitado y honesto que interactivo y sin efecto. */
-.sort-select { padding: 5px 10px; border: 1px solid var(--gray); font-size: 12px; color: var(--muted); font-family: var(--font-body); background: var(--off); cursor: not-allowed; outline: none; }
+/* T21/05: ya no está deshabilitado — el endpoint acepta ?sort= de verdad. */
+.sort-select { padding: 5px 10px; border: 1px solid var(--gray); font-size: 12px; color: var(--navy); font-family: var(--font-body); background: var(--white); cursor: pointer; outline: none; }
 
 .pagination { display: flex; align-items: center; justify-content: center; gap: 6px; margin-top: 32px; }
 .page-btn { width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; border: 1px solid var(--gray); font-size: 13px; font-weight: 500; color: var(--navy); cursor: pointer; transition: all 0.15s; background: var(--white); font-family: var(--font-body); }
@@ -564,3 +578,40 @@
 .btn-continue:hover { border-color: var(--navy); }
 .btn-whatsapp { padding: 14px 32px; background: #25d366; color: var(--white); border: none; font-size: 13px; font-weight: 500; letter-spacing: 0.06em; cursor: pointer; font-family: var(--font-body); display: flex; align-items: center; justify-content: center; gap: 8px; transition: background 0.2s; text-decoration: none; }
 .btn-whatsapp:hover { background: #1da355; }
+
+/* ── T21/05: sidebar de filtros de categoría/colección ── */
+.main-layout { display: grid; grid-template-columns: 220px 1fr; gap: 32px; align-items: start; }
+.filters-sidebar { position: sticky; top: 124px; display: flex; flex-direction: column; }
+.filter-group { margin-bottom: 28px; }
+.filter-group-title { font-size: 11px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--navy); margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1px solid var(--gray); }
+
+.talle-options { display: flex; flex-wrap: wrap; gap: 6px; }
+.talle-chip { width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; border: 1px solid var(--gray); background: var(--white); font-size: 12px; font-weight: 500; font-family: var(--font-body); color: var(--navy); cursor: pointer; transition: all 0.15s; }
+.talle-chip:hover { border-color: var(--navy); }
+.talle-chip.active { background: var(--navy); color: var(--white); border-color: var(--navy); }
+
+.color-options { display: flex; flex-wrap: wrap; gap: 8px; }
+.color-dot { width: 24px; height: 24px; border-radius: 50%; cursor: pointer; position: relative; transition: transform 0.15s; border: 2px solid transparent; padding: 0; }
+.color-dot:hover { transform: scale(1.15); }
+.color-dot.active { border-color: var(--navy); }
+.color-dot.active::after { content: "✓"; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 10px; color: var(--white); font-weight: 700; text-shadow: 0 0 2px rgba(0, 0, 0, 0.5); }
+
+.price-range { display: flex; flex-direction: column; gap: 10px; }
+.price-inputs { display: flex; gap: 8px; align-items: center; }
+.price-input { flex: 1; width: 0; padding: 7px 10px; border: 1px solid var(--gray); font-size: 12px; font-family: var(--font-body); color: var(--navy); outline: none; }
+.price-input:focus { border-color: var(--navy); }
+.price-sep { color: var(--muted); font-size: 12px; }
+
+/* T21/05: chips en vez de checkboxes para marca — selección única (el
+   backend acepta una sola marca por request), no simular multi-select. */
+.checkbox-options { display: flex; flex-direction: column; gap: 8px; }
+.marca-chip { text-align: left; padding: 6px 0; border: none; background: none; font-size: 13px; font-family: var(--font-body); color: var(--text); cursor: pointer; transition: color 0.15s; }
+.marca-chip:hover { color: var(--navy); }
+.marca-chip.active { color: var(--tenant-primary); font-weight: 600; }
+
+.clear-filters { font-size: 12px; color: var(--tenant-primary); cursor: pointer; text-decoration: underline; margin-top: 4px; }
+
+@media (max-width: 768px) {
+  .main-layout { grid-template-columns: 1fr; }
+  .filters-sidebar { position: static; }
+}

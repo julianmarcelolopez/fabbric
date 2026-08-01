@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { formatPrice } from "../../lib/money";
+import { colorSwatchStyle } from "./colorSwatch";
 import { ProductCard } from "./ProductCard";
 import "./catalog.css";
 
@@ -50,51 +51,14 @@ type Props = {
   shippingSummary?: string | null;
   address?: string | null;
   businessHours?: string | null;
+  /** T21/06 — texto propio de la tienda; sin esto, el panel "Envíos y cambios"
+   * sigue derivando a WhatsApp (T20/06), sin cambios. */
+  returnPolicy?: string | null;
   /** otros productos de la misma categoría, ya resueltos por la página pública */
   related?: RelatedProduct[];
   relatedCategoryName?: string | null;
   onRelatedClick?: (productId: string) => void;
 };
-
-// T20/06: aproximación visual — el swatch es solo una ayuda de lectura rápida,
-// el nombre de color (dato real) siempre se muestra al lado y es la fuente de
-// verdad. Nombres no reconocidos caen a un swatch neutro con borde punteado
-// en vez de adivinar mal un color.
-const COLOR_HEX: Record<string, string> = {
-  rojo: "#E53E3E",
-  negro: "#2C2C2C",
-  blanco: "#F7F7F7",
-  azul: "#2B4C7E",
-  "azul marino": "#1E2A4A",
-  celeste: "#7FB3D5",
-  verde: "#4A7C59",
-  oliva: "#6B7A4A",
-  amarillo: "#E8C547",
-  gris: "#8A8278",
-  beige: "#D8CBB8",
-  crema: "#EFE6D8",
-  marron: "#6F4E37",
-  marrón: "#6F4E37",
-  camel: "#C19A6B",
-  rosa: "#E8A0BF",
-  violeta: "#7D5BA6",
-  morado: "#7D5BA6",
-  naranja: "#E07A3E",
-  coral: "#F07058",
-  bordo: "#7B2D3E",
-  bordó: "#7B2D3E",
-  dorado: "#C9A227",
-  plateado: "#B8B8B8",
-  turquesa: "#3FA6A6",
-  nude: "#D9B99B",
-};
-
-function colorSwatchStyle(color: string): React.CSSProperties {
-  const hex = COLOR_HEX[color.trim().toLowerCase()];
-  return hex
-    ? { background: hex }
-    : { background: "var(--gray)", border: "1px dashed var(--muted)" };
-}
 
 function Gallery({ name, images }: { name: string; images: { url: string }[] }) {
   const [index, setIndex] = useState(0);
@@ -172,6 +136,7 @@ export function ProductDetailView({
   shippingSummary,
   address,
   businessHours,
+  returnPolicy,
   related,
   relatedCategoryName,
   onRelatedClick,
@@ -351,12 +316,15 @@ export function ProductDetailView({
             </summary>
             <div className="pdv-accordion-body">{description || "Sin descripción."}</div>
           </details>
-          {(address || businessHours || shippingSummary || whatsappHref) && (
+          {(address || businessHours || shippingSummary || whatsappHref || returnPolicy) && (
             <details className="pdv-accordion-item">
               <summary className="pdv-accordion-header">
                 Envíos y cambios <span className="pdv-accordion-icon">+</span>
               </summary>
               <div className="pdv-accordion-body">
+                {/* T21/06: política real de la tienda, si existe — antes del
+                    resumen de envío/dirección/horario (decisión del usuario). */}
+                {returnPolicy && <p>{returnPolicy}</p>}
                 {shippingSummary && <p>{shippingSummary}.</p>}
                 {address && <p>Retiro en {address}.</p>}
                 {businessHours && <p>Horario de atención: {businessHours}.</p>}

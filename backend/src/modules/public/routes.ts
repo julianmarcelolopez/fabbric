@@ -1,4 +1,4 @@
-import { and, asc, count, eq, inArray, ne } from "drizzle-orm";
+import { and, asc, count, desc, eq, exists, gt, gte, inArray, isNotNull, lte, ne } from "drizzle-orm";
 import type { FastifyInstance } from "fastify";
 import type { ZodTypeProvider } from "fastify-type-provider-zod";
 import { z } from "zod";
@@ -25,11 +25,58 @@ const slugIdParam = z.object({ slug: z.string().min(1), id: z.string().uuid() })
 const slugCategoryParam = z.object({ slug: z.string().min(1), categorySlug: z.string().min(1) });
 const slugCollectionParam = z.object({ slug: z.string().min(1), collectionSlug: z.string().min(1) });
 const pageQuery = z.object({ page: z.coerce.number().int().min(1).default(1) });
+// T21/05: filtros/orden reales de categoría y colección — todos opcionales,
+// sin querystring el comportamiento es idéntico al de antes (T19/10).
+const productListQuery = pageQuery.extend({
+  talle: z.string().min(1).optional(),
+  color: z.string().min(1).optional(),
+  marca: z.string().min(1).optional(),
+  precioMin: z.coerce.number().int().min(0).optional(),
+  precioMax: z.coerce.number().int().min(0).optional(),
+  // "más vendidos" queda afuera: no hay una fuente de datos razonable acá sin
+  // joins extra a order_items (agregar ventas por producto) — se documenta
+  // como omisión en vez de simularlo con un criterio inventado.
+  sort: z.enum(["precio_asc", "precio_desc", "nuevos"]).optional(),
+});
+type ProductListQuery = z.infer<typeof productListQuery>;
 const tag = { tags: ["público"] };
 
 // T19/10: techo de home_sections (8 por sección) — el link "Ver todos" de una
 // categoría lleva a la ruta paginada de abajo con este tamaño de página.
 const CATEGORY_PAGE_SIZE = 24;
+
+// T21/05 — helpers compartidos por categorías y colecciones (mismos filtros,
+// mismo orden, solo cambia el scope/join de cada endpoint).
+
+/** talle/color combinados: el producto entra si UNA MISMA variante matchea
+ * ambos (no "alguna variante con ese talle" + "alguna con ese color" por
+ * separado) — es lo que un comprador espera al filtrar "talle M, color rojo". */
+function variantMatchCondition(talle?: string, color?: string) {
+  if (!talle && !color) return null;
+  const conditions = [eq(productVariants.productId, products.id), gt(productVariants.stockOnline, 0)];
+  if (talle) conditions.push(eq(productVariants.talle, talle));
+  if (color) conditions.push(eq(productVariants.color, color));
+  return exists(db.select({ id: productVariants.id }).from(productVariants).where(and(...conditions)));
+}
+
+function extraFilterConditions(query: ProductListQuery) {
+  const conditions = [];
+  const variantMatch = variantMatchCondition(query.talle, query.color);
+  if (variantMatch) conditions.push(variantMatch);
+  if (query.marca) conditions.push(eq(products.brand, query.marca));
+  // T21/05: filtra sobre products.price únicamente, no sobre el precio
+  // efectivo de la variante (priceOverride) — limitación conocida, documentada.
+  if (query.precioMin !== undefined) conditions.push(gte(products.price, query.precioMin));
+  if (query.precioMax !== undefined) conditions.push(lte(products.price, query.precioMax));
+  return conditions;
+}
+
+function resolveSort(sort?: ProductListQuery["sort"]) {
+  if (sort === "precio_asc") return [asc(products.price)];
+  if (sort === "precio_desc") return [desc(products.price)];
+  if (sort === "nuevos") return [desc(products.createdAt)];
+  return [asc(products.sortOrder), asc(products.name)];
+}
 
 export async function publicRoutes(fastify: FastifyInstance) {
   const app = fastify.withTypeProvider<ZodTypeProvider>();
@@ -51,6 +98,13 @@ export async function publicRoutes(fastify: FastifyInstance) {
         email: config.email,
         address: config.address,
         businessHours: config.businessHours,
+        // T21/03 — null = StoreLayout.tsx autogenera desde zonas de envío
+        announcementText: config.announcementText,
+        // T21/04 — null = mid-banner del home sin overlay ni texto (T20/03)
+        midBannerTitle: config.midBannerTitle,
+        midBannerSubtitle: config.midBannerSubtitle,
+        // T21/06 — null = la ficha de producto sigue derivando a WhatsApp (T20/06)
+        returnPolicy: config.returnPolicy,
       };
     }
   );
@@ -185,16 +239,17 @@ export async function publicRoutes(fastify: FastifyInstance) {
       schema: {
         ...tag,
         summary:
-          "Todos los productos de una categoría, paginados (T19/10) — resuelve el techo de 8 por sección del home",
+          "Productos de una categoría, paginados (T19/10) y filtrables/ordenables (T21/05)",
         params: slugCategoryParam,
-        querystring: pageQuery,
+        querystring: productListQuery,
       },
     },
     async (request) => {
       const config = await resolveStore(request.params.slug);
       const orgId = config.orgId;
       const { categorySlug } = request.params;
-      const { page } = request.query;
+      const query = request.query;
+      const { page } = query;
 
       const [category] = await db
         .select({ id: categories.id, name: categories.name, slug: categories.slug, imageUrl: categories.imageUrl })
@@ -203,31 +258,47 @@ export async function publicRoutes(fastify: FastifyInstance) {
       if (!category) throw new AppError(404, "not_found", "Categoría no encontrada");
 
       // Mismo contrato public-safe que /home: visibles, no pausados
-      const productFilter = and(
+      const scopeFilter = and(
         eq(products.orgId, orgId),
         eq(products.categoryId, category.id),
         eq(products.visibleInCatalog, true),
         ne(products.status, "paused")
       );
+      const productFilter = and(scopeFilter, ...extraFilterConditions(query));
 
-      const [{ totalCount }] = await db
-        .select({ totalCount: count() })
-        .from(products)
-        .where(productFilter);
-
-      const rows = await db
-        .select({
-          id: products.id,
-          name: products.name,
-          price: products.price,
-          compareAtPrice: products.compareAtPrice,
-          brand: products.brand,
-        })
-        .from(products)
-        .where(productFilter)
-        .orderBy(asc(products.sortOrder), asc(products.name))
-        .limit(CATEGORY_PAGE_SIZE)
-        .offset((page - 1) * CATEGORY_PAGE_SIZE);
+      const [[{ totalCount }], rows, talles, colores, marcas] = await Promise.all([
+        db.select({ totalCount: count() }).from(products).where(productFilter),
+        db
+          .select({
+            id: products.id,
+            name: products.name,
+            price: products.price,
+            compareAtPrice: products.compareAtPrice,
+            brand: products.brand,
+          })
+          .from(products)
+          .where(productFilter)
+          .orderBy(...resolveSort(query.sort))
+          .limit(CATEGORY_PAGE_SIZE)
+          .offset((page - 1) * CATEGORY_PAGE_SIZE),
+        // T21/05: availableFilters se calcula sobre TODA la categoría (scopeFilter
+        // sin los filtros ya aplicados) — refleja qué existe en la categoría, no
+        // qué queda tras filtrar (decisión del usuario).
+        db
+          .selectDistinct({ talle: productVariants.talle })
+          .from(productVariants)
+          .innerJoin(products, eq(productVariants.productId, products.id))
+          .where(and(scopeFilter, gt(productVariants.stockOnline, 0))),
+        db
+          .selectDistinct({ color: productVariants.color })
+          .from(productVariants)
+          .innerJoin(products, eq(productVariants.productId, products.id))
+          .where(and(scopeFilter, gt(productVariants.stockOnline, 0))),
+        db
+          .selectDistinct({ brand: products.brand })
+          .from(products)
+          .where(and(scopeFilter, isNotNull(products.brand))),
+      ]);
 
       const productIds = rows.map((p) => p.id);
       const firstImages = productIds.length
@@ -246,6 +317,11 @@ export async function publicRoutes(fastify: FastifyInstance) {
         pageSize: CATEGORY_PAGE_SIZE,
         totalCount,
         totalPages: Math.max(1, Math.ceil(totalCount / CATEGORY_PAGE_SIZE)),
+        availableFilters: {
+          talles: talles.map((t) => t.talle).sort(),
+          colores: colores.map((c) => c.color).sort(),
+          marcas: marcas.map((m) => m.brand as string).sort(),
+        },
       };
     }
   );
@@ -255,16 +331,17 @@ export async function publicRoutes(fastify: FastifyInstance) {
     {
       schema: {
         ...tag,
-        summary: "Todos los productos de una colección, paginados (T21/02) — mismo contrato que categorías",
+        summary: "Productos de una colección, paginados (T21/02) y filtrables/ordenables (T21/05)",
         params: slugCollectionParam,
-        querystring: pageQuery,
+        querystring: productListQuery,
       },
     },
     async (request) => {
       const config = await resolveStore(request.params.slug);
       const orgId = config.orgId;
       const { collectionSlug } = request.params;
-      const { page } = request.query;
+      const query = request.query;
+      const { page } = query;
 
       const [collection] = await db
         .select({ id: collections.id, name: collections.name, slug: collections.slug, imageUrl: collections.imageUrl })
@@ -273,33 +350,52 @@ export async function publicRoutes(fastify: FastifyInstance) {
       if (!collection) throw new AppError(404, "not_found", "Colección no encontrada");
 
       // Mismo contrato public-safe que categorías: visibles, no pausados
-      const productFilter = and(
+      const scopeFilter = and(
         eq(products.orgId, orgId),
         eq(productCollections.collectionId, collection.id),
         eq(products.visibleInCatalog, true),
         ne(products.status, "paused")
       );
+      const productFilter = and(scopeFilter, ...extraFilterConditions(query));
 
-      const [{ totalCount }] = await db
-        .select({ totalCount: count() })
-        .from(productCollections)
-        .innerJoin(products, eq(productCollections.productId, products.id))
-        .where(productFilter);
-
-      const rows = await db
-        .select({
-          id: products.id,
-          name: products.name,
-          price: products.price,
-          compareAtPrice: products.compareAtPrice,
-          brand: products.brand,
-        })
-        .from(productCollections)
-        .innerJoin(products, eq(productCollections.productId, products.id))
-        .where(productFilter)
-        .orderBy(asc(products.sortOrder), asc(products.name))
-        .limit(CATEGORY_PAGE_SIZE)
-        .offset((page - 1) * CATEGORY_PAGE_SIZE);
+      const [[{ totalCount }], rows, talles, colores, marcas] = await Promise.all([
+        db
+          .select({ totalCount: count() })
+          .from(productCollections)
+          .innerJoin(products, eq(productCollections.productId, products.id))
+          .where(productFilter),
+        db
+          .select({
+            id: products.id,
+            name: products.name,
+            price: products.price,
+            compareAtPrice: products.compareAtPrice,
+            brand: products.brand,
+          })
+          .from(productCollections)
+          .innerJoin(products, eq(productCollections.productId, products.id))
+          .where(productFilter)
+          .orderBy(...resolveSort(query.sort))
+          .limit(CATEGORY_PAGE_SIZE)
+          .offset((page - 1) * CATEGORY_PAGE_SIZE),
+        db
+          .selectDistinct({ talle: productVariants.talle })
+          .from(productVariants)
+          .innerJoin(products, eq(productVariants.productId, products.id))
+          .innerJoin(productCollections, eq(productCollections.productId, products.id))
+          .where(and(scopeFilter, gt(productVariants.stockOnline, 0))),
+        db
+          .selectDistinct({ color: productVariants.color })
+          .from(productVariants)
+          .innerJoin(products, eq(productVariants.productId, products.id))
+          .innerJoin(productCollections, eq(productCollections.productId, products.id))
+          .where(and(scopeFilter, gt(productVariants.stockOnline, 0))),
+        db
+          .selectDistinct({ brand: products.brand })
+          .from(products)
+          .innerJoin(productCollections, eq(productCollections.productId, products.id))
+          .where(and(scopeFilter, isNotNull(products.brand))),
+      ]);
 
       const productIds = rows.map((p) => p.id);
       const firstImages = productIds.length
@@ -318,6 +414,11 @@ export async function publicRoutes(fastify: FastifyInstance) {
         pageSize: CATEGORY_PAGE_SIZE,
         totalCount,
         totalPages: Math.max(1, Math.ceil(totalCount / CATEGORY_PAGE_SIZE)),
+        availableFilters: {
+          talles: talles.map((t) => t.talle).sort(),
+          colores: colores.map((c) => c.color).sort(),
+          marcas: marcas.map((m) => m.brand as string).sort(),
+        },
       };
     }
   );

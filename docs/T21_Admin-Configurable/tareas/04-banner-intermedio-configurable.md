@@ -1,5 +1,7 @@
 # 04 — Banner intermedio del home configurable
 
+**Estado:** ✅ Completa (2026-08-01)
+
 ## Qué se implementa
 
 Título y subtítulo opcionales para el mid-banner del home, en vez de mostrar únicamente la imagen (`bannerUrl`) sin ningún texto propio.
@@ -45,3 +47,20 @@ Fila "Banner promocional intermedio (texto propio)" de la tabla de `docs/T20_UX-
 
 - Independiente de `01`, `02`, `03`, `05`, `06`, `07`.
 - Ojo con el contraste texto/imagen — T20/03 ya había identificado que superponer texto sobre `bannerUrl` sin un overlay oscuro adecuado puede quedar ilegible (fue justamente parte de por qué se sacó el texto del hero en su momento) — no reintroducir ese problema acá.
+
+## Resultado
+
+**Backend**: `midBannerTitle` (máx 60) y `midBannerSubtitle` (máx 120), ambos nullable, en `catalogConfigs` — migración `0013_mid_banner_text.sql` aplicada. Sumados a `catalogConfigSchema`/`updateCatalogConfigSchema` (`@fabbric/shared`, con los límites de caracteres del usuario) y a `GET /public/:slug/config`.
+
+**Frontend admin** (`MyStorePage.tsx`): dos inputs nuevos dentro de la card "Banner de portada" (junto al upload de `bannerUrl`, misma sección conceptual) — título y subtítulo, con placeholder aclarando que vacío = banner sin overlay. Mismo patrón "Opción A" (estado local hasta guardar).
+
+**Frontend tienda pública** (`CatalogHomePage.tsx`, `MidBanner`): la función ahora resuelve 3 casos en orden de prioridad —
+1. **Hay `title`**: overlay + texto, con o sin `bannerUrl` de fondo (si no hay imagen, el overlay igual se ve sobre `--navy`, que ya es el `background-color` base del elemento). `subtitle` solo se renderiza si `title` también existe.
+2. **No hay `title`, hay `bannerUrl`**: comportamiento de T20/03 sin cambios — imagen sola, sin overlay.
+3. **Ninguno**: fallback original de T20/03 — navy + "Descubrí la colección completa" + botón.
+
+CSS: `.home-mid-banner.has-text::before` con el gradiente exacto que pidió el usuario (`linear-gradient(to right, ...)`). A diferencia de la imagen de categoría/colección de `01` (un `<img>` hermano, donde `::before` queda tapado por pintar antes), acá el fondo es `background-image` inline del propio elemento — `::before` sí pinta por encima de eso y por debajo de los hijos reales, así que alcanzó con el pseudo-elemento, sin necesitar un nodo de scrim real. Texto alineado a la izquierda para acompañar el gradiente (más oscuro a la izquierda) — extrapolación razonable a partir de la dirección del gradiente pedida, no algo explícitamente indicado, documentada acá. Título en `clamp(40px, 5vw, 48px)` (rango 40-48 pedido), `--tenant-font-display`, weight 300; subtítulo `--font-body` 15px weight 300 opacity 0.8; texto siempre blanco.
+
+**Verificación real de datos** (`backend/t21-04-midbanner-text.mjs`, queda en el repo sin trackear): admin *staff* temporal, confirmados los 3 casos a nivel de datos (título+subtítulo, solo título con subtítulo vaciado a `null`, ninguno de los dos) reflejados sin delay en `GET /public/eliathi-modas/config`, y los límites de 60/120 caracteres respetados por el schema (61/121 → 400). 15/15 checks en verde.
+
+`tsc --noEmit` limpio en `backend/` y `frontend/`; `vite build` limpio. **Pendiente**: verificación visual del usuario de los 3 casos en el navegador — la rama de datos ya está probada, falta confirmar que el overlay se ve legible y el layout no se rompe con textos reales de distinto largo.

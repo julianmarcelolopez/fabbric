@@ -408,6 +408,16 @@ export const catalogConfigs = pgTable("catalog_configs", {
   email: text("email"),
   address: text("address"),
   businessHours: text("business_hours"),
+  // T21/03 — texto propio del announcement bar; null = autogenerado desde
+  // zonas de envío reales (mismo criterio de T20/02, ahora como fallback)
+  announcementText: text("announcement_text"),
+  // T21/04 — texto opcional superpuesto al mid-banner del home; null = el
+  // banner se muestra solo (bannerUrl), sin overlay ni texto (T20/03).
+  midBannerTitle: text("mid_banner_title"),
+  midBannerSubtitle: text("mid_banner_subtitle"),
+  // T21/06 — texto libre de la política de cambios/devoluciones; null = la
+  // ficha de producto sigue derivando a WhatsApp (T20/06).
+  returnPolicy: text("return_policy"),
   // Mercado Pago propia de la org (T16) — cifradas (ver lib/crypto.ts), nunca
   // en texto plano; nunca en updateCatalogConfigSchema, se setean aparte
   mpAccessToken: text("mp_access_token"),

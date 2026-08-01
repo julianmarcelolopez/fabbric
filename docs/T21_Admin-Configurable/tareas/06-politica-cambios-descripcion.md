@@ -1,5 +1,7 @@
 # 06 — Política de cambios/devoluciones
 
+**Estado:** ✅ Completa (2026-08-01)
+
 ## Qué se implementa
 
 Un campo de texto largo opcional para que cada tienda describa su propia política de cambios/devoluciones, mostrado en la ficha de producto en vez del link genérico a WhatsApp que dejó T20.
@@ -46,3 +48,19 @@ Fila "Política de cambios/devoluciones" de la tabla de `docs/T20_UX-Store/tarea
 
 - Independiente de `01`, `02`, `03`, `04`, `05`, `07`.
 - Mismo patrón que `03` y `04` — campo de texto simple en `catalog_configs`, sin storage, sin lógica nueva más allá de "si existe, mostralo; si no, fallback".
+
+## Resultado
+
+**Decisión del usuario**: el benefit strip **no cambia** — sigue linkeando a WhatsApp exista o no `returnPolicy`. La política real aparece únicamente dentro del panel "Envíos y cambios" del accordion, como párrafo propio **antes** del resumen de envío/dirección/horario. Sin anclas, sin duplicar información entre el strip y el accordion.
+
+**Backend**: `returnPolicy` (nullable, máx 2000 — mismo límite que `businessDescription`) en `catalogConfigs`, migración `0014_return_policy.sql` aplicada. Sumado a `catalogConfigSchema`/`updateCatalogConfigSchema` y a `GET /public/:slug/config`.
+
+**Frontend admin** (`MyStorePage.tsx`): textarea nueva junto al campo de announcement bar (misma sección de identidad/textos configurables), con el placeholder exacto que pidió el usuario.
+
+**Frontend tienda pública**: `ProductDetailView.tsx` ganó la prop opcional `returnPolicy` (mismo patrón que `whatsappHref`/`shippingSummary`/`address`/`businessHours` desde T20/06 — el preview del admin no la pasa, esa sección simplemente no cambia ahí). La condición para mostrar el panel "Envíos y cambios" ahora incluye `returnPolicy` (antes el panel no aparecía si SOLO había política sin ningún otro dato). `StoreProductPage.tsx` pasa `config.returnPolicy`.
+
+**Verificación real de datos** (`backend/t21-06-return-policy.mjs`, queda en el repo sin trackear): admin *staff* temporal, confirmado que `returnPolicy` es `null` en el estado real de Eliathi Modas, que setearlo se refleja sin delay en `GET /public/eliathi-modas/config`, que vaciarlo vuelve a `null` (dispara el fallback a WhatsApp en el frontend), y que el límite de 2000 caracteres se respeta (2001 → 400). 8/8 checks en verde.
+
+`tsc --noEmit` limpio en `backend/` y `frontend/`; `vite build` limpio. **Pendiente**: verificación visual del usuario — cargar una política real y confirmarla en una ficha de producto, y confirmar que sin el campo la ficha se ve exactamente como la dejó T20/06.
+
+Con esta tarea, **T21 — Lo que T20 dejó pendiente del lado del backend queda completo** (`01` a `07`, todas con Resultado documentado).

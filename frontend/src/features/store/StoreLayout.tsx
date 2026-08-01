@@ -194,11 +194,17 @@ export function StoreLayout() {
 
   const whatsappHref = config.whatsapp ? `https://wa.me/${config.whatsapp.replace(/\D/g, "")}` : null;
 
+  // T21/03 — texto propio del admin tiene prioridad; si no hay, el
+  // autogenerado de T20/02 sigue funcionando como fallback; si no hay
+  // ninguno de los dos, la barra no se muestra (mismo comportamiento de hoy).
+  const announcementText = config.announcementText?.trim() || null;
+
   return (
     <CustomerAuthProvider slug={slug!}>
       <CartProvider slug={slug!}>
         <div className="store" style={{ "--accent": config.accentColor } as CSSProperties}>
-          {!isCheckout && cheapestFreeShipping && (
+          {!isCheckout && announcementText && <div className="announcement">{announcementText}</div>}
+          {!isCheckout && !announcementText && cheapestFreeShipping && (
             <div className="announcement">
               Envío gratis en {cheapestFreeShipping.name} en compras mayores a{" "}
               <strong>{formatPrice(cheapestFreeShipping.freeShippingFrom as number)}</strong>

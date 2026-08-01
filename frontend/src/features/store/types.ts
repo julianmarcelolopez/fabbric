@@ -12,6 +12,13 @@ export type PublicStoreConfig = {
   email: string | null;
   address: string | null;
   businessHours: string | null;
+  // T21/03 — null = StoreLayout.tsx autogenera desde zonas de envío
+  announcementText: string | null;
+  // T21/04 — null = mid-banner del home sin overlay ni texto (T20/03)
+  midBannerTitle: string | null;
+  midBannerSubtitle: string | null;
+  // T21/06 — null = la ficha de producto sigue derivando a WhatsApp (T20/06)
+  returnPolicy: string | null;
 };
 
 export type PublicHomeSection = HsrSection;
@@ -42,7 +49,16 @@ export type StoreContext = {
   config: PublicStoreConfig;
 };
 
-// T19/10
+// T21/05 — qué talles/colores/marcas existen realmente en la categoría/
+// colección (con stock, en el caso de talle/color) — para no ofrecer un
+// filtro que no devolvería ningún producto.
+export type PublicAvailableFilters = {
+  talles: string[];
+  colores: string[];
+  marcas: string[];
+};
+
+// T19/10 (paginación) + T21/05 (filtros/orden)
 export type PublicCategoryProducts = {
   category: { name: string; slug: string; imageUrl: string | null };
   products: {
@@ -57,6 +73,7 @@ export type PublicCategoryProducts = {
   pageSize: number;
   totalCount: number;
   totalPages: number;
+  availableFilters: PublicAvailableFilters;
 };
 
 // T21/02 — mismo contrato que PublicCategoryProducts, solo cambia la clave
@@ -68,4 +85,5 @@ export type PublicCollectionProducts = {
   pageSize: number;
   totalCount: number;
   totalPages: number;
+  availableFilters: PublicAvailableFilters;
 };

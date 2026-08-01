@@ -13,6 +13,13 @@ type ConfigForm = {
   email: string;
   address: string;
   businessHours: string;
+  // T21/03 — vacío = la tienda pública autogenera el texto desde zonas de envío
+  announcementText: string;
+  // T21/04 — vacío = mid-banner del home sin overlay ni texto (T20/03)
+  midBannerTitle: string;
+  midBannerSubtitle: string;
+  // T21/06 — vacío = la ficha de producto sigue derivando a WhatsApp (T20/06)
+  returnPolicy: string;
   active: boolean;
 };
 
@@ -66,6 +73,10 @@ export function MyStorePage() {
         email: c.email ?? "",
         address: c.address ?? "",
         businessHours: c.businessHours ?? "",
+        announcementText: c.announcementText ?? "",
+        midBannerTitle: c.midBannerTitle ?? "",
+        midBannerSubtitle: c.midBannerSubtitle ?? "",
+        returnPolicy: c.returnPolicy ?? "",
         active: c.active,
       });
       setCategories(cats);
@@ -160,6 +171,10 @@ export function MyStorePage() {
           email: form.email.trim() || null,
           address: form.address.trim() || null,
           businessHours: form.businessHours.trim() || null,
+          announcementText: form.announcementText.trim() || null,
+          midBannerTitle: form.midBannerTitle.trim() || null,
+          midBannerSubtitle: form.midBannerSubtitle.trim() || null,
+          returnPolicy: form.returnPolicy.trim() || null,
           active: form.active,
         }),
       });
@@ -437,6 +452,34 @@ export function MyStorePage() {
               />
             </label>
 
+            <label className="field" style={{ marginBottom: 4 }}>
+              Texto de la barra superior (announcement bar)
+              <input
+                value={form.announcementText}
+                onChange={(e) => setForm({ ...form, announcementText: e.target.value })}
+                placeholder="Se genera automáticamente desde tus zonas de envío si lo dejás vacío"
+                maxLength={120}
+              />
+            </label>
+            <p className="muted" style={{ margin: "0 0 12px" }}>
+              {form.announcementText.length}/120 — texto libre. Vacío = se arma solo con la zona de envío gratis más
+              accesible.
+            </p>
+
+            <label className="field" style={{ marginBottom: 4 }}>
+              Política de cambios/devoluciones (aparece en la ficha de cada producto)
+              <textarea
+                rows={3}
+                maxLength={2000}
+                value={form.returnPolicy}
+                onChange={(e) => setForm({ ...form, returnPolicy: e.target.value })}
+                placeholder="Ej: Cambios dentro de los 30 días con ticket de compra"
+              />
+            </label>
+            <p className="muted" style={{ margin: "0 0 12px" }}>
+              Vacío = la ficha de producto sigue mostrando "Consultanos por WhatsApp" en vez de una política propia.
+            </p>
+
             <p className="muted" style={{ margin: "0 0 4px", fontWeight: 600 }}>
               Contacto y horario (aparecen en el pie de la tienda)
             </p>
@@ -546,6 +589,29 @@ export function MyStorePage() {
                   e.target.value = "";
                 }}
               />
+            </div>
+
+            {/* T21/04 — texto opcional superpuesto al banner del home (mid-banner,
+                CatalogHomePage.tsx). Vacío = banner solo, sin overlay (T20/03). */}
+            <div className="row" style={{ marginTop: 12 }}>
+              <label className="field" style={{ flex: 1, minWidth: 220 }}>
+                Título sobre el banner del home (opcional)
+                <input
+                  value={form.midBannerTitle}
+                  onChange={(e) => setForm({ ...form, midBannerTitle: e.target.value })}
+                  placeholder="Vacío = el banner se muestra solo, sin texto"
+                  maxLength={60}
+                />
+              </label>
+              <label className="field" style={{ flex: 1, minWidth: 220 }}>
+                Subtítulo (opcional, solo si hay título)
+                <input
+                  value={form.midBannerSubtitle}
+                  onChange={(e) => setForm({ ...form, midBannerSubtitle: e.target.value })}
+                  placeholder="Bajada corta debajo del título"
+                  maxLength={120}
+                />
+              </label>
             </div>
           </div>
         </div>

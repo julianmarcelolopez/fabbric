@@ -46,3 +46,17 @@ Mismo patrón que el resto del proyecto (`docs/T<N>_*/`): cada tarea se implemen
 - `03`, `04` y `06` son independientes entre sí y del resto — cada una agrega un campo de texto a `catalog_configs` y lo consume en un lugar puntual de la tienda.
 - `05` es independiente pero la más compleja (extiende un endpoint con filtros/orden reales + conecta la sidebar ya construida en T20/05).
 - `01` es prerequisito de `02` — la página de detalle de colección necesita `imageUrl` en `collections` para tener foto real, no solo el placeholder de color.
+
+## Estado — T21 completo (2026-08-01)
+
+| # | Tarea | Estado |
+|---|---|---|
+| 1 | [01-imagen-categoria-coleccion.md](tareas/01-imagen-categoria-coleccion.md) — foto real de categoría/colección | ✅ Completa |
+| 2 | [02-pagina-detalle-coleccion.md](tareas/02-pagina-detalle-coleccion.md) — página de colección (reusa CategoryPage) | ✅ Completa |
+| 3 | [03-announcement-bar-configurable.md](tareas/03-announcement-bar-configurable.md) — texto propio del announcement bar | ✅ Completa |
+| 4 | [04-banner-intermedio-configurable.md](tareas/04-banner-intermedio-configurable.md) — título/subtítulo del mid-banner | ✅ Completa |
+| 5 | [05-filtros-categoria-backend.md](tareas/05-filtros-categoria-backend.md) — filtros/orden reales + sidebar conectada | ✅ Completa |
+| 6 | [06-politica-cambios-descripcion.md](tareas/06-politica-cambios-descripcion.md) — política de cambios real en la ficha de producto | ✅ Completa |
+| 7 | [07-colecciones-auto-home-section.md](tareas/07-colecciones-auto-home-section.md) — auto-creación de home_section para colecciones | ✅ Completa |
+
+Todas las 7 tareas verificadas con datos reales contra el backend de desarrollo (scripts en `backend/t21-*.mjs`, sin trackear), además de `tsc --noEmit`/`vite build` limpios. Pendiente de una pasada visual del usuario en el navegador por cada tarea.
