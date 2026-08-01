@@ -1,0 +1,948 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Eliathi Modas — Remera Boxy Fit Roja</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  :root {
+    --navy:   #1E2A4A;
+    --coral:  #F07058;
+    --white:  #FFFFFF;
+    --off:    #F8F7F5;
+    --gray:   #E8E4DF;
+    --text:   #2C2C2C;
+    --muted:  #8A8278;
+    --green:  #16A34A;
+    --display:'Cormorant Garamond', Georgia, serif;
+    --body:   'DM Sans', system-ui, sans-serif;
+  }
+  body { font-family: var(--body); color: var(--text); background: var(--white); font-size: 14px; line-height: 1.6; -webkit-font-smoothing: antialiased; }
+
+  /* ANNOUNCEMENT */
+  .announcement { background: var(--navy); color: rgba(255,255,255,0.88); text-align: center; padding: 9px 16px; font-size: 12.5px; letter-spacing: 0.04em; }
+  .announcement strong { color: var(--coral); }
+
+  /* HEADER */
+  header { background: var(--white); border-bottom: 1px solid var(--gray); position: sticky; top: 0; z-index: 100; }
+  .header-inner { max-width: 1200px; margin: 0 auto; padding: 0 32px; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; height: 72px; }
+  nav { display: flex; gap: 28px; align-items: center; }
+  nav a { font-size: 12.5px; font-weight: 500; color: var(--navy); text-decoration: none; letter-spacing: 0.08em; text-transform: uppercase; transition: color 0.15s; }
+  nav a:hover { color: var(--coral); }
+  nav a.active { color: var(--coral); border-bottom: 2px solid var(--coral); padding-bottom: 2px; }
+  .logo-wrap { text-align: center; }
+  .logo-wrap img { height: 44px; display: block; margin: 0 auto; }
+  .logo-text { font-family: var(--display); font-size: 22px; color: var(--navy); font-weight: 400; letter-spacing: 0.05em; }
+  .header-actions { display: flex; gap: 20px; align-items: center; justify-content: flex-end; }
+  .header-actions button { background: none; border: none; cursor: pointer; color: var(--navy); font-size: 18px; padding: 4px; transition: color 0.15s; position: relative; }
+  .header-actions button:hover { color: var(--coral); }
+  .cart-badge { position: absolute; top: -4px; right: -6px; background: var(--coral); color: white; font-size: 9px; font-weight: 700; width: 16px; height: 16px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+
+  /* BREADCRUMB */
+  .breadcrumb-bar { background: var(--off); border-bottom: 1px solid var(--gray); padding: 12px 32px; }
+  .breadcrumb { max-width: 1200px; margin: 0 auto; display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--muted); }
+  .breadcrumb a { color: var(--muted); text-decoration: none; transition: color 0.15s; }
+  .breadcrumb a:hover { color: var(--coral); }
+  .breadcrumb-sep { color: var(--gray); }
+  .breadcrumb-current { color: var(--navy); font-weight: 500; }
+
+  /* PRODUCT LAYOUT */
+  .product-layout {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 48px 32px 80px;
+    display: grid;
+    grid-template-columns: 1fr 480px;
+    gap: 64px;
+    align-items: start;
+  }
+
+  /* GALLERY */
+  .gallery { position: sticky; top: 88px; }
+
+  .gallery-main {
+    position: relative;
+    aspect-ratio: 3/4;
+    overflow: hidden;
+    background: var(--off);
+    margin-bottom: 12px;
+  }
+
+  .gallery-main img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: opacity 0.3s;
+  }
+
+  .gallery-nav {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    padding: 0 16px;
+    pointer-events: none;
+  }
+
+  .gallery-btn {
+    width: 36px; height: 36px;
+    background: rgba(255,255,255,0.9);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px;
+    cursor: pointer;
+    pointer-events: all;
+    transition: background 0.2s;
+    color: var(--navy);
+    border: none;
+  }
+  .gallery-btn:hover { background: white; }
+
+  .gallery-badge {
+    position: absolute;
+    top: 16px; left: 16px;
+    background: var(--coral);
+    color: white;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    padding: 5px 10px;
+  }
+
+  .gallery-wishlist {
+    position: absolute;
+    top: 16px; right: 16px;
+    width: 36px; height: 36px;
+    background: white;
+    border: none;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .gallery-wishlist:hover { background: var(--off); color: var(--coral); }
+
+  .gallery-dots {
+    position: absolute;
+    bottom: 16px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 6px;
+  }
+  .gallery-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.5);
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .gallery-dot.active { background: white; }
+
+  .gallery-thumbs {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+  }
+
+  .thumb {
+    aspect-ratio: 3/4;
+    overflow: hidden;
+    background: var(--off);
+    cursor: pointer;
+    border: 2px solid transparent;
+    transition: border-color 0.15s;
+  }
+  .thumb.active { border-color: var(--navy); }
+  .thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+  /* PRODUCT INFO */
+  .product-info {}
+
+  .product-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+  }
+
+  .product-brand-tag {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .product-share {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .share-btn {
+    font-size: 13px;
+    color: var(--muted);
+    cursor: pointer;
+    transition: color 0.15s;
+    background: none;
+    border: none;
+    padding: 4px;
+  }
+  .share-btn:hover { color: var(--coral); }
+
+  .product-name {
+    font-family: var(--display);
+    font-size: 40px;
+    font-weight: 300;
+    color: var(--navy);
+    line-height: 1.1;
+    letter-spacing: -0.01em;
+    margin-bottom: 16px;
+  }
+
+  .product-rating {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 20px;
+  }
+
+  .stars { color: #F59E0B; font-size: 14px; letter-spacing: 2px; }
+  .rating-count { font-size: 12px; color: var(--muted); }
+
+  .product-prices {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    margin-bottom: 8px;
+  }
+
+  .price-current {
+    font-family: var(--display);
+    font-size: 36px;
+    font-weight: 400;
+    color: var(--navy);
+  }
+  .price-current.sale { color: var(--coral); }
+  .price-old { font-size: 18px; color: var(--muted); text-decoration: line-through; }
+  .price-save {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--green);
+    background: #F0FDF4;
+    padding: 3px 8px;
+    border-radius: 2px;
+  }
+
+  .price-installments {
+    font-size: 13px;
+    color: var(--muted);
+    margin-bottom: 24px;
+  }
+  .price-installments strong { color: var(--green); }
+
+  .divider { height: 1px; background: var(--gray); margin: 24px 0; }
+
+  /* SELECTOR DE TALLE */
+  .selector-label {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+  .selector-title {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--navy);
+  }
+  .selector-selected { font-size: 12px; color: var(--coral); font-weight: 500; }
+  .size-guide {
+    font-size: 12px;
+    color: var(--muted);
+    text-decoration: underline;
+    cursor: pointer;
+    transition: color 0.15s;
+  }
+  .size-guide:hover { color: var(--coral); }
+
+  .talle-options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 24px;
+  }
+
+  .talle-chip {
+    min-width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--gray);
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--navy);
+    cursor: pointer;
+    transition: all 0.15s;
+    padding: 0 12px;
+    position: relative;
+  }
+  .talle-chip:hover { border-color: var(--navy); }
+  .talle-chip.active { background: var(--navy); color: white; border-color: var(--navy); }
+  .talle-chip.no-stock {
+    color: var(--gray);
+    cursor: not-allowed;
+  }
+  .talle-chip.no-stock::after {
+    content: '';
+    position: absolute;
+    top: 50%; left: 0; right: 0;
+    height: 1px;
+    background: var(--gray);
+    transform: rotate(-45deg);
+  }
+
+  /* SELECTOR DE COLOR */
+  .color-options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 28px;
+  }
+
+  .color-option {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+  }
+
+  .color-swatch {
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    border: 3px solid transparent;
+    outline: 2px solid transparent;
+    transition: all 0.15s;
+    position: relative;
+  }
+
+  .color-option.active .color-swatch {
+    border-color: white;
+    outline-color: var(--navy);
+  }
+
+  .color-name { font-size: 10px; color: var(--muted); letter-spacing: 0.04em; }
+
+  /* STOCK INDICATOR */
+  .stock-indicator {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--green);
+    margin-bottom: 24px;
+  }
+  .stock-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); flex-shrink: 0; }
+  .stock-indicator.low { color: var(--coral); }
+  .stock-indicator.low .stock-dot { background: var(--coral); }
+
+  /* CTA BUTTONS */
+  .cta-group {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+
+  .qty-row {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+  }
+
+  .qty-selector {
+    display: flex;
+    align-items: center;
+    border: 1px solid var(--gray);
+    height: 52px;
+  }
+
+  .qty-btn {
+    width: 44px; height: 100%;
+    display: flex; align-items: center; justify-content: center;
+    background: none;
+    border: none;
+    font-size: 18px;
+    cursor: pointer;
+    color: var(--navy);
+    transition: background 0.15s;
+  }
+  .qty-btn:hover { background: var(--off); }
+
+  .qty-value {
+    width: 44px;
+    text-align: center;
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--navy);
+    border-left: 1px solid var(--gray);
+    border-right: 1px solid var(--gray);
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .btn-add-cart {
+    flex: 1;
+    height: 52px;
+    background: var(--navy);
+    color: white;
+    border: none;
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    cursor: pointer;
+    font-family: var(--body);
+    transition: background 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+  }
+  .btn-add-cart:hover { background: #2a3a5e; }
+
+  .btn-buy-now {
+    height: 52px;
+    background: var(--coral);
+    color: white;
+    border: none;
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    cursor: pointer;
+    font-family: var(--body);
+    transition: background 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+  }
+  .btn-buy-now:hover { background: #e05e46; }
+
+  /* BENEFITS STRIP */
+  .benefits-strip {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0;
+    border: 1px solid var(--gray);
+    margin-bottom: 28px;
+  }
+
+  .benefit {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 14px 10px;
+    border-right: 1px solid var(--gray);
+    gap: 4px;
+  }
+  .benefit:last-child { border-right: none; }
+
+  .benefit-icon { font-size: 18px; }
+  .benefit-text { font-size: 11px; color: var(--navy); font-weight: 500; line-height: 1.3; }
+  .benefit-sub { font-size: 10px; color: var(--muted); }
+
+  /* DESCRIPCIÓN ACCORDION */
+  .accordion { border-top: 1px solid var(--gray); }
+
+  .accordion-item { border-bottom: 1px solid var(--gray); }
+
+  .accordion-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 0;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--navy);
+    transition: color 0.15s;
+  }
+  .accordion-header:hover { color: var(--coral); }
+  .accordion-icon { font-size: 16px; color: var(--muted); transition: transform 0.2s; }
+  .accordion-item.open .accordion-icon { transform: rotate(45deg); }
+
+  .accordion-body {
+    padding: 0 0 16px;
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.8;
+    display: none;
+  }
+  .accordion-item.open .accordion-body { display: block; }
+
+  .accordion-body ul { padding-left: 16px; }
+  .accordion-body ul li { margin-bottom: 4px; }
+
+  /* PRODUCTOS RELACIONADOS */
+  .related-section {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 32px 80px;
+    border-top: 1px solid var(--gray);
+    padding-top: 64px;
+  }
+
+  .related-header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 32px;
+  }
+
+  .related-title {
+    font-family: var(--display);
+    font-size: 32px;
+    font-weight: 300;
+    color: var(--navy);
+  }
+
+  .related-link {
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--coral);
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: gap 0.2s;
+  }
+  .related-link:hover { gap: 10px; }
+
+  .related-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+  }
+
+  .product-card { cursor: pointer; }
+  .product-img-wrap { position: relative; aspect-ratio: 3/4; overflow: hidden; background: var(--off); margin-bottom: 14px; }
+  .product-img-wrap img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s ease; display: block; }
+  .product-card:hover .product-img-wrap img { transform: scale(1.04); }
+  .product-badge-sm { position: absolute; top: 10px; left: 10px; background: var(--coral); color: white; font-size: 9px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; padding: 3px 7px; }
+  .product-wishlist-sm { position: absolute; top: 10px; right: 10px; background: white; border: none; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 12px; opacity: 0; transition: opacity 0.2s; }
+  .product-card:hover .product-wishlist-sm { opacity: 1; }
+  .product-quick-add-sm { position: absolute; bottom: 0; left: 0; right: 0; background: var(--navy); color: white; border: none; padding: 9px; font-size: 10px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer; font-family: var(--body); transform: translateY(100%); transition: transform 0.25s ease; }
+  .product-card:hover .product-quick-add-sm { transform: translateY(0); }
+  .product-brand-sm { font-size: 10px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin-bottom: 3px; }
+  .product-name-sm { font-size: 13px; font-weight: 400; color: var(--navy); margin-bottom: 6px; line-height: 1.3; }
+  .product-prices-sm { display: flex; align-items: center; gap: 7px; }
+  .price-old-sm { font-size: 11px; color: var(--muted); text-decoration: line-through; }
+  .price-current-sm { font-size: 14px; font-weight: 500; color: var(--navy); }
+  .price-current-sm.sale { color: var(--coral); }
+
+  /* FOOTER */
+  footer { background: var(--navy); color: rgba(255,255,255,0.7); padding: 64px 32px 32px; }
+  .footer-inner { max-width: 1200px; margin: 0 auto; }
+  .footer-top { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 48px; padding-bottom: 48px; border-bottom: 1px solid rgba(255,255,255,0.1); margin-bottom: 32px; }
+  .footer-logo-text { font-family: var(--display); font-size: 24px; color: rgba(255,255,255,0.8); font-weight: 300; letter-spacing: 0.05em; margin-bottom: 16px; display: block; }
+  .footer-brand p { font-size: 13px; line-height: 1.7; color: rgba(255,255,255,0.5); margin-bottom: 20px; max-width: 260px; }
+  .footer-social { display: flex; gap: 12px; }
+  .social-btn { width: 36px; height: 36px; border: 1px solid rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; font-size: 14px; color: rgba(255,255,255,0.6); cursor: pointer; transition: all 0.2s; text-decoration: none; }
+  .social-btn:hover { border-color: var(--coral); color: var(--coral); }
+  .footer-col h4 { font-size: 11px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: white; margin-bottom: 20px; }
+  .footer-col ul { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+  .footer-col ul li a { font-size: 13px; color: rgba(255,255,255,0.5); text-decoration: none; transition: color 0.15s; }
+  .footer-col ul li a:hover { color: var(--coral); }
+  .footer-bottom { display: flex; align-items: center; justify-content: space-between; font-size: 12px; color: rgba(255,255,255,0.3); }
+  .footer-payments { display: flex; gap: 8px; }
+  .payment-badge { background: rgba(255,255,255,0.08); padding: 4px 10px; font-size: 11px; color: rgba(255,255,255,0.5); border: 1px solid rgba(255,255,255,0.1); }
+
+  .whatsapp-float { position: fixed; bottom: 28px; right: 28px; width: 52px; height: 52px; background: #25D366; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; cursor: pointer; box-shadow: 0 4px 16px rgba(37,211,102,0.4); z-index: 999; text-decoration: none; transition: transform 0.2s; }
+  .whatsapp-float:hover { transform: scale(1.08); }
+</style>
+</head>
+<body>
+
+<div class="announcement">
+  Envío gratis en zona Quilmes en compras mayores a <strong>$50.000</strong> &nbsp;·&nbsp; 3 cuotas sin interés
+</div>
+
+<header>
+  <div class="header-inner">
+    <nav>
+      <a href="#" class="active">Remeras</a>
+      <a href="#">Jeans</a>
+      <a href="#">Buzos</a>
+      <a href="#">Camperas</a>
+      <a href="#">Ver todo</a>
+    </nav>
+    <div class="logo-wrap">
+      <img src="/mnt/user-data/uploads/eliathi.png" alt="Eliathi Modas"
+           onerror="this.style.display='none';this.nextElementSibling.style.display='block'">
+      <span class="logo-text" style="display:none">Eliathi Modas</span>
+    </div>
+    <div class="header-actions">
+      <button>🔍</button>
+      <button>👤</button>
+      <button style="position:relative">🛒<span class="cart-badge">2</span></button>
+    </div>
+  </div>
+</header>
+
+<div class="breadcrumb-bar">
+  <div class="breadcrumb">
+    <a href="#">Inicio</a>
+    <span class="breadcrumb-sep">›</span>
+    <a href="#">Remeras</a>
+    <span class="breadcrumb-sep">›</span>
+    <span class="breadcrumb-current">Remera Boxy Fit Roja</span>
+  </div>
+</div>
+
+<!-- PRODUCT LAYOUT -->
+<div class="product-layout">
+
+  <!-- GALLERY -->
+  <div class="gallery">
+    <div class="gallery-main">
+      <img src="https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=800&q=80" alt="Remera Boxy Fit Roja" id="main-img">
+      <div class="gallery-nav">
+        <button class="gallery-btn" onclick="changeImg(0)">‹</button>
+        <button class="gallery-btn" onclick="changeImg(1)">›</button>
+      </div>
+      <span class="gallery-badge">−18%</span>
+      <button class="gallery-wishlist">♡</button>
+      <div class="gallery-dots">
+        <div class="gallery-dot active" onclick="changeImg(0)"></div>
+        <div class="gallery-dot" onclick="changeImg(1)"></div>
+        <div class="gallery-dot" onclick="changeImg(2)"></div>
+        <div class="gallery-dot" onclick="changeImg(3)"></div>
+      </div>
+    </div>
+    <div class="gallery-thumbs">
+      <div class="thumb active" onclick="selectThumb(this, 0)">
+        <img src="https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=200&q=70" alt="">
+      </div>
+      <div class="thumb" onclick="selectThumb(this, 1)">
+        <img src="https://images.unsplash.com/photo-1503341733017-1901578f9f1e?w=200&q=70" alt="">
+      </div>
+      <div class="thumb" onclick="selectThumb(this, 2)">
+        <img src="https://images.unsplash.com/photo-1583744946564-b52ac1c389c8?w=200&q=70" alt="">
+      </div>
+      <div class="thumb" onclick="selectThumb(this, 3)">
+        <img src="https://images.unsplash.com/photo-1562157873-818bc0726f68?w=200&q=70" alt="">
+      </div>
+    </div>
+  </div>
+
+  <!-- PRODUCT INFO -->
+  <div class="product-info">
+
+    <div class="product-meta">
+      <span class="product-brand-tag">Taverniti</span>
+      <div class="product-share">
+        <button class="share-btn" title="Compartir">🔗</button>
+        <button class="share-btn" title="Instagram">📷</button>
+      </div>
+    </div>
+
+    <h1 class="product-name">Remera Boxy<br>Fit Roja</h1>
+
+    <div class="product-rating">
+      <span class="stars">★★★★★</span>
+      <span class="rating-count">4.8 · 12 reseñas</span>
+    </div>
+
+    <div class="product-prices">
+      <span class="price-old">$ 22.000</span>
+      <span class="price-current sale">$ 18.000</span>
+      <span class="price-save">Ahorrás $4.000</span>
+    </div>
+
+    <div class="price-installments">
+      o <strong>3 cuotas sin interés de $ 6.000</strong> con todas las tarjetas
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- TALLE -->
+    <div class="selector-label">
+      <div>
+        <span class="selector-title">Talle</span>
+        &nbsp;
+        <span class="selector-selected">M seleccionado</span>
+      </div>
+      <span class="size-guide">Guía de talles</span>
+    </div>
+
+    <div class="talle-options">
+      <div class="talle-chip">XS</div>
+      <div class="talle-chip">S</div>
+      <div class="talle-chip active">M</div>
+      <div class="talle-chip">L</div>
+      <div class="talle-chip">XL</div>
+      <div class="talle-chip no-stock">XXL</div>
+    </div>
+
+    <!-- COLOR -->
+    <div class="selector-label" style="margin-bottom:12px">
+      <span class="selector-title">Color</span>
+      <span class="selector-selected">Rojo seleccionado</span>
+    </div>
+
+    <div class="color-options">
+      <div class="color-option active">
+        <div class="color-swatch" style="background:#E53E3E"></div>
+        <span class="color-name">Rojo</span>
+      </div>
+      <div class="color-option">
+        <div class="color-swatch" style="background:#2C2C2C"></div>
+        <span class="color-name">Negro</span>
+      </div>
+      <div class="color-option">
+        <div class="color-swatch" style="background:#F7F7F7;border:1px solid #E8E4DF"></div>
+        <span class="color-name">Blanco</span>
+      </div>
+      <div class="color-option">
+        <div class="color-swatch" style="background:#68A063"></div>
+        <span class="color-name">Verde</span>
+      </div>
+    </div>
+
+    <!-- STOCK -->
+    <div class="stock-indicator low">
+      <div class="stock-dot"></div>
+      Quedan solo 5 unidades en talle M · Rojo
+    </div>
+
+    <!-- CTA -->
+    <div class="cta-group">
+      <div class="qty-row">
+        <div class="qty-selector">
+          <button class="qty-btn">−</button>
+          <div class="qty-value">1</div>
+          <button class="qty-btn">+</button>
+        </div>
+        <button class="btn-add-cart">
+          🛒 Agregar al carrito
+        </button>
+      </div>
+      <button class="btn-buy-now">
+        ⚡ Comprar ahora
+      </button>
+    </div>
+
+    <!-- BENEFITS -->
+    <div class="benefits-strip">
+      <div class="benefit">
+        <span class="benefit-icon">🚗</span>
+        <span class="benefit-text">Envío express</span>
+        <span class="benefit-sub">Zona Quilmes</span>
+      </div>
+      <div class="benefit">
+        <span class="benefit-icon">↩️</span>
+        <span class="benefit-text">Cambios gratis</span>
+        <span class="benefit-sub">30 días</span>
+      </div>
+      <div class="benefit">
+        <span class="benefit-icon">🔒</span>
+        <span class="benefit-text">Pago seguro</span>
+        <span class="benefit-sub">Mercado Pago</span>
+      </div>
+    </div>
+
+    <!-- ACCORDION -->
+    <div class="accordion">
+      <div class="accordion-item open">
+        <div class="accordion-header" onclick="toggleAccordion(this)">
+          Descripción <span class="accordion-icon">+</span>
+        </div>
+        <div class="accordion-body">
+          Remera boxy fit de algodón 100%. Corte relajado y hombros caídos que le dan ese look urbano y cómodo. Ideal para usar sola o abierta sobre otra prenda.
+          <ul style="margin-top:10px">
+            <li>100% algodón</li>
+            <li>Corte oversize / boxy</li>
+            <li>Largo: 68cm en talle M</li>
+            <li>Lavado a máquina</li>
+          </ul>
+        </div>
+      </div>
+      <div class="accordion-item">
+        <div class="accordion-header" onclick="toggleAccordion(this)">
+          Guía de talles <span class="accordion-icon">+</span>
+        </div>
+        <div class="accordion-body">
+          S: busto 88cm · M: busto 96cm · L: busto 104cm · XL: busto 112cm<br>
+          Este modelo calza grande — recomendamos pedir un talle menos de tu talle habitual.
+        </div>
+      </div>
+      <div class="accordion-item">
+        <div class="accordion-header" onclick="toggleAccordion(this)">
+          Envíos y cambios <span class="accordion-icon">+</span>
+        </div>
+        <div class="accordion-body">
+          Envío express a zona Quilmes desde $5.000. Todo el país por Andreani. Cambios gratis dentro de los 30 días con el ticket de compra.
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- PRODUCTOS RELACIONADOS -->
+<div class="related-section">
+  <div class="related-header">
+    <h2 class="related-title">También te puede gustar</h2>
+    <a href="#" class="related-link">Ver todas las remeras →</a>
+  </div>
+  <div class="related-grid">
+    <div class="product-card">
+      <div class="product-img-wrap">
+        <img src="https://images.unsplash.com/photo-1618354691373-d851c5c3a990?w=600&q=80" alt="" loading="lazy">
+        <button class="product-wishlist-sm">♡</button>
+        <button class="product-quick-add-sm">Agregar</button>
+      </div>
+      <div class="product-brand-sm"></div>
+      <div class="product-name-sm">Remera Oversize Negra</div>
+      <div class="product-prices-sm"><span class="price-current-sm">$ 15.000</span></div>
+    </div>
+    <div class="product-card">
+      <div class="product-img-wrap">
+        <img src="https://images.unsplash.com/photo-1503342394128-c104d54dba01?w=600&q=80" alt="" loading="lazy">
+        <span class="product-badge-sm">Nuevo</span>
+        <button class="product-wishlist-sm">♡</button>
+        <button class="product-quick-add-sm">Agregar</button>
+      </div>
+      <div class="product-brand-sm">Taverniti</div>
+      <div class="product-name-sm">Musculosa Básica Blanca</div>
+      <div class="product-prices-sm"><span class="price-current-sm">$ 12.000</span></div>
+    </div>
+    <div class="product-card">
+      <div class="product-img-wrap">
+        <img src="https://images.unsplash.com/photo-1562157873-818bc0726f68?w=600&q=80" alt="" loading="lazy">
+        <span class="product-badge-sm">−20%</span>
+        <button class="product-wishlist-sm">♡</button>
+        <button class="product-quick-add-sm">Agregar</button>
+      </div>
+      <div class="product-brand-sm">Taverniti</div>
+      <div class="product-name-sm">Remera Crop Coral</div>
+      <div class="product-prices-sm">
+        <span class="price-old-sm">$ 16.000</span>
+        <span class="price-current-sm sale">$ 12.800</span>
+      </div>
+    </div>
+    <div class="product-card">
+      <div class="product-img-wrap">
+        <img src="https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?w=600&q=80" alt="" loading="lazy">
+        <button class="product-wishlist-sm">♡</button>
+        <button class="product-quick-add-sm">Agregar</button>
+      </div>
+      <div class="product-brand-sm"></div>
+      <div class="product-name-sm">Remera Rayas Marineras</div>
+      <div class="product-prices-sm"><span class="price-current-sm">$ 14.000</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-inner">
+    <div class="footer-top">
+      <div class="footer-brand">
+        <span class="footer-logo-text">Eliathi Modas</span>
+        <p>Moda para el día a día. Encontrá tu estilo en Quilmes y todo el país.</p>
+        <div class="footer-social">
+          <a href="#" class="social-btn">📷</a>
+          <a href="#" class="social-btn">💬</a>
+          <a href="#" class="social-btn">👍</a>
+        </div>
+      </div>
+      <div class="footer-col">
+        <h4>Tienda</h4>
+        <ul>
+          <li><a href="#">Remeras</a></li>
+          <li><a href="#">Jeans</a></li>
+          <li><a href="#">Buzos</a></li>
+          <li><a href="#">Camperas</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Ayuda</h4>
+        <ul>
+          <li><a href="#">Cómo comprar</a></li>
+          <li><a href="#">Envíos</a></li>
+          <li><a href="#">Cambios</a></li>
+          <li><a href="#">Contacto</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Contacto</h4>
+        <ul>
+          <li><a href="#">WhatsApp</a></li>
+          <li><a href="#">Instagram</a></li>
+          <li><a href="#">Quilmes, Buenos Aires</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2026 Eliathi Modas. Todos los derechos reservados.</span>
+      <div class="footer-payments">
+        <span class="payment-badge">Visa</span>
+        <span class="payment-badge">Mastercard</span>
+        <span class="payment-badge">MP</span>
+        <span class="payment-badge">Transferencia</span>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<a href="#" class="whatsapp-float">💬</a>
+
+<script>
+  const imgs = [
+    'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=800&q=80',
+    'https://images.unsplash.com/photo-1503341733017-1901578f9f1e?w=800&q=80',
+    'https://images.unsplash.com/photo-1583744946564-b52ac1c389c8?w=800&q=80',
+    'https://images.unsplash.com/photo-1562157873-818bc0726f68?w=800&q=80'
+  ];
+  let current = 0;
+
+  function changeImg(dir) {
+    current = dir === 1 ? (current + 1) % imgs.length : (current - 1 + imgs.length) % imgs.length;
+    document.getElementById('main-img').src = imgs[current];
+    document.querySelectorAll('.gallery-dot').forEach((d,i) => d.classList.toggle('active', i === current));
+    document.querySelectorAll('.thumb').forEach((t,i) => t.classList.toggle('active', i === current));
+  }
+
+  function selectThumb(el, idx) {
+    current = idx;
+    document.getElementById('main-img').src = imgs[idx];
+    document.querySelectorAll('.thumb').forEach(t => t.classList.remove('active'));
+    el.classList.add('active');
+    document.querySelectorAll('.gallery-dot').forEach((d,i) => d.classList.toggle('active', i === idx));
+  }
+
+  function toggleAccordion(header) {
+    const item = header.parentElement;
+    item.classList.toggle('open');
+  }
+</script>
+</body>
+</html>

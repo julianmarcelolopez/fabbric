@@ -1,0 +1,1092 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Eliathi Modas — Home</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --navy:    #1E2A4A;
+    --coral:   #F07058;
+    --coral-light: #FDF1EE;
+    --white:   #FFFFFF;
+    --off:     #F8F7F5;
+    --gray:    #E8E4DF;
+    --text:    #2C2C2C;
+    --muted:   #8A8278;
+    --display: 'Cormorant Garamond', Georgia, serif;
+    --body:    'DM Sans', system-ui, sans-serif;
+  }
+
+  body {
+    font-family: var(--body);
+    color: var(--text);
+    background: var(--white);
+    font-size: 14px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ── ANNOUNCEMENT BAR ── */
+  .announcement {
+    background: var(--navy);
+    color: rgba(255,255,255,0.88);
+    text-align: center;
+    padding: 9px 16px;
+    font-size: 12.5px;
+    letter-spacing: 0.04em;
+  }
+
+  .announcement strong { color: var(--coral); }
+
+  /* ── HEADER ── */
+  header {
+    background: var(--white);
+    border-bottom: 1px solid var(--gray);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .header-inner {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 32px;
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    height: 72px;
+  }
+
+  nav {
+    display: flex;
+    gap: 28px;
+    align-items: center;
+  }
+
+  nav a {
+    font-size: 12.5px;
+    font-weight: 500;
+    color: var(--navy);
+    text-decoration: none;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    transition: color 0.15s;
+  }
+
+  nav a:hover { color: var(--coral); }
+
+  .logo-wrap {
+    text-align: center;
+  }
+
+  .logo-wrap img {
+    height: 44px;
+    display: block;
+    margin: 0 auto;
+  }
+
+  .header-actions {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+    justify-content: flex-end;
+  }
+
+  .header-actions button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--navy);
+    font-size: 18px;
+    padding: 4px;
+    transition: color 0.15s;
+    position: relative;
+  }
+
+  .header-actions button:hover { color: var(--coral); }
+
+  .cart-badge {
+    position: absolute;
+    top: -4px;
+    right: -6px;
+    background: var(--coral);
+    color: white;
+    font-size: 9px;
+    font-weight: 700;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--body);
+  }
+
+  /* ── HERO ── */
+  .hero {
+    position: relative;
+    height: 88vh;
+    min-height: 560px;
+    overflow: hidden;
+    background: var(--navy);
+  }
+
+  .hero-img {
+    position: absolute;
+    inset: 0;
+    background-image: url('https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=1400&q=80');
+    background-size: cover;
+    background-position: center 20%;
+    opacity: 0.55;
+  }
+
+  .hero-content {
+    position: relative;
+    z-index: 2;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    padding: 0 64px 72px;
+    max-width: 700px;
+  }
+
+  .hero-eyebrow {
+    font-family: var(--body);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--coral);
+    margin-bottom: 16px;
+  }
+
+  .hero-title {
+    font-family: var(--display);
+    font-size: clamp(52px, 7vw, 88px);
+    font-weight: 300;
+    line-height: 1.0;
+    color: var(--white);
+    letter-spacing: -0.01em;
+    margin-bottom: 24px;
+  }
+
+  .hero-title em {
+    font-style: italic;
+    color: rgba(255,255,255,0.75);
+  }
+
+  .hero-sub {
+    font-size: 15px;
+    color: rgba(255,255,255,0.7);
+    margin-bottom: 36px;
+    font-weight: 300;
+    max-width: 420px;
+    line-height: 1.7;
+  }
+
+  .hero-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--coral);
+    color: white;
+    padding: 14px 32px;
+    font-size: 12.5px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    border: none;
+    cursor: pointer;
+    transition: background 0.2s;
+    text-decoration: none;
+    width: fit-content;
+  }
+
+  .hero-cta:hover { background: #e05e46; }
+
+  .hero-cta-arrow { font-size: 16px; }
+
+  .hero-scroll {
+    position: absolute;
+    bottom: 32px;
+    right: 48px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    color: rgba(255,255,255,0.4);
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  .hero-scroll-line {
+    width: 1px;
+    height: 48px;
+    background: rgba(255,255,255,0.25);
+  }
+
+  /* ── SECTIONS WRAPPER ── */
+  .section {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 80px 32px;
+  }
+
+  .section-header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 40px;
+  }
+
+  .section-title {
+    font-family: var(--display);
+    font-size: 36px;
+    font-weight: 300;
+    color: var(--navy);
+    letter-spacing: -0.01em;
+  }
+
+  .section-link {
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--coral);
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: gap 0.2s;
+  }
+
+  .section-link:hover { gap: 10px; }
+
+  /* ── CATEGORÍAS ── */
+  .categories-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+  }
+
+  .cat-card {
+    position: relative;
+    aspect-ratio: 3/4;
+    overflow: hidden;
+    cursor: pointer;
+    background: var(--off);
+  }
+
+  .cat-card img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.5s ease;
+    display: block;
+  }
+
+  .cat-card:hover img { transform: scale(1.04); }
+
+  .cat-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top, rgba(30,42,74,0.75) 0%, transparent 50%);
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    padding: 20px;
+  }
+
+  .cat-name {
+    font-family: var(--display);
+    font-size: 22px;
+    font-weight: 400;
+    color: white;
+    letter-spacing: 0.01em;
+  }
+
+  .cat-count {
+    font-size: 11px;
+    color: rgba(255,255,255,0.65);
+    letter-spacing: 0.06em;
+    margin-top: 4px;
+  }
+
+  .cat-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 12px;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--coral);
+    background: rgba(255,255,255,0.12);
+    padding: 6px 12px;
+    width: fit-content;
+    transition: background 0.2s;
+  }
+
+  .cat-card:hover .cat-cta { background: rgba(255,255,255,0.2); }
+
+  /* ── PRODUCTOS ── */
+  .products-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+  }
+
+  .product-card {
+    cursor: pointer;
+  }
+
+  .product-img-wrap {
+    position: relative;
+    aspect-ratio: 3/4;
+    overflow: hidden;
+    background: var(--off);
+    margin-bottom: 14px;
+  }
+
+  .product-img-wrap img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.5s ease;
+    display: block;
+  }
+
+  .product-card:hover .product-img-wrap img { transform: scale(1.04); }
+
+  .product-badge {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    background: var(--coral);
+    color: white;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 4px 8px;
+  }
+
+  .product-wishlist {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    background: white;
+    border: none;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 14px;
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+
+  .product-card:hover .product-wishlist { opacity: 1; }
+
+  .product-quick-add {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: var(--navy);
+    color: white;
+    border: none;
+    padding: 10px;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    cursor: pointer;
+    font-family: var(--body);
+    transform: translateY(100%);
+    transition: transform 0.25s ease;
+  }
+
+  .product-card:hover .product-quick-add { transform: translateY(0); }
+
+  .product-brand {
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 4px;
+  }
+
+  .product-name {
+    font-size: 14px;
+    font-weight: 400;
+    color: var(--navy);
+    margin-bottom: 8px;
+    line-height: 1.3;
+  }
+
+  .product-prices {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .price-old {
+    font-size: 12px;
+    color: var(--muted);
+    text-decoration: line-through;
+  }
+
+  .price-current {
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--navy);
+  }
+
+  .price-current.sale { color: var(--coral); }
+
+  /* ── BANNER INTERMEDIO ── */
+  .mid-banner {
+    background: var(--navy);
+    position: relative;
+    overflow: hidden;
+    margin: 0;
+  }
+
+  .mid-banner-img {
+    position: absolute;
+    inset: 0;
+    background-image: url('https://images.unsplash.com/photo-1445205170230-053b83016050?w=1400&q=80');
+    background-size: cover;
+    background-position: center;
+    opacity: 0.35;
+  }
+
+  .mid-banner-inner {
+    position: relative;
+    z-index: 2;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 96px 64px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .mid-banner-text { max-width: 560px; }
+
+  .mid-banner-eyebrow {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--coral);
+    margin-bottom: 16px;
+  }
+
+  .mid-banner-title {
+    font-family: var(--display);
+    font-size: clamp(36px, 5vw, 60px);
+    font-weight: 300;
+    color: white;
+    line-height: 1.1;
+    margin-bottom: 20px;
+    letter-spacing: -0.01em;
+  }
+
+  .mid-banner-sub {
+    font-size: 15px;
+    color: rgba(255,255,255,0.65);
+    font-weight: 300;
+    line-height: 1.7;
+    margin-bottom: 36px;
+  }
+
+  .btn-outline-white {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    border: 1px solid rgba(255,255,255,0.5);
+    color: white;
+    padding: 13px 28px;
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    cursor: pointer;
+    background: transparent;
+    transition: all 0.2s;
+    text-decoration: none;
+    font-family: var(--body);
+  }
+
+  .btn-outline-white:hover {
+    background: white;
+    color: var(--navy);
+    border-color: white;
+  }
+
+  .mid-banner-stat {
+    text-align: right;
+    color: white;
+  }
+
+  .mid-banner-stat-number {
+    font-family: var(--display);
+    font-size: 72px;
+    font-weight: 300;
+    line-height: 1;
+    color: var(--coral);
+  }
+
+  .mid-banner-stat-label {
+    font-size: 13px;
+    color: rgba(255,255,255,0.55);
+    letter-spacing: 0.06em;
+    margin-top: 8px;
+  }
+
+  /* ── INSTAGRAM STRIP ── */
+  .insta-strip {
+    background: var(--off);
+    padding: 64px 0 0;
+  }
+
+  .insta-header {
+    text-align: center;
+    padding: 0 32px 40px;
+  }
+
+  .insta-eyebrow {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--coral);
+    margin-bottom: 12px;
+  }
+
+  .insta-title {
+    font-family: var(--display);
+    font-size: 32px;
+    font-weight: 300;
+    color: var(--navy);
+  }
+
+  .insta-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+  }
+
+  .insta-item {
+    aspect-ratio: 1;
+    overflow: hidden;
+    position: relative;
+    cursor: pointer;
+  }
+
+  .insta-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.4s ease;
+    display: block;
+  }
+
+  .insta-item:hover img { transform: scale(1.06); }
+
+  .insta-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(30,42,74,0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+
+  .insta-item:hover .insta-overlay { opacity: 1; }
+
+  .insta-icon {
+    font-size: 28px;
+    color: white;
+  }
+
+  /* ── FOOTER ── */
+  footer {
+    background: var(--navy);
+    color: rgba(255,255,255,0.7);
+    padding: 64px 32px 32px;
+  }
+
+  .footer-inner {
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  .footer-top {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 1fr;
+    gap: 48px;
+    padding-bottom: 48px;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+    margin-bottom: 32px;
+  }
+
+  .footer-brand img {
+    height: 40px;
+    margin-bottom: 16px;
+    filter: brightness(0) invert(1);
+    opacity: 0.85;
+  }
+
+  .footer-brand p {
+    font-size: 13px;
+    line-height: 1.7;
+    color: rgba(255,255,255,0.5);
+    margin-bottom: 20px;
+    max-width: 260px;
+  }
+
+  .footer-social {
+    display: flex;
+    gap: 12px;
+  }
+
+  .social-btn {
+    width: 36px;
+    height: 36px;
+    border: 1px solid rgba(255,255,255,0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    color: rgba(255,255,255,0.6);
+    cursor: pointer;
+    transition: all 0.2s;
+    text-decoration: none;
+  }
+
+  .social-btn:hover {
+    border-color: var(--coral);
+    color: var(--coral);
+  }
+
+  .footer-col h4 {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: white;
+    margin-bottom: 20px;
+  }
+
+  .footer-col ul {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .footer-col ul li a {
+    font-size: 13px;
+    color: rgba(255,255,255,0.5);
+    text-decoration: none;
+    transition: color 0.15s;
+  }
+
+  .footer-col ul li a:hover { color: var(--coral); }
+
+  .footer-bottom {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 12px;
+    color: rgba(255,255,255,0.3);
+  }
+
+  .footer-payments {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .payment-badge {
+    background: rgba(255,255,255,0.08);
+    padding: 4px 10px;
+    font-size: 11px;
+    color: rgba(255,255,255,0.5);
+    border: 1px solid rgba(255,255,255,0.1);
+  }
+
+  /* ── DIVIDER ── */
+  .divider {
+    height: 1px;
+    background: var(--gray);
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  /* ── WHATSAPP FLOAT ── */
+  .whatsapp-float {
+    position: fixed;
+    bottom: 28px;
+    right: 28px;
+    width: 52px;
+    height: 52px;
+    background: #25D366;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    cursor: pointer;
+    box-shadow: 0 4px 16px rgba(37,211,102,0.4);
+    z-index: 999;
+    text-decoration: none;
+    transition: transform 0.2s;
+  }
+
+  .whatsapp-float:hover { transform: scale(1.08); }
+</style>
+</head>
+<body>
+
+<!-- ANNOUNCEMENT -->
+<div class="announcement">
+  Envío gratis en zona Quilmes en compras mayores a <strong>$50.000</strong> &nbsp;·&nbsp; 3 cuotas sin interés
+</div>
+
+<!-- HEADER -->
+<header>
+  <div class="header-inner">
+    <nav>
+      <a href="#">Remeras</a>
+      <a href="#">Jeans</a>
+      <a href="#">Buzos</a>
+      <a href="#">Ofertas</a>
+    </nav>
+
+    <div class="logo-wrap">
+      <img src="/mnt/user-data/uploads/eliathi.png" alt="Eliathi Modas" onerror="this.style.display='none';this.nextElementSibling.style.display='block'">
+      <span style="display:none;font-family:'Cormorant Garamond',serif;font-size:22px;color:#1E2A4A;font-weight:400;letter-spacing:0.05em">Eliathi Modas</span>
+    </div>
+
+    <div class="header-actions">
+      <button title="Buscar">🔍</button>
+      <button title="Mi cuenta">👤</button>
+      <button title="Carrito" style="position:relative">
+        🛒
+        <span class="cart-badge">2</span>
+      </button>
+    </div>
+  </div>
+</header>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-img"></div>
+  <div class="hero-content">
+    <div class="hero-eyebrow">Nueva colección · Verano 2027</div>
+    <h1 class="hero-title">Tu estilo,<br><em>tu manera</em></h1>
+    <p class="hero-sub">Prendas pensadas para el día a día. Calidad, comodidad y diseño en cada detalle.</p>
+    <a class="hero-cta" href="#">
+      Ver colección <span class="hero-cta-arrow">→</span>
+    </a>
+  </div>
+  <div class="hero-scroll">
+    <div class="hero-scroll-line"></div>
+    <span>scroll</span>
+  </div>
+</section>
+
+<!-- CATEGORÍAS -->
+<div class="section">
+  <div class="section-header">
+    <h2 class="section-title">Explorá por categoría</h2>
+    <a href="#" class="section-link">Ver todo →</a>
+  </div>
+  <div class="categories-grid">
+    <div class="cat-card">
+      <img src="https://images.unsplash.com/photo-1576566588028-4147f3842f27?w=600&q=80" alt="Remeras" loading="lazy">
+      <div class="cat-overlay">
+        <div class="cat-name">Remeras</div>
+        <div class="cat-count">12 productos</div>
+        <div class="cat-cta">Ver todo →</div>
+      </div>
+    </div>
+    <div class="cat-card">
+      <img src="https://images.unsplash.com/photo-1541099649105-f69ad21f3246?w=600&q=80" alt="Jeans" loading="lazy">
+      <div class="cat-overlay">
+        <div class="cat-name">Jeans</div>
+        <div class="cat-count">8 productos</div>
+        <div class="cat-cta">Ver todo →</div>
+      </div>
+    </div>
+    <div class="cat-card">
+      <img src="https://images.unsplash.com/photo-1620799140408-edc6dcb6d633?w=600&q=80" alt="Buzos" loading="lazy">
+      <div class="cat-overlay">
+        <div class="cat-name">Buzos</div>
+        <div class="cat-count">6 productos</div>
+        <div class="cat-cta">Ver todo →</div>
+      </div>
+    </div>
+    <div class="cat-card">
+      <img src="https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=600&q=80" alt="Accesorios" loading="lazy">
+      <div class="cat-overlay">
+        <div class="cat-name">Accesorios</div>
+        <div class="cat-count">5 productos</div>
+        <div class="cat-cta">Ver todo →</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- PRODUCTOS DESTACADOS -->
+<div class="section">
+  <div class="section-header">
+    <h2 class="section-title">Lo más vendido</h2>
+    <a href="#" class="section-link">Ver todos →</a>
+  </div>
+  <div class="products-grid">
+
+    <div class="product-card">
+      <div class="product-img-wrap">
+        <img src="https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=600&q=80" alt="Remera Boxy" loading="lazy">
+        <span class="product-badge">−18%</span>
+        <button class="product-wishlist">♡</button>
+        <button class="product-quick-add">Agregar al carrito</button>
+      </div>
+      <div class="product-brand">Taverniti</div>
+      <div class="product-name">Remera Boxy Fit Roja</div>
+      <div class="product-prices">
+        <span class="price-old">$ 22.000</span>
+        <span class="price-current sale">$ 18.000</span>
+      </div>
+    </div>
+
+    <div class="product-card">
+      <div class="product-img-wrap">
+        <img src="https://images.unsplash.com/photo-1618354691373-d851c5c3a990?w=600&q=80" alt="Remera Oversize" loading="lazy">
+        <button class="product-wishlist">♡</button>
+        <button class="product-quick-add">Agregar al carrito</button>
+      </div>
+      <div class="product-brand"></div>
+      <div class="product-name">Remera Oversize Negra</div>
+      <div class="product-prices">
+        <span class="price-current">$ 15.000</span>
+      </div>
+    </div>
+
+    <div class="product-card">
+      <div class="product-img-wrap">
+        <img src="https://images.unsplash.com/photo-1594938298603-c8148c4b1e9a?w=600&q=80" alt="Jean" loading="lazy">
+        <button class="product-wishlist">♡</button>
+        <button class="product-quick-add">Agregar al carrito</button>
+      </div>
+      <div class="product-brand">Levi's</div>
+      <div class="product-name">Jean Skinny Azul</div>
+      <div class="product-prices">
+        <span class="price-current">$ 28.000</span>
+      </div>
+    </div>
+
+    <div class="product-card">
+      <div class="product-img-wrap">
+        <img src="https://images.unsplash.com/photo-1556821840-3a63f15732ce?w=600&q=80" alt="Buzo" loading="lazy">
+        <span class="product-badge">Nuevo</span>
+        <button class="product-wishlist">♡</button>
+        <button class="product-quick-add">Agregar al carrito</button>
+      </div>
+      <div class="product-brand"></div>
+      <div class="product-name">Buzo Hoodie Gris</div>
+      <div class="product-prices">
+        <span class="price-current">$ 22.000</span>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- BANNER INTERMEDIO -->
+<section class="mid-banner">
+  <div class="mid-banner-img"></div>
+  <div class="mid-banner-inner">
+    <div class="mid-banner-text">
+      <div class="mid-banner-eyebrow">Oferta especial</div>
+      <h2 class="mid-banner-title">10% OFF<br>pagando en efectivo</h2>
+      <p class="mid-banner-sub">Transferencia o efectivo, sin mínimo de compra. También 3 cuotas sin interés con todas las tarjetas.</p>
+      <a class="btn-outline-white" href="#">Ver condiciones →</a>
+    </div>
+    <div class="mid-banner-stat">
+      <div class="mid-banner-stat-number">3×</div>
+      <div class="mid-banner-stat-label">cuotas sin interés<br>con todas las tarjetas</div>
+    </div>
+  </div>
+</section>
+
+<!-- VERANO 2027 -->
+<div class="section">
+  <div class="section-header">
+    <h2 class="section-title">Verano 2027</h2>
+    <a href="#" class="section-link">Ver colección →</a>
+  </div>
+  <div class="products-grid">
+
+    <div class="product-card">
+      <div class="product-img-wrap">
+        <img src="https://images.unsplash.com/photo-1503342394128-c104d54dba01?w=600&q=80" alt="Producto" loading="lazy">
+        <span class="product-badge">Nuevo</span>
+        <button class="product-wishlist">♡</button>
+        <button class="product-quick-add">Agregar al carrito</button>
+      </div>
+      <div class="product-brand">Taverniti</div>
+      <div class="product-name">Musculosa Básica Blanca</div>
+      <div class="product-prices">
+        <span class="price-current">$ 12.000</span>
+      </div>
+    </div>
+
+    <div class="product-card">
+      <div class="product-img-wrap">
+        <img src="https://images.unsplash.com/photo-1581655353564-df123a1eb820?w=600&q=80" alt="Producto" loading="lazy">
+        <button class="product-wishlist">♡</button>
+        <button class="product-quick-add">Agregar al carrito</button>
+      </div>
+      <div class="product-brand"></div>
+      <div class="product-name">Short Cargo Verde</div>
+      <div class="product-prices">
+        <span class="price-current">$ 18.000</span>
+      </div>
+    </div>
+
+    <div class="product-card">
+      <div class="product-img-wrap">
+        <img src="https://images.unsplash.com/photo-1571945153237-4929e783af4a?w=600&q=80" alt="Producto" loading="lazy">
+        <button class="product-wishlist">♡</button>
+        <button class="product-quick-add">Agregar al carrito</button>
+      </div>
+      <div class="product-brand"></div>
+      <div class="product-name">Vestido Floral</div>
+      <div class="product-prices">
+        <span class="price-old">$ 32.000</span>
+        <span class="price-current sale">$ 26.000</span>
+      </div>
+    </div>
+
+    <div class="product-card">
+      <div class="product-img-wrap">
+        <img src="https://images.unsplash.com/photo-1509631179647-0177331693ae?w=600&q=80" alt="Producto" loading="lazy">
+        <button class="product-wishlist">♡</button>
+        <button class="product-quick-add">Agregar al carrito</button>
+      </div>
+      <div class="product-brand"></div>
+      <div class="product-name">Camisa Lino Beige</div>
+      <div class="product-prices">
+        <span class="price-current">$ 24.000</span>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- INSTAGRAM -->
+<div class="insta-strip">
+  <div class="insta-header">
+    <div class="insta-eyebrow">Seguinos</div>
+    <h2 class="insta-title">@eliathimodas</h2>
+  </div>
+  <div class="insta-grid">
+    <div class="insta-item">
+      <img src="https://images.unsplash.com/photo-1469334031218-e382a71b716b?w=400&q=80" alt="" loading="lazy">
+      <div class="insta-overlay"><span class="insta-icon">📷</span></div>
+    </div>
+    <div class="insta-item">
+      <img src="https://images.unsplash.com/photo-1485230895905-ec40ba36b9bc?w=400&q=80" alt="" loading="lazy">
+      <div class="insta-overlay"><span class="insta-icon">📷</span></div>
+    </div>
+    <div class="insta-item">
+      <img src="https://images.unsplash.com/photo-1496747611176-843222e1e57c?w=400&q=80" alt="" loading="lazy">
+      <div class="insta-overlay"><span class="insta-icon">📷</span></div>
+    </div>
+    <div class="insta-item">
+      <img src="https://images.unsplash.com/photo-1479064555552-3ef4979f8908?w=400&q=80" alt="" loading="lazy">
+      <div class="insta-overlay"><span class="insta-icon">📷</span></div>
+    </div>
+    <div class="insta-item">
+      <img src="https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=400&q=80" alt="" loading="lazy">
+      <div class="insta-overlay"><span class="insta-icon">📷</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-inner">
+    <div class="footer-top">
+      <div class="footer-brand">
+        <img src="/mnt/user-data/uploads/eliathi.png" alt="Eliathi Modas" onerror="this.style.display='none'">
+        <p>Moda para el día a día. Encontrá tu estilo en Quilmes y todo el país.</p>
+        <div class="footer-social">
+          <a href="#" class="social-btn">📷</a>
+          <a href="#" class="social-btn">💬</a>
+          <a href="#" class="social-btn">👍</a>
+        </div>
+      </div>
+      <div class="footer-col">
+        <h4>Tienda</h4>
+        <ul>
+          <li><a href="#">Remeras</a></li>
+          <li><a href="#">Jeans</a></li>
+          <li><a href="#">Buzos</a></li>
+          <li><a href="#">Ofertas</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Ayuda</h4>
+        <ul>
+          <li><a href="#">Cómo comprar</a></li>
+          <li><a href="#">Envíos</a></li>
+          <li><a href="#">Cambios</a></li>
+          <li><a href="#">Contacto</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Contacto</h4>
+        <ul>
+          <li><a href="#">WhatsApp</a></li>
+          <li><a href="#">Instagram</a></li>
+          <li><a href="#">Quilmes, Buenos Aires</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2026 Eliathi Modas. Todos los derechos reservados.</span>
+      <div class="footer-payments">
+        <span class="payment-badge">Visa</span>
+        <span class="payment-badge">Mastercard</span>
+        <span class="payment-badge">MP</span>
+        <span class="payment-badge">Transferencia</span>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<!-- WHATSAPP FLOTANTE -->
+<a href="#" class="whatsapp-float" title="Escribinos por WhatsApp">💬</a>
+
+</body>
+</html>

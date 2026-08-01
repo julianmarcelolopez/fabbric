@@ -1,0 +1,910 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Eliathi Modas — Checkout</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  :root {
+    --navy:   #1E2A4A;
+    --coral:  #F07058;
+    --white:  #FFFFFF;
+    --off:    #F8F7F5;
+    --gray:   #E8E4DF;
+    --text:   #2C2C2C;
+    --muted:  #8A8278;
+    --green:  #16A34A;
+    --green-bg: #F0FDF4;
+    --display:'Cormorant Garamond', Georgia, serif;
+    --body:   'DM Sans', system-ui, sans-serif;
+  }
+  body { font-family: var(--body); color: var(--text); background: var(--off); font-size: 14px; line-height: 1.6; -webkit-font-smoothing: antialiased; }
+
+  /* HEADER CHECKOUT — simplificado */
+  .checkout-header {
+    background: var(--white);
+    border-bottom: 1px solid var(--gray);
+    padding: 0 32px;
+  }
+  .checkout-header-inner {
+    max-width: 1100px;
+    margin: 0 auto;
+    height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .logo-text { font-family: var(--display); font-size: 22px; color: var(--navy); font-weight: 400; letter-spacing: 0.05em; }
+  .checkout-steps {
+    display: flex;
+    align-items: center;
+    gap: 0;
+  }
+  .step-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 16px;
+    font-size: 12px;
+    color: var(--muted);
+    letter-spacing: 0.04em;
+  }
+  .step-item.active { color: var(--navy); font-weight: 500; }
+  .step-item.done { color: var(--green); }
+  .step-num {
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    border: 1.5px solid var(--gray);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px;
+    font-weight: 600;
+    flex-shrink: 0;
+  }
+  .step-item.active .step-num { background: var(--navy); color: white; border-color: var(--navy); }
+  .step-item.done .step-num { background: var(--green); color: white; border-color: var(--green); font-size: 12px; }
+  .step-divider { width: 32px; height: 1px; background: var(--gray); }
+  .back-link { font-size: 13px; color: var(--muted); text-decoration: none; display: flex; align-items: center; gap: 4px; transition: color 0.15s; }
+  .back-link:hover { color: var(--coral); }
+
+  /* TABS para mostrar carrito vs checkout */
+  .view-tabs {
+    background: var(--navy);
+    padding: 10px 32px;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+  .view-tab {
+    padding: 6px 14px;
+    border-radius: 20px;
+    border: 1px solid rgba(255,255,255,0.2);
+    background: transparent;
+    color: rgba(255,255,255,0.6);
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-family: var(--body);
+  }
+  .view-tab.active { background: var(--coral); border-color: var(--coral); color: white; }
+  .view-tab:hover:not(.active) { border-color: rgba(255,255,255,0.4); color: white; }
+  .view-label { font-size: 12px; color: rgba(255,255,255,0.4); margin-right: 4px; }
+
+  /* VIEWS */
+  .view { display: none; }
+  .view.active { display: block; }
+
+  /* ══════════════════════════════════
+     VISTA 1 — CARRITO (drawer lateral)
+  ══════════════════════════════════ */
+  .cart-overlay {
+    position: relative;
+    background: var(--off);
+    min-height: calc(100vh - 120px);
+    display: flex;
+    align-items: flex-start;
+    justify-content: flex-end;
+    padding: 32px;
+    gap: 24px;
+  }
+
+  .cart-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(30,42,74,0.15);
+  }
+
+  .cart-drawer {
+    position: relative;
+    z-index: 2;
+    width: 420px;
+    background: var(--white);
+    box-shadow: -4px 0 24px rgba(0,0,0,0.12);
+    display: flex;
+    flex-direction: column;
+    min-height: 600px;
+    flex-shrink: 0;
+  }
+
+  .cart-header {
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--gray);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .cart-title { font-family: var(--display); font-size: 24px; font-weight: 300; color: var(--navy); }
+  .cart-count { font-size: 13px; color: var(--muted); margin-top: 2px; }
+  .cart-close { background: none; border: none; font-size: 20px; color: var(--muted); cursor: pointer; padding: 4px; transition: color 0.15s; }
+  .cart-close:hover { color: var(--navy); }
+
+  .cart-items { flex: 1; overflow-y: auto; padding: 16px 24px; }
+
+  .cart-item {
+    display: grid;
+    grid-template-columns: 80px 1fr auto;
+    gap: 14px;
+    padding: 16px 0;
+    border-bottom: 1px solid var(--gray);
+    align-items: start;
+  }
+  .cart-item:last-child { border-bottom: none; }
+
+  .cart-item-img {
+    width: 80px;
+    aspect-ratio: 3/4;
+    object-fit: cover;
+    background: var(--off);
+    display: block;
+  }
+
+  .cart-item-info { display: flex; flex-direction: column; gap: 4px; }
+  .cart-item-brand { font-size: 10px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+  .cart-item-name { font-size: 14px; font-weight: 400; color: var(--navy); line-height: 1.3; }
+  .cart-item-variant { font-size: 12px; color: var(--muted); }
+  .cart-item-qty {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    border: 1px solid var(--gray);
+    width: fit-content;
+    margin-top: 8px;
+  }
+  .qty-btn-sm { width: 28px; height: 28px; background: none; border: none; cursor: pointer; font-size: 14px; color: var(--navy); display: flex; align-items: center; justify-content: center; transition: background 0.15s; }
+  .qty-btn-sm:hover { background: var(--off); }
+  .qty-val-sm { width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 500; color: var(--navy); border-left: 1px solid var(--gray); border-right: 1px solid var(--gray); }
+
+  .cart-item-price { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+  .item-price-old { font-size: 11px; color: var(--muted); text-decoration: line-through; }
+  .item-price-current { font-size: 15px; font-weight: 500; color: var(--navy); }
+  .item-price-current.sale { color: var(--coral); }
+  .item-remove { font-size: 11px; color: var(--muted); cursor: pointer; text-decoration: underline; transition: color 0.15s; margin-top: 4px; }
+  .item-remove:hover { color: var(--coral); }
+
+  .cart-footer { padding: 20px 24px; border-top: 1px solid var(--gray); background: var(--white); }
+
+  .cart-promo {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+  .promo-input { flex: 1; padding: 9px 12px; border: 1px solid var(--gray); font-size: 13px; font-family: var(--body); outline: none; }
+  .promo-input:focus { border-color: var(--navy); }
+  .promo-btn { padding: 9px 16px; background: var(--off); border: 1px solid var(--gray); font-size: 12px; font-weight: 500; color: var(--navy); cursor: pointer; font-family: var(--body); letter-spacing: 0.06em; transition: all 0.15s; }
+  .promo-btn:hover { background: var(--gray); }
+
+  .cart-summary { margin-bottom: 16px; display: flex; flex-direction: column; gap: 8px; }
+  .summary-row { display: flex; justify-content: space-between; font-size: 13px; color: var(--muted); }
+  .summary-row.total { font-size: 16px; font-weight: 600; color: var(--navy); padding-top: 10px; border-top: 1px solid var(--gray); margin-top: 4px; }
+  .summary-row.total .summary-value { color: var(--coral); }
+  .summary-row.savings { color: var(--green); font-size: 12px; }
+
+  .cart-cta {
+    width: 100%;
+    padding: 15px;
+    background: var(--navy);
+    color: white;
+    border: none;
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    cursor: pointer;
+    font-family: var(--body);
+    transition: background 0.2s;
+    margin-bottom: 10px;
+  }
+  .cart-cta:hover { background: #2a3a5e; }
+
+  .cart-security { display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 11px; color: var(--muted); }
+
+  /* ══════════════════════════════════
+     VISTA 2 — CHECKOUT
+  ══════════════════════════════════ */
+  .checkout-layout {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 40px 32px 80px;
+    display: grid;
+    grid-template-columns: 1fr 380px;
+    gap: 40px;
+    align-items: start;
+  }
+
+  /* FORM SIDE */
+  .checkout-form {}
+
+  .form-section {
+    background: var(--white);
+    border: 1px solid var(--gray);
+    margin-bottom: 16px;
+    overflow: hidden;
+  }
+
+  .form-section-header {
+    padding: 18px 24px;
+    background: var(--white);
+    border-bottom: 1px solid var(--gray);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .form-section-num {
+    width: 28px; height: 28px;
+    background: var(--navy);
+    color: white;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+  .form-section-num.done { background: var(--green); }
+
+  .form-section-title { font-size: 15px; font-weight: 500; color: var(--navy); }
+  .form-section-edit { margin-left: auto; font-size: 12px; color: var(--coral); cursor: pointer; text-decoration: underline; }
+
+  .form-body { padding: 24px; }
+
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+  .form-row.single { grid-template-columns: 1fr; }
+  .form-row.triple { grid-template-columns: 1fr 1fr 1fr; }
+
+  .form-group { display: flex; flex-direction: column; gap: 5px; }
+  .form-label { font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--navy); }
+  .form-input, .form-select {
+    padding: 11px 14px;
+    border: 1px solid var(--gray);
+    font-size: 14px;
+    font-family: var(--body);
+    color: var(--text);
+    outline: none;
+    background: white;
+    transition: border-color 0.15s;
+  }
+  .form-input:focus, .form-select:focus { border-color: var(--navy); }
+  .form-input.filled { border-color: var(--gray); background: var(--off); color: var(--navy); }
+
+  /* COLLAPSED SECTION */
+  .form-section.collapsed .form-body { display: none; }
+  .form-section.collapsed .form-section-header { border-bottom: none; }
+  .collapsed-preview { padding: 0 24px 16px; font-size: 13px; color: var(--muted); }
+
+  /* ZONA DE ENVÍO */
+  .shipping-options { display: flex; flex-direction: column; gap: 10px; }
+  .shipping-option {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 16px;
+    border: 1px solid var(--gray);
+    cursor: pointer;
+    transition: border-color 0.15s;
+  }
+  .shipping-option.selected { border-color: var(--navy); background: var(--off); }
+  .shipping-option:hover { border-color: var(--navy); }
+  .shipping-radio {
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    border: 2px solid var(--gray);
+    flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .shipping-option.selected .shipping-radio { border-color: var(--navy); }
+  .shipping-radio-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--navy); display: none; }
+  .shipping-option.selected .shipping-radio-dot { display: block; }
+  .shipping-info { flex: 1; }
+  .shipping-name { font-size: 14px; font-weight: 500; color: var(--navy); }
+  .shipping-sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .shipping-price { font-size: 15px; font-weight: 600; color: var(--navy); }
+  .shipping-price.free { color: var(--green); }
+
+  /* PAGO */
+  .payment-options { display: flex; flex-direction: column; gap: 10px; }
+  .payment-option {
+    border: 1px solid var(--gray);
+    overflow: hidden;
+    transition: border-color 0.15s;
+  }
+  .payment-option.selected { border-color: var(--navy); }
+  .payment-option-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 16px;
+    cursor: pointer;
+  }
+  .payment-logos { display: flex; gap: 6px; align-items: center; margin-left: auto; }
+  .payment-logo { height: 20px; background: var(--gray); border-radius: 3px; padding: 2px 6px; font-size: 10px; font-weight: 700; color: var(--navy); display: flex; align-items: center; }
+  .payment-body { padding: 0 16px 16px; display: none; }
+  .payment-option.selected .payment-body { display: block; }
+  .mp-info { display: flex; align-items: center; gap: 10px; padding: 12px; background: var(--off); border: 1px solid var(--gray); font-size: 13px; color: var(--muted); }
+  .mp-icon { font-size: 20px; }
+
+  /* ORDER SUMMARY */
+  .order-summary {
+    background: var(--white);
+    border: 1px solid var(--gray);
+    position: sticky;
+    top: 80px;
+  }
+
+  .summary-header {
+    padding: 18px 24px;
+    border-bottom: 1px solid var(--gray);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .summary-title { font-size: 14px; font-weight: 600; color: var(--navy); letter-spacing: 0.04em; text-transform: uppercase; font-size: 12px; }
+  .summary-edit { font-size: 12px; color: var(--coral); cursor: pointer; text-decoration: underline; }
+
+  .summary-items { padding: 16px 24px; border-bottom: 1px solid var(--gray); }
+  .summary-item { display: flex; gap: 12px; margin-bottom: 14px; align-items: start; }
+  .summary-item:last-child { margin-bottom: 0; }
+  .summary-item-img { position: relative; width: 56px; flex-shrink: 0; }
+  .summary-item-img img { width: 56px; aspect-ratio: 3/4; object-fit: cover; display: block; }
+  .summary-item-qty { position: absolute; top: -6px; right: -6px; width: 18px; height: 18px; background: var(--muted); color: white; border-radius: 50%; font-size: 10px; font-weight: 700; display: flex; align-items: center; justify-content: center; }
+  .summary-item-info { flex: 1; }
+  .summary-item-name { font-size: 13px; color: var(--navy); line-height: 1.3; margin-bottom: 2px; }
+  .summary-item-variant { font-size: 11px; color: var(--muted); }
+  .summary-item-price { font-size: 14px; font-weight: 500; color: var(--navy); white-space: nowrap; }
+  .summary-item-price.sale { color: var(--coral); }
+
+  .summary-totals { padding: 16px 24px; border-bottom: 1px solid var(--gray); display: flex; flex-direction: column; gap: 8px; }
+  .total-row { display: flex; justify-content: space-between; font-size: 13px; color: var(--muted); }
+  .total-row.main { font-size: 16px; font-weight: 600; color: var(--navy); padding-top: 10px; border-top: 1px solid var(--gray); margin-top: 4px; }
+  .total-row.main .total-val { color: var(--coral); }
+  .total-row.savings-row { color: var(--green); font-size: 12px; }
+
+  .summary-cta { padding: 16px 24px; }
+  .btn-confirm {
+    width: 100%;
+    padding: 16px;
+    background: var(--coral);
+    color: white;
+    border: none;
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    cursor: pointer;
+    font-family: var(--body);
+    transition: background 0.2s;
+    margin-bottom: 12px;
+  }
+  .btn-confirm:hover { background: #e05e46; }
+  .security-note { display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 11px; color: var(--muted); text-align: center; }
+
+  /* ══════════════════════════════════
+     VISTA 3 — CONFIRMACIÓN
+  ══════════════════════════════════ */
+  .confirmation-wrapper {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 64px 32px 80px;
+    text-align: center;
+  }
+
+  .confirm-icon {
+    width: 72px; height: 72px;
+    background: var(--green-bg);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 32px;
+    margin: 0 auto 24px;
+  }
+
+  .confirm-title {
+    font-family: var(--display);
+    font-size: 44px;
+    font-weight: 300;
+    color: var(--navy);
+    line-height: 1.1;
+    margin-bottom: 12px;
+  }
+
+  .confirm-sub {
+    font-size: 15px;
+    color: var(--muted);
+    margin-bottom: 32px;
+    line-height: 1.7;
+  }
+
+  .confirm-order-box {
+    background: var(--white);
+    border: 1px solid var(--gray);
+    padding: 24px;
+    margin-bottom: 24px;
+    text-align: left;
+  }
+
+  .confirm-order-num {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+
+  .confirm-order-val {
+    font-family: var(--display);
+    font-size: 28px;
+    font-weight: 300;
+    color: var(--navy);
+    margin-bottom: 20px;
+  }
+
+  .confirm-details { display: flex; flex-direction: column; gap: 10px; }
+  .confirm-row { display: flex; justify-content: space-between; font-size: 13px; padding-bottom: 10px; border-bottom: 1px solid var(--gray); }
+  .confirm-row:last-child { border-bottom: none; padding-bottom: 0; }
+  .confirm-key { color: var(--muted); }
+  .confirm-val { color: var(--navy); font-weight: 500; }
+
+  .confirm-tracking {
+    background: var(--navy);
+    color: white;
+    padding: 20px 24px;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    text-align: left;
+  }
+
+  .tracking-icon { font-size: 28px; flex-shrink: 0; }
+  .tracking-text h4 { font-size: 14px; font-weight: 500; margin-bottom: 4px; }
+  .tracking-text p { font-size: 12px; color: rgba(255,255,255,0.65); line-height: 1.5; }
+  .tracking-link { margin-left: auto; font-size: 12px; color: var(--coral); text-decoration: underline; cursor: pointer; white-space: nowrap; }
+
+  .confirm-actions { display: flex; flex-direction: column; gap: 10px; }
+  .btn-orders { padding: 14px 32px; background: var(--navy); color: white; border: none; font-size: 13px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer; font-family: var(--body); transition: background 0.2s; }
+  .btn-orders:hover { background: #2a3a5e; }
+  .btn-continue { padding: 14px 32px; background: transparent; color: var(--navy); border: 1px solid var(--gray); font-size: 13px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer; font-family: var(--body); transition: all 0.2s; }
+  .btn-continue:hover { border-color: var(--navy); }
+  .btn-whatsapp { padding: 14px 32px; background: #25D366; color: white; border: none; font-size: 13px; font-weight: 500; letter-spacing: 0.06em; cursor: pointer; font-family: var(--body); display: flex; align-items: center; justify-content: center; gap: 8px; transition: background 0.2s; }
+  .btn-whatsapp:hover { background: #1da355; }
+
+  .whatsapp-float { position: fixed; bottom: 28px; right: 28px; width: 52px; height: 52px; background: #25D366; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; cursor: pointer; box-shadow: 0 4px 16px rgba(37,211,102,0.4); z-index: 999; text-decoration: none; transition: transform 0.2s; }
+  .whatsapp-float:hover { transform: scale(1.08); }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="checkout-header">
+  <div class="checkout-header-inner">
+    <span class="logo-text">Eliathi Modas</span>
+    <div class="checkout-steps">
+      <div class="step-item done">
+        <div class="step-num">✓</div>
+        Carrito
+      </div>
+      <div class="step-divider"></div>
+      <div class="step-item active">
+        <div class="step-num">2</div>
+        Datos y envío
+      </div>
+      <div class="step-divider"></div>
+      <div class="step-item">
+        <div class="step-num">3</div>
+        Pago
+      </div>
+    </div>
+    <a href="#" class="back-link">← Volver a la tienda</a>
+  </div>
+</div>
+
+<!-- TABS DE NAVEGACIÓN -->
+<div class="view-tabs">
+  <span class="view-label">Vista:</span>
+  <button class="view-tab active" onclick="showView('carrito')">🛒 Carrito</button>
+  <button class="view-tab" onclick="showView('checkout')">📋 Checkout</button>
+  <button class="view-tab" onclick="showView('confirmacion')">✅ Confirmación</button>
+</div>
+
+<!-- ══════════ VISTA 1: CARRITO ══════════ -->
+<div id="view-carrito" class="view active">
+  <div class="cart-overlay">
+    <div class="cart-backdrop"></div>
+    <div class="cart-drawer">
+      <div class="cart-header">
+        <div>
+          <div class="cart-title">Tu carrito</div>
+          <div class="cart-count">3 productos</div>
+        </div>
+        <button class="cart-close">✕</button>
+      </div>
+
+      <div class="cart-items">
+        <div class="cart-item">
+          <img class="cart-item-img" src="https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=200&q=70" alt="">
+          <div class="cart-item-info">
+            <div class="cart-item-brand">Taverniti</div>
+            <div class="cart-item-name">Remera Boxy Fit Roja</div>
+            <div class="cart-item-variant">Talle M · Rojo</div>
+            <div class="cart-item-qty">
+              <button class="qty-btn-sm">−</button>
+              <div class="qty-val-sm">1</div>
+              <button class="qty-btn-sm">+</button>
+            </div>
+          </div>
+          <div class="cart-item-price">
+            <span class="item-price-old">$ 22.000</span>
+            <span class="item-price-current sale">$ 18.000</span>
+            <span class="item-remove">Eliminar</span>
+          </div>
+        </div>
+
+        <div class="cart-item">
+          <img class="cart-item-img" src="https://images.unsplash.com/photo-1618354691373-d851c5c3a990?w=200&q=70" alt="">
+          <div class="cart-item-info">
+            <div class="cart-item-brand"></div>
+            <div class="cart-item-name">Remera Oversize Negra</div>
+            <div class="cart-item-variant">Talle L · Negro</div>
+            <div class="cart-item-qty">
+              <button class="qty-btn-sm">−</button>
+              <div class="qty-val-sm">2</div>
+              <button class="qty-btn-sm">+</button>
+            </div>
+          </div>
+          <div class="cart-item-price">
+            <span class="item-price-current">$ 30.000</span>
+            <span class="item-remove">Eliminar</span>
+          </div>
+        </div>
+
+        <div class="cart-item">
+          <img class="cart-item-img" src="https://images.unsplash.com/photo-1503342394128-c104d54dba01?w=200&q=70" alt="">
+          <div class="cart-item-info">
+            <div class="cart-item-brand">Taverniti</div>
+            <div class="cart-item-name">Musculosa Básica Blanca</div>
+            <div class="cart-item-variant">Talle S · Blanco</div>
+            <div class="cart-item-qty">
+              <button class="qty-btn-sm">−</button>
+              <div class="qty-val-sm">1</div>
+              <button class="qty-btn-sm">+</button>
+            </div>
+          </div>
+          <div class="cart-item-price">
+            <span class="item-price-current">$ 12.000</span>
+            <span class="item-remove">Eliminar</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="cart-footer">
+        <div class="cart-promo">
+          <input class="promo-input" placeholder="Código de descuento">
+          <button class="promo-btn">Aplicar</button>
+        </div>
+        <div class="cart-summary">
+          <div class="summary-row">
+            <span>Subtotal (4 productos)</span>
+            <span>$ 60.000</span>
+          </div>
+          <div class="summary-row savings">
+            <span>🏷️ Descuento aplicado</span>
+            <span>− $ 4.000</span>
+          </div>
+          <div class="summary-row">
+            <span>Envío</span>
+            <span style="color:var(--green)">A calcular</span>
+          </div>
+          <div class="summary-row total">
+            <span>Total</span>
+            <span class="summary-value">$ 56.000</span>
+          </div>
+        </div>
+        <button class="cart-cta">Continuar con el pago →</button>
+        <div class="cart-security">🔒 Pago seguro con Mercado Pago</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ VISTA 2: CHECKOUT ══════════ -->
+<div id="view-checkout" class="view">
+  <div class="checkout-layout">
+
+    <div class="checkout-form">
+
+      <!-- DATOS PERSONALES — completado -->
+      <div class="form-section collapsed">
+        <div class="form-section-header">
+          <div class="form-section-num done">✓</div>
+          <div class="form-section-title">Datos de contacto</div>
+          <span class="form-section-edit">Editar</span>
+        </div>
+        <div class="collapsed-preview">María González · maria@gmail.com · 11-5555-1234</div>
+      </div>
+
+      <!-- DIRECCIÓN DE ENVÍO -->
+      <div class="form-section">
+        <div class="form-section-header">
+          <div class="form-section-num">2</div>
+          <div class="form-section-title">Dirección de envío</div>
+        </div>
+        <div class="form-body">
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Nombre *</label>
+              <input class="form-input filled" value="María" readonly>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Apellido *</label>
+              <input class="form-input filled" value="González" readonly>
+            </div>
+          </div>
+          <div class="form-row single">
+            <div class="form-group">
+              <label class="form-label">Dirección *</label>
+              <input class="form-input" placeholder="Calle y número">
+            </div>
+          </div>
+          <div class="form-row triple">
+            <div class="form-group">
+              <label class="form-label">Código postal *</label>
+              <input class="form-input" placeholder="1878" value="1878">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Ciudad *</label>
+              <input class="form-input" placeholder="Quilmes">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Provincia *</label>
+              <select class="form-select">
+                <option>Buenos Aires</option>
+                <option>CABA</option>
+                <option>Córdoba</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- MÉTODO DE ENVÍO -->
+      <div class="form-section">
+        <div class="form-section-header">
+          <div class="form-section-num">3</div>
+          <div class="form-section-title">Método de envío</div>
+        </div>
+        <div class="form-body">
+          <div class="shipping-options">
+            <div class="shipping-option selected">
+              <div class="shipping-radio"><div class="shipping-radio-dot"></div></div>
+              <div class="shipping-info">
+                <div class="shipping-name">🚗 Envío express — Zona Quilmes</div>
+                <div class="shipping-sub">Hoy o mañana · entre 16 y 18hs</div>
+              </div>
+              <div class="shipping-price">$ 5.000</div>
+            </div>
+            <div class="shipping-option">
+              <div class="shipping-radio"><div class="shipping-radio-dot"></div></div>
+              <div class="shipping-info">
+                <div class="shipping-name">📦 Andreani — Todo el país</div>
+                <div class="shipping-sub">3 a 5 días hábiles</div>
+              </div>
+              <div class="shipping-price">$ 8.400</div>
+            </div>
+            <div class="shipping-option">
+              <div class="shipping-radio"><div class="shipping-radio-dot"></div></div>
+              <div class="shipping-info">
+                <div class="shipping-name">📍 Retiro en local — Quilmes</div>
+                <div class="shipping-sub">Coordinamos por email</div>
+              </div>
+              <div class="shipping-price free">Gratis</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PAGO -->
+      <div class="form-section">
+        <div class="form-section-header">
+          <div class="form-section-num">4</div>
+          <div class="form-section-title">Método de pago</div>
+        </div>
+        <div class="form-body">
+          <div class="payment-options">
+            <div class="payment-option selected">
+              <div class="payment-option-header">
+                <div class="shipping-radio"><div class="shipping-radio-dot"></div></div>
+                <span style="font-size:14px;font-weight:500;color:var(--navy)">Mercado Pago</span>
+                <div class="payment-logos">
+                  <div class="payment-logo">Visa</div>
+                  <div class="payment-logo">MC</div>
+                  <div class="payment-logo">MP</div>
+                </div>
+              </div>
+              <div class="payment-body">
+                <div class="mp-info">
+                  <span class="mp-icon">🔒</span>
+                  Serás redirigido a Mercado Pago para completar el pago de forma segura. Podés pagar con tarjeta, débito o saldo en tu cuenta MP.
+                </div>
+              </div>
+            </div>
+            <div class="payment-option">
+              <div class="payment-option-header">
+                <div class="shipping-radio"><div class="shipping-radio-dot"></div></div>
+                <span style="font-size:14px;font-weight:500;color:var(--navy)">Transferencia bancaria</span>
+                <span style="margin-left:auto;font-size:12px;color:var(--green);font-weight:600">10% OFF</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ORDER SUMMARY -->
+    <div class="order-summary">
+      <div class="summary-header">
+        <span class="summary-title">Resumen del pedido</span>
+        <span class="summary-edit">Editar carrito</span>
+      </div>
+      <div class="summary-items">
+        <div class="summary-item">
+          <div class="summary-item-img">
+            <img src="https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=200&q=70" alt="">
+            <div class="summary-item-qty">1</div>
+          </div>
+          <div class="summary-item-info">
+            <div class="summary-item-name">Remera Boxy Fit Roja</div>
+            <div class="summary-item-variant">M · Rojo</div>
+          </div>
+          <div class="summary-item-price sale">$ 18.000</div>
+        </div>
+        <div class="summary-item">
+          <div class="summary-item-img">
+            <img src="https://images.unsplash.com/photo-1618354691373-d851c5c3a990?w=200&q=70" alt="">
+            <div class="summary-item-qty">2</div>
+          </div>
+          <div class="summary-item-info">
+            <div class="summary-item-name">Remera Oversize Negra</div>
+            <div class="summary-item-variant">L · Negro</div>
+          </div>
+          <div class="summary-item-price">$ 30.000</div>
+        </div>
+        <div class="summary-item">
+          <div class="summary-item-img">
+            <img src="https://images.unsplash.com/photo-1503342394128-c104d54dba01?w=200&q=70" alt="">
+            <div class="summary-item-qty">1</div>
+          </div>
+          <div class="summary-item-info">
+            <div class="summary-item-name">Musculosa Básica Blanca</div>
+            <div class="summary-item-variant">S · Blanco</div>
+          </div>
+          <div class="summary-item-price">$ 12.000</div>
+        </div>
+      </div>
+      <div class="summary-totals">
+        <div class="total-row">
+          <span>Subtotal</span>
+          <span>$ 60.000</span>
+        </div>
+        <div class="total-row savings-row">
+          <span>🏷️ Descuento</span>
+          <span>− $ 4.000</span>
+        </div>
+        <div class="total-row">
+          <span>Envío express</span>
+          <span>$ 5.000</span>
+        </div>
+        <div class="total-row main">
+          <span>Total</span>
+          <span class="total-val">$ 61.000</span>
+        </div>
+      </div>
+      <div class="summary-cta">
+        <button class="btn-confirm">Confirmar y pagar →</button>
+        <div class="security-note">🔒 Tu información está protegida</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════════ VISTA 3: CONFIRMACIÓN ══════════ -->
+<div id="view-confirmacion" class="view">
+  <div class="confirmation-wrapper">
+
+    <div class="confirm-icon">✅</div>
+
+    <h1 class="confirm-title">¡Pedido<br>confirmado!</h1>
+
+    <p class="confirm-sub">
+      Gracias María. Tu pedido fue recibido y está siendo preparado.<br>
+      Te avisamos cuando salga para entrega.
+    </p>
+
+    <div class="confirm-order-box">
+      <div class="confirm-order-num">Número de pedido</div>
+      <div class="confirm-order-val">#001</div>
+      <div class="confirm-details">
+        <div class="confirm-row">
+          <span class="confirm-key">Productos</span>
+          <span class="confirm-val">4 prendas</span>
+        </div>
+        <div class="confirm-row">
+          <span class="confirm-key">Total pagado</span>
+          <span class="confirm-val" style="color:var(--coral)">$ 61.000</span>
+        </div>
+        <div class="confirm-row">
+          <span class="confirm-key">Método de pago</span>
+          <span class="confirm-val">Mercado Pago</span>
+        </div>
+        <div class="confirm-row">
+          <span class="confirm-key">Envío</span>
+          <span class="confirm-val">Express · Zona Quilmes</span>
+        </div>
+        <div class="confirm-row">
+          <span class="confirm-key">Dirección</span>
+          <span class="confirm-val">Quilmes, Buenos Aires</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="confirm-tracking">
+      <span class="tracking-icon">🚗</span>
+      <div class="tracking-text">
+        <h4>Seguí tu entrega en tiempo real</h4>
+        <p>Cuando tu pedido salga para entrega, te mandamos el link de seguimiento por email.</p>
+      </div>
+      <span class="tracking-link">Ver mis pedidos →</span>
+    </div>
+
+    <div class="confirm-actions">
+      <button class="btn-orders">Ver mis pedidos</button>
+      <button class="btn-continue">Seguir comprando</button>
+      <button class="btn-whatsapp">💬 ¿Tenés alguna duda? Escribinos</button>
+    </div>
+
+  </div>
+</div>
+
+<a href="#" class="whatsapp-float">💬</a>
+
+<script>
+  function showView(name) {
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+    document.querySelectorAll('.view-tab').forEach(t => t.classList.remove('active'));
+    document.getElementById('view-' + name).classList.add('active');
+    event.target.classList.add('active');
+
+    const steps = { carrito: 0, checkout: 1, confirmacion: 2 };
+    const stepItems = document.querySelectorAll('.step-item');
+    const stepDividers = document.querySelectorAll('.step-divider');
+    const idx = steps[name];
+    stepItems.forEach((s, i) => {
+      s.classList.remove('active', 'done');
+      if (i < idx) s.classList.add('done');
+      else if (i === idx) s.classList.add('active');
+    });
+  }
+</script>
+</body>
+</html>

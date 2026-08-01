@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Eliathi Modas — Remeras</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  :root {
+    --navy:   #1E2A4A;
+    --coral:  #F07058;
+    --white:  #FFFFFF;
+    --off:    #F8F7F5;
+    --gray:   #E8E4DF;
+    --text:   #2C2C2C;
+    --muted:  #8A8278;
+    --display:'Cormorant Garamond', Georgia, serif;
+    --body:   'DM Sans', system-ui, sans-serif;
+  }
+  body { font-family: var(--body); color: var(--text); background: var(--white); font-size: 14px; line-height: 1.6; -webkit-font-smoothing: antialiased; }
+
+  /* ANNOUNCEMENT */
+  .announcement { background: var(--navy); color: rgba(255,255,255,0.88); text-align: center; padding: 9px 16px; font-size: 12.5px; letter-spacing: 0.04em; }
+  .announcement strong { color: var(--coral); }
+
+  /* HEADER */
+  header { background: var(--white); border-bottom: 1px solid var(--gray); position: sticky; top: 0; z-index: 100; }
+  .header-inner { max-width: 1200px; margin: 0 auto; padding: 0 32px; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; height: 72px; }
+  nav { display: flex; gap: 28px; align-items: center; }
+  nav a { font-size: 12.5px; font-weight: 500; color: var(--navy); text-decoration: none; letter-spacing: 0.08em; text-transform: uppercase; transition: color 0.15s; }
+  nav a:hover { color: var(--coral); }
+  nav a.active { color: var(--coral); border-bottom: 2px solid var(--coral); padding-bottom: 2px; }
+  .logo-wrap { text-align: center; }
+  .logo-wrap img { height: 44px; display: block; margin: 0 auto; }
+  .logo-text { font-family: var(--display); font-size: 22px; color: var(--navy); font-weight: 400; letter-spacing: 0.05em; }
+  .header-actions { display: flex; gap: 20px; align-items: center; justify-content: flex-end; }
+  .header-actions button { background: none; border: none; cursor: pointer; color: var(--navy); font-size: 18px; padding: 4px; transition: color 0.15s; position: relative; }
+  .header-actions button:hover { color: var(--coral); }
+  .cart-badge { position: absolute; top: -4px; right: -6px; background: var(--coral); color: white; font-size: 9px; font-weight: 700; width: 16px; height: 16px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-family: var(--body); }
+
+  /* CATEGORY HERO BANNER */
+  .cat-banner {
+    position: relative;
+    height: 320px;
+    overflow: hidden;
+    background: var(--navy);
+  }
+  .cat-banner-img {
+    position: absolute;
+    inset: 0;
+    background-image: url('https://images.unsplash.com/photo-1576566588028-4147f3842f27?w=1400&q=80');
+    background-size: cover;
+    background-position: center 30%;
+    opacity: 0.45;
+  }
+  .cat-banner-content {
+    position: relative;
+    z-index: 2;
+    height: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 32px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    padding-bottom: 40px;
+  }
+  .breadcrumb { display: flex; align-items: center; gap: 8px; font-size: 12px; color: rgba(255,255,255,0.5); margin-bottom: 12px; }
+  .breadcrumb a { color: rgba(255,255,255,0.5); text-decoration: none; transition: color 0.15s; }
+  .breadcrumb a:hover { color: var(--coral); }
+  .breadcrumb-sep { color: rgba(255,255,255,0.25); }
+  .cat-banner-title { font-family: var(--display); font-size: clamp(40px, 6vw, 64px); font-weight: 300; color: white; letter-spacing: -0.01em; margin-bottom: 8px; }
+  .cat-banner-sub { font-size: 14px; color: rgba(255,255,255,0.6); font-weight: 300; }
+
+  /* TOOLBAR */
+  .toolbar {
+    background: var(--white);
+    border-bottom: 1px solid var(--gray);
+    position: sticky;
+    top: 72px;
+    z-index: 90;
+  }
+  .toolbar-inner {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 52px;
+    gap: 16px;
+  }
+  .toolbar-left { display: flex; align-items: center; gap: 8px; }
+  .filter-chip {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 12px;
+    border: 1px solid var(--gray);
+    border-radius: 2px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--navy);
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+    background: white;
+  }
+  .filter-chip:hover { border-color: var(--navy); }
+  .filter-chip.active { background: var(--navy); color: white; border-color: var(--navy); }
+  .filter-chip .chip-icon { font-size: 10px; }
+  .filter-active {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    background: var(--coral-light, #FDF1EE);
+    border: 1px solid var(--coral);
+    border-radius: 2px;
+    font-size: 11px;
+    color: var(--coral);
+    font-weight: 500;
+  }
+  .filter-active-x { cursor: pointer; font-size: 13px; line-height: 1; }
+  .toolbar-right { display: flex; align-items: center; gap: 12px; }
+  .result-count { font-size: 12px; color: var(--muted); white-space: nowrap; }
+  .sort-select {
+    padding: 5px 10px;
+    border: 1px solid var(--gray);
+    font-size: 12px;
+    color: var(--navy);
+    font-family: var(--body);
+    background: white;
+    cursor: pointer;
+    outline: none;
+  }
+  .view-toggle { display: flex; gap: 4px; }
+  .view-btn {
+    width: 30px; height: 30px;
+    display: flex; align-items: center; justify-content: center;
+    border: 1px solid var(--gray);
+    cursor: pointer;
+    font-size: 13px;
+    color: var(--muted);
+    background: white;
+    transition: all 0.15s;
+  }
+  .view-btn.active { background: var(--navy); color: white; border-color: var(--navy); }
+
+  /* MAIN LAYOUT */
+  .main-layout {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 32px 32px 80px;
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    gap: 40px;
+    align-items: start;
+  }
+
+  /* SIDEBAR FILTERS */
+  .filters-sidebar {
+    position: sticky;
+    top: 124px;
+  }
+  .filter-group { margin-bottom: 28px; }
+  .filter-group-title {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--navy);
+    margin-bottom: 14px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--gray);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+  }
+  .filter-group-toggle { font-size: 14px; color: var(--muted); }
+
+  /* TALLE CHIPS */
+  .talle-options { display: flex; flex-wrap: wrap; gap: 6px; }
+  .talle-chip {
+    width: 36px; height: 36px;
+    display: flex; align-items: center; justify-content: center;
+    border: 1px solid var(--gray);
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--navy);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .talle-chip:hover { border-color: var(--navy); }
+  .talle-chip.active { background: var(--navy); color: white; border-color: var(--navy); }
+  .talle-chip.disabled { opacity: 0.3; cursor: not-allowed; }
+
+  /* COLOR DOTS */
+  .color-options { display: flex; flex-wrap: wrap; gap: 8px; }
+  .color-dot {
+    width: 24px; height: 24px;
+    border-radius: 50%;
+    cursor: pointer;
+    position: relative;
+    transition: transform 0.15s;
+    border: 2px solid transparent;
+  }
+  .color-dot:hover { transform: scale(1.15); }
+  .color-dot.active { border-color: var(--navy); }
+  .color-dot.active::after {
+    content: '✓';
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    color: white;
+    font-weight: 700;
+  }
+
+  /* PRICE RANGE */
+  .price-range { display: flex; flex-direction: column; gap: 10px; }
+  .price-inputs { display: flex; gap: 8px; align-items: center; }
+  .price-input {
+    flex: 1;
+    padding: 7px 10px;
+    border: 1px solid var(--gray);
+    font-size: 12px;
+    font-family: var(--body);
+    color: var(--navy);
+    outline: none;
+  }
+  .price-input:focus { border-color: var(--navy); }
+  .price-sep { color: var(--muted); font-size: 12px; }
+  .price-slider {
+    width: 100%;
+    accent-color: var(--coral);
+  }
+
+  /* CHECKBOX FILTERS */
+  .checkbox-options { display: flex; flex-direction: column; gap: 10px; }
+  .checkbox-item { display: flex; align-items: center; gap: 8px; cursor: pointer; }
+  .checkbox-item input { accent-color: var(--coral); cursor: pointer; }
+  .checkbox-label { font-size: 13px; color: var(--text); }
+  .checkbox-count { font-size: 11px; color: var(--muted); margin-left: auto; }
+
+  .clear-filters {
+    font-size: 12px;
+    color: var(--coral);
+    cursor: pointer;
+    text-decoration: underline;
+    margin-top: 4px;
+    display: inline-block;
+  }
+
+  /* PRODUCTS GRID */
+  .products-area {}
+  .products-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+    margin-bottom: 40px;
+  }
+
+  .product-card { cursor: pointer; }
+  .product-img-wrap {
+    position: relative;
+    aspect-ratio: 3/4;
+    overflow: hidden;
+    background: var(--off);
+    margin-bottom: 14px;
+  }
+  .product-img-wrap img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s ease; display: block; }
+  .product-card:hover .product-img-wrap img { transform: scale(1.04); }
+
+  .product-badge {
+    position: absolute;
+    top: 12px; left: 12px;
+    background: var(--coral);
+    color: white;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 4px 8px;
+  }
+  .badge-new { background: var(--navy); }
+
+  .product-wishlist {
+    position: absolute;
+    top: 12px; right: 12px;
+    background: white;
+    border: none;
+    width: 32px; height: 32px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    font-size: 14px;
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+  .product-card:hover .product-wishlist { opacity: 1; }
+
+  .product-quick-add {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    background: var(--navy);
+    color: white;
+    border: none;
+    padding: 10px;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    cursor: pointer;
+    font-family: var(--body);
+    transform: translateY(100%);
+    transition: transform 0.25s ease;
+  }
+  .product-card:hover .product-quick-add { transform: translateY(0); }
+
+  /* TALLES DISPONIBLES EN CARD */
+  .product-talles {
+    position: absolute;
+    bottom: 40px; left: 0; right: 0;
+    display: flex;
+    justify-content: center;
+    gap: 4px;
+    opacity: 0;
+    transition: opacity 0.2s;
+    padding: 0 8px;
+  }
+  .product-card:hover .product-talles { opacity: 1; }
+  .talle-pill {
+    background: rgba(255,255,255,0.9);
+    color: var(--navy);
+    font-size: 9px;
+    font-weight: 600;
+    padding: 3px 6px;
+  }
+  .talle-pill.no-stock {
+    background: rgba(255,255,255,0.4);
+    color: rgba(255,255,255,0.6);
+    text-decoration: line-through;
+  }
+
+  .product-brand { font-size: 10px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin-bottom: 4px; }
+  .product-name { font-size: 14px; font-weight: 400; color: var(--navy); margin-bottom: 8px; line-height: 1.3; }
+  .product-prices { display: flex; align-items: center; gap: 8px; }
+  .price-old { font-size: 12px; color: var(--muted); text-decoration: line-through; }
+  .price-current { font-size: 15px; font-weight: 500; color: var(--navy); }
+  .price-current.sale { color: var(--coral); }
+
+  /* PAGINATION */
+  .pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+  }
+  .page-btn {
+    width: 36px; height: 36px;
+    display: flex; align-items: center; justify-content: center;
+    border: 1px solid var(--gray);
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--navy);
+    cursor: pointer;
+    transition: all 0.15s;
+    background: white;
+    font-family: var(--body);
+  }
+  .page-btn:hover { border-color: var(--navy); }
+  .page-btn.active { background: var(--navy); color: white; border-color: var(--navy); }
+  .page-btn.arrow { font-size: 16px; color: var(--muted); }
+  .page-btn.arrow:hover { color: var(--navy); border-color: var(--navy); }
+
+  /* FOOTER */
+  footer { background: var(--navy); color: rgba(255,255,255,0.7); padding: 64px 32px 32px; margin-top: 40px; }
+  .footer-inner { max-width: 1200px; margin: 0 auto; }
+  .footer-top { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 48px; padding-bottom: 48px; border-bottom: 1px solid rgba(255,255,255,0.1); margin-bottom: 32px; }
+  .footer-logo-text { font-family: var(--display); font-size: 24px; color: rgba(255,255,255,0.8); font-weight: 300; letter-spacing: 0.05em; margin-bottom: 16px; display: block; }
+  .footer-brand p { font-size: 13px; line-height: 1.7; color: rgba(255,255,255,0.5); margin-bottom: 20px; max-width: 260px; }
+  .footer-social { display: flex; gap: 12px; }
+  .social-btn { width: 36px; height: 36px; border: 1px solid rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; font-size: 14px; color: rgba(255,255,255,0.6); cursor: pointer; transition: all 0.2s; text-decoration: none; }
+  .social-btn:hover { border-color: var(--coral); color: var(--coral); }
+  .footer-col h4 { font-size: 11px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: white; margin-bottom: 20px; }
+  .footer-col ul { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+  .footer-col ul li a { font-size: 13px; color: rgba(255,255,255,0.5); text-decoration: none; transition: color 0.15s; }
+  .footer-col ul li a:hover { color: var(--coral); }
+  .footer-bottom { display: flex; align-items: center; justify-content: space-between; font-size: 12px; color: rgba(255,255,255,0.3); }
+  .footer-payments { display: flex; gap: 8px; }
+  .payment-badge { background: rgba(255,255,255,0.08); padding: 4px 10px; font-size: 11px; color: rgba(255,255,255,0.5); border: 1px solid rgba(255,255,255,0.1); }
+
+  .whatsapp-float { position: fixed; bottom: 28px; right: 28px; width: 52px; height: 52px; background: #25D366; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; cursor: pointer; box-shadow: 0 4px 16px rgba(37,211,102,0.4); z-index: 999; text-decoration: none; transition: transform 0.2s; }
+  .whatsapp-float:hover { transform: scale(1.08); }
+</style>
+</head>
+<body>
+
+<div class="announcement">
+  Envío gratis en zona Quilmes en compras mayores a <strong>$50.000</strong> &nbsp;·&nbsp; 3 cuotas sin interés
+</div>
+
+<header>
+  <div class="header-inner">
+    <nav>
+      <a href="#" class="active">Remeras</a>
+      <a href="#">Jeans</a>
+      <a href="#">Buzos</a>
+      <a href="#">Camperas</a>
+      <a href="#">Ver todo</a>
+    </nav>
+    <div class="logo-wrap">
+      <img src="/mnt/user-data/uploads/eliathi.png" alt="Eliathi Modas"
+           onerror="this.style.display='none';this.nextElementSibling.style.display='block'">
+      <span class="logo-text" style="display:none">Eliathi Modas</span>
+    </div>
+    <div class="header-actions">
+      <button>🔍</button>
+      <button>👤</button>
+      <button style="position:relative">🛒 <span class="cart-badge">2</span></button>
+    </div>
+  </div>
+</header>
+
+<!-- BANNER DE CATEGORÍA -->
+<div class="cat-banner">
+  <div class="cat-banner-img"></div>
+  <div class="cat-banner-content">
+    <div class="breadcrumb">
+      <a href="#">Inicio</a>
+      <span class="breadcrumb-sep">›</span>
+      <a href="#">Categorías</a>
+      <span class="breadcrumb-sep">›</span>
+      <span style="color:rgba(255,255,255,0.8)">Remeras</span>
+    </div>
+    <h1 class="cat-banner-title">Remeras</h1>
+    <p class="cat-banner-sub">12 productos — Básicas, oversize, boxy fit y más</p>
+  </div>
+</div>
+
+<!-- TOOLBAR -->
+<div class="toolbar">
+  <div class="toolbar-inner">
+    <div class="toolbar-left">
+      <div class="filter-chip active">
+        <span class="chip-icon">▼</span> Filtros
+      </div>
+      <div class="filter-active">
+        Talle: M <span class="filter-active-x">×</span>
+      </div>
+      <div class="filter-active">
+        Color: Rojo <span class="filter-active-x">×</span>
+      </div>
+      <span class="clear-filters">Limpiar filtros</span>
+    </div>
+    <div class="toolbar-right">
+      <span class="result-count">12 productos</span>
+      <select class="sort-select">
+        <option>Más vendidos</option>
+        <option>Menor precio</option>
+        <option>Mayor precio</option>
+        <option>Más nuevos</option>
+      </select>
+      <div class="view-toggle">
+        <div class="view-btn active">▦</div>
+        <div class="view-btn">▤</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main-layout">
+
+  <!-- FILTROS SIDEBAR -->
+  <aside class="filters-sidebar">
+
+    <div class="filter-group">
+      <div class="filter-group-title">
+        Talle <span class="filter-group-toggle">−</span>
+      </div>
+      <div class="talle-options">
+        <div class="talle-chip">XS</div>
+        <div class="talle-chip">S</div>
+        <div class="talle-chip active">M</div>
+        <div class="talle-chip">L</div>
+        <div class="talle-chip">XL</div>
+        <div class="talle-chip disabled">XXL</div>
+        <div class="talle-chip">Único</div>
+      </div>
+    </div>
+
+    <div class="filter-group">
+      <div class="filter-group-title">
+        Color <span class="filter-group-toggle">−</span>
+      </div>
+      <div class="color-options">
+        <div class="color-dot" style="background:#1E2A4A" title="Navy"></div>
+        <div class="color-dot active" style="background:#E53E3E" title="Rojo"></div>
+        <div class="color-dot" style="background:#2C2C2C" title="Negro"></div>
+        <div class="color-dot" style="background:#F7F7F7;border:1px solid #E8E4DF" title="Blanco"></div>
+        <div class="color-dot" style="background:#68A063" title="Verde"></div>
+        <div class="color-dot" style="background:#F07058" title="Coral"></div>
+        <div class="color-dot" style="background:#9B8EA0" title="Lila"></div>
+        <div class="color-dot" style="background:#D4A96A" title="Camel"></div>
+      </div>
+    </div>
+
+    <div class="filter-group">
+      <div class="filter-group-title">
+        Precio <span class="filter-group-toggle">−</span>
+      </div>
+      <div class="price-range">
+        <input type="range" class="price-slider" min="0" max="50000" value="30000">
+        <div class="price-inputs">
+          <input class="price-input" value="$ 0" />
+          <span class="price-sep">—</span>
+          <input class="price-input" value="$ 30.000" />
+        </div>
+      </div>
+    </div>
+
+    <div class="filter-group">
+      <div class="filter-group-title">
+        Marca <span class="filter-group-toggle">−</span>
+      </div>
+      <div class="checkbox-options">
+        <label class="checkbox-item">
+          <input type="checkbox" checked>
+          <span class="checkbox-label">Taverniti</span>
+          <span class="checkbox-count">4</span>
+        </label>
+        <label class="checkbox-item">
+          <input type="checkbox">
+          <span class="checkbox-label">Sin marca</span>
+          <span class="checkbox-count">8</span>
+        </label>
+      </div>
+    </div>
+
+    <div class="filter-group">
+      <div class="filter-group-title">
+        Estado <span class="filter-group-toggle">+</span>
+      </div>
+    </div>
+
+  </aside>
+
+  <!-- PRODUCTOS -->
+  <div class="products-area">
+    <div class="products-grid">
+
+      <div class="product-card">
+        <div class="product-img-wrap">
+          <img src="https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=600&q=80" alt="Remera Boxy" loading="lazy">
+          <span class="product-badge">−18%</span>
+          <button class="product-wishlist">♡</button>
+          <div class="product-talles">
+            <span class="talle-pill">S</span>
+            <span class="talle-pill active" style="background:var(--coral);color:white">M</span>
+            <span class="talle-pill">L</span>
+            <span class="talle-pill no-stock">XL</span>
+          </div>
+          <button class="product-quick-add">Agregar al carrito</button>
+        </div>
+        <div class="product-brand">Taverniti</div>
+        <div class="product-name">Remera Boxy Fit Roja</div>
+        <div class="product-prices">
+          <span class="price-old">$ 22.000</span>
+          <span class="price-current sale">$ 18.000</span>
+        </div>
+      </div>
+
+      <div class="product-card">
+        <div class="product-img-wrap">
+          <img src="https://images.unsplash.com/photo-1618354691373-d851c5c3a990?w=600&q=80" alt="Remera Oversize" loading="lazy">
+          <button class="product-wishlist">♡</button>
+          <div class="product-talles">
+            <span class="talle-pill">S</span>
+            <span class="talle-pill active" style="background:var(--coral);color:white">M</span>
+            <span class="talle-pill">L</span>
+            <span class="talle-pill">XL</span>
+          </div>
+          <button class="product-quick-add">Agregar al carrito</button>
+        </div>
+        <div class="product-brand"></div>
+        <div class="product-name">Remera Oversize Negra</div>
+        <div class="product-prices">
+          <span class="price-current">$ 15.000</span>
+        </div>
+      </div>
+
+      <div class="product-card">
+        <div class="product-img-wrap">
+          <img src="https://images.unsplash.com/photo-1503342394128-c104d54dba01?w=600&q=80" alt="Musculosa" loading="lazy">
+          <span class="product-badge badge-new">Nuevo</span>
+          <button class="product-wishlist">♡</button>
+          <div class="product-talles">
+            <span class="talle-pill">XS</span>
+            <span class="talle-pill active" style="background:var(--coral);color:white">M</span>
+            <span class="talle-pill">L</span>
+          </div>
+          <button class="product-quick-add">Agregar al carrito</button>
+        </div>
+        <div class="product-brand">Taverniti</div>
+        <div class="product-name">Musculosa Básica Blanca</div>
+        <div class="product-prices">
+          <span class="price-current">$ 12.000</span>
+        </div>
+      </div>
+
+      <div class="product-card">
+        <div class="product-img-wrap">
+          <img src="https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?w=600&q=80" alt="Remera listada" loading="lazy">
+          <button class="product-wishlist">♡</button>
+          <div class="product-talles">
+            <span class="talle-pill">S</span>
+            <span class="talle-pill active" style="background:var(--coral);color:white">M</span>
+            <span class="talle-pill no-stock">L</span>
+          </div>
+          <button class="product-quick-add">Agregar al carrito</button>
+        </div>
+        <div class="product-brand"></div>
+        <div class="product-name">Remera Rayas Marineras</div>
+        <div class="product-prices">
+          <span class="price-current">$ 14.000</span>
+        </div>
+      </div>
+
+      <div class="product-card">
+        <div class="product-img-wrap">
+          <img src="https://images.unsplash.com/photo-1562157873-818bc0726f68?w=600&q=80" alt="Remera crop" loading="lazy">
+          <span class="product-badge">−20%</span>
+          <button class="product-wishlist">♡</button>
+          <div class="product-talles">
+            <span class="talle-pill">XS</span>
+            <span class="talle-pill active" style="background:var(--coral);color:white">M</span>
+            <span class="talle-pill">L</span>
+          </div>
+          <button class="product-quick-add">Agregar al carrito</button>
+        </div>
+        <div class="product-brand">Taverniti</div>
+        <div class="product-name">Remera Crop Coral</div>
+        <div class="product-prices">
+          <span class="price-old">$ 16.000</span>
+          <span class="price-current sale">$ 12.800</span>
+        </div>
+      </div>
+
+      <div class="product-card">
+        <div class="product-img-wrap">
+          <img src="https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=600&q=80" alt="Remera manga larga" loading="lazy">
+          <span class="product-badge badge-new">Nuevo</span>
+          <button class="product-wishlist">♡</button>
+          <div class="product-talles">
+            <span class="talle-pill">S</span>
+            <span class="talle-pill active" style="background:var(--coral);color:white">M</span>
+            <span class="talle-pill">L</span>
+            <span class="talle-pill">XL</span>
+          </div>
+          <button class="product-quick-add">Agregar al carrito</button>
+        </div>
+        <div class="product-brand"></div>
+        <div class="product-name">Remera Manga Larga Verde</div>
+        <div class="product-prices">
+          <span class="price-current">$ 17.000</span>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- PAGINACIÓN -->
+    <div class="pagination">
+      <button class="page-btn arrow">‹</button>
+      <button class="page-btn active">1</button>
+      <button class="page-btn">2</button>
+      <button class="page-btn arrow">›</button>
+    </div>
+
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-inner">
+    <div class="footer-top">
+      <div class="footer-brand">
+        <span class="footer-logo-text">Eliathi Modas</span>
+        <p>Moda para el día a día. Encontrá tu estilo en Quilmes y todo el país.</p>
+        <div class="footer-social">
+          <a href="#" class="social-btn">📷</a>
+          <a href="#" class="social-btn">💬</a>
+          <a href="#" class="social-btn">👍</a>
+        </div>
+      </div>
+      <div class="footer-col">
+        <h4>Tienda</h4>
+        <ul>
+          <li><a href="#">Remeras</a></li>
+          <li><a href="#">Jeans</a></li>
+          <li><a href="#">Buzos</a></li>
+          <li><a href="#">Camperas</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Ayuda</h4>
+        <ul>
+          <li><a href="#">Cómo comprar</a></li>
+          <li><a href="#">Envíos</a></li>
+          <li><a href="#">Cambios</a></li>
+          <li><a href="#">Contacto</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Contacto</h4>
+        <ul>
+          <li><a href="#">WhatsApp</a></li>
+          <li><a href="#">Instagram</a></li>
+          <li><a href="#">Quilmes, Buenos Aires</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2026 Eliathi Modas. Todos los derechos reservados.</span>
+      <div class="footer-payments">
+        <span class="payment-badge">Visa</span>
+        <span class="payment-badge">Mastercard</span>
+        <span class="payment-badge">MP</span>
+        <span class="payment-badge">Transferencia</span>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<a href="#" class="whatsapp-float">💬</a>
+
+</body>
+</html>
