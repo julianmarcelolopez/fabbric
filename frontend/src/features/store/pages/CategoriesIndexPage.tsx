@@ -35,14 +35,19 @@ export function CategoriesIndexPage() {
 
   return (
     <div className="categories-index">
-      <div className="page-hero">
-        <div className="breadcrumb">
-          <Link to={`/store/${slug}`}>Inicio</Link>
-          <span className="breadcrumb-sep">›</span>
-          <span>{tab === "categories" ? "Categorías" : "Colecciones"}</span>
+      {/* T21/08: reusa .cat-banner tal cual (mismo navy/alineado a la izquierda que
+          la categoría individual) — antes tenía su propio estilo claro/centrado
+          (.page-hero), inconsistente con el resto de los headers de página. */}
+      <div className="cat-banner">
+        <div className="cat-banner-content">
+          <div className="breadcrumb">
+            <Link to={`/store/${slug}`}>Inicio</Link>
+            <span className="breadcrumb-sep">›</span>
+            <span className="breadcrumb-current">{tab === "categories" ? "Categorías" : "Colecciones"}</span>
+          </div>
+          <h1 className="cat-banner-title">Explorá la tienda</h1>
+          <p className="cat-banner-sub">Encontrá lo que buscás entre todas nuestras categorías y colecciones</p>
         </div>
-        <h1 className="page-title">Explorá la tienda</h1>
-        <p className="page-subtitle">Encontrá lo que buscás entre todas nuestras categorías y colecciones</p>
       </div>
 
       <div className="tabs-bar">

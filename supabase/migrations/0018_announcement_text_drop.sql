@@ -1,0 +1,1 @@
+ALTER TABLE "catalog_configs" DROP COLUMN "announcement_text";

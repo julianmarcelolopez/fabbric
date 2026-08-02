@@ -405,12 +405,17 @@ export const catalogConfigs = pgTable("catalog_configs", {
   bannerUrl: text("banner_url"),
   whatsapp: text("whatsapp"),
   instagram: text("instagram"),
+  // T21/08 — red social adicional; mismo patrón que instagram (icono en el
+  // footer solo si tiene valor)
+  facebook: text("facebook"),
   email: text("email"),
   address: text("address"),
   businessHours: text("business_hours"),
-  // T21/03 — texto propio del announcement bar; null = autogenerado desde
-  // zonas de envío reales (mismo criterio de T20/02, ahora como fallback)
-  announcementText: text("announcement_text"),
+  // T21/08 — mensajes propios del announcement bar, en orden de rotación;
+  // [] = autogenerado desde zonas de envío reales (mismo criterio de T20/02,
+  // ahora como fallback). Pasó de un texto único a una lista (carrusel con
+  // flechas cuando hay 2+, mensaje fijo sin flechas cuando hay exactamente 1).
+  announcementTexts: text("announcement_texts").array().notNull().default([]),
   // T21/04 — texto opcional superpuesto al mid-banner del home; null = el
   // banner se muestra solo (bannerUrl), sin overlay ni texto (T20/03).
   midBannerTitle: text("mid_banner_title"),
@@ -418,6 +423,8 @@ export const catalogConfigs = pgTable("catalog_configs", {
   // T21/06 — texto libre de la política de cambios/devoluciones; null = la
   // ficha de producto sigue derivando a WhatsApp (T20/06).
   returnPolicy: text("return_policy"),
+  // Imagen de fondo del hero del home; null = fondo navy sólido (T20/03)
+  heroImageUrl: text("hero_image_url"),
   // Mercado Pago propia de la org (T16) — cifradas (ver lib/crypto.ts), nunca
   // en texto plano; nunca en updateCatalogConfigSchema, se setean aparte
   mpAccessToken: text("mp_access_token"),

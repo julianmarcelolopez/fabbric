@@ -1,0 +1,1 @@
+ALTER TABLE "catalog_configs" ADD COLUMN "facebook" text;

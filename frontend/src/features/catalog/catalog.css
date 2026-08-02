@@ -151,6 +151,15 @@
 /* ── T20/02: announcement bar ─────────────────────────────────────────────── */
 .announcement { background: var(--navy); color: rgba(255,255,255,0.88); text-align: center; padding: 9px 16px; font-size: 12.5px; letter-spacing: 0.04em; }
 .announcement strong { color: var(--tenant-primary); }
+/* T21/08: .announcement-carousel es un wrapper INTERNO de .announcement (no
+   combinado en el mismo div) — así el fondo navy de .announcement sigue
+   ocupando el ancho completo de la pantalla, y el max-width solo acerca las
+   flechas al texto en vez de pegarlas a los bordes reales. Solo aparece con
+   2+ mensajes propios (ver AnnouncementBar en StoreLayout.tsx). */
+.announcement-carousel { display: flex; align-items: center; justify-content: center; gap: 16px; max-width: 600px; margin: 0 auto; }
+.announcement-text { flex: 1; text-align: center; }
+.announcement-arrow { flex-shrink: 0; background: none; border: none; padding: 0 4px; font-size: 16px; line-height: 1; color: rgba(255,255,255,0.55); cursor: pointer; transition: color 0.15s; }
+.announcement-arrow:hover { color: rgba(255,255,255,0.95); }
 
 /* ── T20/02: header nuevo ─────────────────────────────────────────────────── */
 /* T20/03: logo al extremo izquierdo (antes del nav), no centrado — decisión
@@ -165,7 +174,7 @@
 .store-nav a:hover { color: var(--tenant-primary); }
 .store-nav a.active { color: var(--tenant-primary); border-bottom: 2px solid var(--tenant-primary); padding-bottom: 2px; }
 .store-logo-wrap { text-decoration: none; flex-shrink: 0; }
-.store-logo-wrap img { height: 40px; display: block; }
+.store-logo-wrap img { height: 52px; display: block; }
 .store-logo-text { font-family: var(--tenant-font-display); font-size: 22px; color: var(--navy); font-weight: 400; letter-spacing: 0.05em; }
 .store-header-actions { display: flex; gap: 20px; align-items: center; justify-content: flex-end; margin-left: auto; flex-shrink: 0; }
 .header-action-btn { display: flex; align-items: center; justify-content: center; background: none; border: none; cursor: pointer; color: var(--navy); padding: 4px; transition: color 0.15s; position: relative; }
@@ -181,13 +190,25 @@
 .account-dropdown a:hover, .account-dropdown button:hover { background: var(--off); color: var(--tenant-primary); }
 
 /* ── T20/02: footer nuevo ─────────────────────────────────────────────────── */
-.store-footer-v2 { background: var(--navy); color: rgba(255,255,255,0.7); padding: 64px 32px 32px; margin-top: 40px; }
-.store-footer-v2 .footer-inner { max-width: 1200px; margin: 0 auto; }
-.store-footer-v2 .footer-top { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 48px; padding-bottom: 48px; border-bottom: 1px solid rgba(255,255,255,0.1); margin-bottom: 32px; }
+.store-footer-v2 { background: var(--navy); color: rgba(255,255,255,0.7); padding: 48px 0 28px; margin-top: 40px; }
+/* T21/08: en el home, .home-mid-banner ya llega al borde real de <main> (ver
+   catalog.css, margin-bottom negativo) — este margin-top de 40px es aire
+   pensado para las demás páginas (contenido normal antes del footer) y acá
+   solo deja una franja del fondo de .store visible entre el banner y el
+   footer. StoreLayout.tsx aplica esta clase solo en la ruta del home. */
+.store-footer-v2.flush-top { margin-top: 0; }
+/* T21/08: mismo max-width/padding/box-sizing que .store-main, para que el
+   punto de arranque a la izquierda de las columnas del footer coincida
+   exactamente con el de los productos/categorías, sin importar el ancho de
+   pantalla (antes usaba max-width:1200px + el padding de .store-footer-v2). */
+.store-footer-v2 .footer-inner { max-width: 1000px; margin: 0 auto; padding: 0 20px; box-sizing: border-box; }
+.store-footer-v2 .footer-top { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 48px; padding-bottom: 32px; border-bottom: 1px solid rgba(255,255,255,0.1); margin-bottom: 24px; }
 /* T20/02: el logo real de Eliathi Modas tiene fondo blanco opaco (no transparente) —
    invertir a blanco lo dejaba todo blanco (fondo y trazo por igual). En vez de un
    filtro, se apoya en un chip claro para leerse bien sobre el footer navy. */
-.store-footer-v2 .footer-brand .footer-logo-img { height: 40px; margin-bottom: 16px; background: var(--white); padding: 8px 14px; border-radius: 4px; display: inline-block; }
+.store-footer-v2 .footer-brand .footer-logo-link { display: inline-block; text-decoration: none; transition: opacity 0.2s; }
+.store-footer-v2 .footer-brand .footer-logo-link:hover { opacity: 0.85; }
+.store-footer-v2 .footer-brand .footer-logo-img { height: 52px; margin-bottom: 16px; background: var(--white); padding: 8px 20px; border-radius: 999px; display: inline-block; }
 .store-footer-v2 .footer-brand .footer-logo-text { font-family: var(--tenant-font-display); font-size: 24px; color: rgba(255,255,255,0.85); font-weight: 300; letter-spacing: 0.05em; margin-bottom: 16px; display: block; }
 .store-footer-v2 .footer-brand p { font-size: 13px; line-height: 1.7; color: rgba(255,255,255,0.5); margin-bottom: 20px; max-width: 260px; }
 .store-footer-v2 .footer-social { display: flex; gap: 12px; }
@@ -226,7 +247,7 @@
 .hsr-empty { color: #6b7280; font-size: 14px; text-align: center; padding: 24px 0; }
 
 /* T19/10: link "Ver todos" junto al título de sección + página de categoría paginada */
-.hsr-section-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.hsr-section-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
 .hsr-viewall { font-size: 13px; color: var(--accent, #111827); text-decoration: none; white-space: nowrap; }
 .hsr-viewall:hover { text-decoration: underline; }
 /* T20/05: flex-column + flex:1 (mismo patrón que .home-page/.categories-index)
@@ -256,29 +277,56 @@
    hero y el banner intermedio ocupan todo el ancho de la pantalla). */
 .home-hero {
   position: relative;
-  min-height: 60vh;
+  min-height: 280px;
   width: 100vw;
   margin: -24px calc(50% - 50vw) 0;
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   justify-content: center;
+  padding-bottom: 36px;
   background-color: var(--navy);
   overflow: hidden;
   text-align: center;
 }
-.home-hero-content { position: relative; z-index: 2; max-width: 720px; padding: 40px 24px; }
+/* T21/08 — heroImageUrl: foto/textura de fondo dedicada (distinta de
+   bannerUrl, que ya usa el mid-banner). background-color de .home-hero queda
+   como fallback detrás de la imagen mientras carga. El scrim (::before) pinta
+   arriba del background-image propio pero abajo de .home-hero-content (mismo
+   orden de pintado que .home-mid-banner.has-text, T21/04) — necesario acá
+   porque, a diferencia de las cards de categoría (T21/01), la imagen es
+   background propio, no un <img> hermano. */
+.home-hero.has-image {
+  background-size: cover;
+  background-position: center;
+}
+.home-hero.has-image::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(30, 42, 74, 0.55);
+}
+/* padding-bottom: 0 — el padding-bottom del padre (.home-hero) ya separa el
+   botón del borde real; si acá también tuviera padding-bottom, se sumarían
+   los dos y quedaría un hueco de más abajo, sin contraparte arriba. */
+.home-hero-content { position: relative; z-index: 2; max-width: 720px; padding: 40px 24px 0; }
 /* T20/03 (opción A, sin imagen): tipografía grande y protagonista en vez de
    foto de fondo — el subtítulo va en itálica para el mismo acento editorial
    que el mockup le daba a una palabra del título, aplicado de forma genérica
    (config.storeName es texto libre por tenant, no se puede asumir qué
    palabra italizar sin hardcodear algo específico de un tenant). */
-.home-hero-title { font-family: var(--tenant-font-display); font-size: clamp(48px, 9vw, 100px); font-weight: 300; line-height: 1.02; color: var(--white); margin: 0 0 20px; letter-spacing: -0.02em; }
-.home-hero-sub { font-family: var(--tenant-font-display); font-style: italic; font-weight: 400; font-size: 20px; color: rgba(255, 255, 255, 0.8); margin: 0 auto 32px; max-width: 460px; line-height: 1.5; }
+/* T21/08: script solo acá (no en --tenant-font-display, ver index.html) —
+   line-height/letter-spacing más sueltos que la serif de arriba porque un
+   script necesita aire para los trazos ascendentes/descendentes. */
+.home-hero-title { font-family: 'Alex Brush', var(--tenant-font-display); font-size: clamp(56px, 10vw, 120px); font-weight: 400; line-height: 1.2; color: var(--white); margin: 0 0 10px; letter-spacing: 0; }
+.home-hero-sub { font-family: var(--tenant-font-display); font-style: italic; font-weight: 400; font-size: 20px; color: rgba(255, 255, 255, 0.8); margin: 0 auto 20px; max-width: 460px; line-height: 1.5; }
 .home-hero-cta { display: inline-flex; align-items: center; gap: 10px; background: var(--tenant-primary); color: var(--white); padding: 13px 26px; font-size: 12.5px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; text-decoration: none; width: fit-content; margin: 0 auto; transition: opacity 0.2s; }
 .home-hero-cta:hover { opacity: 0.88; }
 .home-hero-cta-arrow { font-size: 15px; }
 
-.home-section { padding: 40px 0; }
+/* gap:12px iguala el espaciado interno de .hsr-section (título → grilla) —
+   sin efecto donde .home-section tiene un solo hijo (los wrappers que
+   envuelven HomeSectionsRenderer), gap de grid solo actúa entre ítems. */
+.home-section { display: grid; gap: 12px; padding: 40px 0; }
 
 .home-categories-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 14px; }
 .home-cat-card { position: relative; aspect-ratio: 3 / 4; overflow: hidden; display: block; text-decoration: none; color: inherit; }
@@ -299,7 +347,11 @@
 /* home-mid-banner es un <a> cuando hay bannerUrl (imagen sola, clickeable,
    sin texto superpuesto) y un <section> con texto genérico cuando no hay
    imagen — ver Resultado en docs/T20_UX-Store/tareas/03-home.md. */
-.home-mid-banner { position: relative; display: flex; align-items: center; justify-content: center; flex: 1 1 auto; width: 100vw; margin: 32px calc(50% - 50vw) 0; min-height: 220px; background-color: var(--navy); background-size: cover; background-position: center; overflow: hidden; text-decoration: none; }
+/* margin-bottom: -24px cancela el padding-bottom de .store-main (24px) — es
+   siempre el último elemento de .home-page, mismo criterio que el margin-top
+   negativo de .home-hero (cancela el padding-top), para que quede pegado al
+   borde real de <main>, no flotando con un margen vacío debajo. */
+.home-mid-banner { position: relative; display: flex; align-items: center; justify-content: center; flex: 1 1 auto; width: 100vw; margin: 32px calc(50% - 50vw) -24px; min-height: 220px; background-color: var(--navy); background-size: cover; background-position: center; overflow: hidden; text-decoration: none; }
 .home-mid-banner-inner { max-width: 560px; margin: 0 auto; padding: 56px 24px; text-align: center; }
 .home-mid-banner-title { font-family: var(--tenant-font-display); font-size: clamp(26px, 4vw, 42px); font-weight: 400; color: var(--white); line-height: 1.15; margin: 0 0 24px; }
 .home-mid-banner-btn { display: inline-flex; align-items: center; gap: 8px; border: 1px solid rgba(255, 255, 255, 0.5); color: var(--white); padding: 12px 26px; font-size: 12px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; text-decoration: none; transition: all 0.2s; }
@@ -317,24 +369,24 @@
   inset: 0;
   background: linear-gradient(to right, rgba(30, 42, 74, 0.85) 0%, rgba(30, 42, 74, 0.4) 60%, rgba(30, 42, 74, 0.1) 100%);
 }
-.home-mid-banner.has-text .home-mid-banner-inner { position: relative; margin: 0; padding: 40px 48px; text-align: left; }
+/* T21/08: mismo max-width/padding que .store-main (antes: margin:0 pegado al
+   borde real del viewport, sin relación con dónde arrancan los productos) —
+   alinea el título del banner con las columnas de productos/categorías y con
+   el footer, sin importar el ancho de pantalla. */
+.home-mid-banner.has-text .home-mid-banner-inner { position: relative; max-width: 1000px; margin: 0 auto; padding: 40px 20px; text-align: left; box-sizing: border-box; }
 .home-mid-banner.has-text .home-mid-banner-title { font-family: var(--tenant-font-display); font-size: clamp(40px, 5vw, 48px); font-weight: 300; color: var(--white); margin: 0 0 12px; }
 .home-mid-banner-sub { font-family: var(--font-body); font-size: 15px; font-weight: 300; color: var(--white); opacity: 0.8; margin: 0; max-width: 420px; }
 
 /* ── T20/04: página índice "Categorías" ── */
 .categories-index { display: flex; flex-direction: column; flex: 1; }
 
-/* .page-hero / .tabs-bar: full-bleed igual que .home-hero (calc(50%-50vw)),
-   .page-hero además cancela el padding-top de .store-main por ser el primer
-   elemento de la página (mismo truco que .home-hero, ver T20/03). Reusable
-   tal cual por la tarea 05 (página de categoría individual). */
-.page-hero { background: var(--off); border-bottom: 1px solid var(--gray); padding: 48px 32px; text-align: center; width: 100vw; margin: -24px calc(50% - 50vw) 0; }
+/* .tabs-bar: full-bleed igual que .home-hero (calc(50%-50vw)). El header de
+   "Categorías" (índice) reusa .cat-banner tal cual — ver CategoriesIndexPage.tsx. */
 .breadcrumb { display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 12px; color: var(--muted); margin-bottom: 16px; letter-spacing: 0.04em; }
 .breadcrumb a { color: var(--muted); text-decoration: none; transition: color 0.15s; }
 .breadcrumb a:hover { color: var(--tenant-primary); }
 .breadcrumb-sep { color: var(--gray); }
-.page-title { font-family: var(--tenant-font-display); font-size: clamp(36px, 5vw, 56px); font-weight: 300; color: var(--navy); letter-spacing: -0.01em; margin: 0 0 10px; }
-.page-subtitle { font-size: 15px; color: var(--muted); font-weight: 300; margin: 0; }
+.breadcrumb-current { color: var(--navy); font-weight: 500; }
 
 .tabs-bar { border-bottom: 1px solid var(--gray); background: var(--white); position: sticky; top: 72px; z-index: 90; width: 100vw; margin: 0 calc(50% - 50vw); }
 .tabs-inner { max-width: 1200px; margin: 0 auto; padding: 0 32px; display: flex; gap: 0; }
@@ -391,13 +443,19 @@
 }
 
 /* ── T20/05: página de categoría individual ── */
-.cat-banner { position: relative; min-height: 280px; width: 100vw; margin: -24px calc(50% - 50vw) 0; display: flex; align-items: flex-end; background: var(--navy); overflow: hidden; }
-.cat-banner::before { content: ""; position: absolute; inset: 0; background: var(--tenant-primary); opacity: 0.2; }
-.cat-banner-content { position: relative; max-width: 1200px; margin: 0 auto; padding: 0 32px 36px; width: 100%; box-sizing: border-box; }
+.cat-banner { position: relative; min-height: 190px; width: 100vw; margin: -24px calc(50% - 50vw) 0; display: flex; align-items: flex-end; background: var(--navy); overflow: hidden; }
+/* T21/08: el tinte del color de acento (::before de T20/05) se sacó — mezclado
+   sobre el navy daba un tono violáceo que desentonaba con el navy sólido de
+   .breadcrumb-bar (ficha de producto). Mismo navy puro en los tres lugares. */
+/* T21/08: max-width 1000px + padding 20px — mismo sistema que .store-main /
+   .footer-inner / .home-mid-banner-inner, para que el título/breadcrumb
+   arranquen exactamente en el mismo punto que el resto del contenido. */
+.cat-banner-content { position: relative; max-width: 1000px; margin: 0 auto; padding: 0 20px 36px; width: 100%; box-sizing: border-box; }
 .cat-banner .breadcrumb { justify-content: flex-start; color: rgba(255, 255, 255, 0.55); margin-bottom: 12px; }
 .cat-banner .breadcrumb a { color: rgba(255, 255, 255, 0.55); }
 .cat-banner .breadcrumb a:hover { color: var(--tenant-primary); }
 .cat-banner .breadcrumb-sep { color: rgba(255, 255, 255, 0.25); }
+.cat-banner .breadcrumb-current { color: rgba(255, 255, 255, 0.9); }
 .cat-banner-title { font-family: var(--tenant-font-display); font-size: clamp(36px, 6vw, 56px); font-weight: 300; color: var(--white); letter-spacing: -0.01em; margin: 0 0 8px; }
 .cat-banner-sub { font-size: 14px; color: rgba(255, 255, 255, 0.7); font-weight: 300; margin: 0; }
 
@@ -418,9 +476,16 @@
 
 /* ── T20/06: página de producto ── */
 .pdv-page { display: flex; flex-direction: column; flex: 1; }
-.breadcrumb-bar { background: var(--off); border-bottom: 1px solid var(--gray); padding: 12px 32px; width: 100vw; margin: -24px calc(50% - 50vw) 32px; }
-.breadcrumb-bar .breadcrumb { justify-content: flex-start; margin-bottom: 0; }
-.breadcrumb-current { color: var(--navy); font-weight: 500; }
+/* T21/08: navy (antes fondo claro var(--off)) — mismo lenguaje de color que
+   .cat-banner, pero angosta a propósito: acá el verdadero "hero" es la foto
+   del producto, no esta franja. max-width 1000px en .breadcrumb (único hijo)
+   para arrancar en el mismo punto que el resto del contenido. */
+.breadcrumb-bar { background: var(--navy); padding: 12px 0; width: 100vw; margin: -24px calc(50% - 50vw) 32px; }
+.breadcrumb-bar .breadcrumb { justify-content: flex-start; margin-bottom: 0; max-width: 1000px; margin-left: auto; margin-right: auto; padding: 0 20px; box-sizing: border-box; color: rgba(255, 255, 255, 0.55); }
+.breadcrumb-bar .breadcrumb a { color: rgba(255, 255, 255, 0.55); }
+.breadcrumb-bar .breadcrumb a:hover { color: var(--tenant-primary); }
+.breadcrumb-bar .breadcrumb-sep { color: rgba(255, 255, 255, 0.25); }
+.breadcrumb-bar .breadcrumb-current { color: rgba(255, 255, 255, 0.9); }
 
 /* Utilidades globales de texto — sin definir hasta ahora en la tienda pública
    (CheckoutPage/MyOrdersPage/OrderDetailPage ya usaban .muted/.error, pero

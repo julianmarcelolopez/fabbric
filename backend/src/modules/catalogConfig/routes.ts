@@ -164,6 +164,58 @@ export async function catalogConfigRoutes(fastify: FastifyInstance) {
     }
   );
 
+  app.post(
+    "/admin/catalog-config/hero-image",
+    {
+      ...auth,
+      schema: {
+        ...tag,
+        summary: "Subir/reemplazar la imagen de fondo del hero del home (multipart, JPEG/PNG/WebP/SVG, máx 2 MB)",
+        consumes: ["multipart/form-data"],
+      },
+    },
+    async (request) => {
+      const orgId = requireOrgId(request);
+      const config = await ensureConfig(orgId);
+
+      const file = await request.file();
+      if (!file) throw new AppError(400, "validation", "Falta el archivo (campo multipart)");
+      const ext = ALLOWED_TYPES[file.mimetype];
+      if (!ext) throw new AppError(400, "invalid_file_type", "Solo JPEG, PNG, WebP o SVG");
+      const buffer = await file.toBuffer();
+      if (buffer.length > LOGO_MAX_BYTES) {
+        throw new AppError(400, "file_too_large", "La imagen del hero no puede superar los 2 MB");
+      }
+
+      const storagePath = `${orgId}/config/hero-${randomUUID()}.${ext}`;
+      const uploaded = await supabaseAdmin.storage
+        .from(BUCKET)
+        .upload(storagePath, buffer, { contentType: file.mimetype });
+      if (uploaded.error) {
+        throw new AppError(502, "storage_error", `Storage: ${uploaded.error.message}`);
+      }
+      const { data: pub } = supabaseAdmin.storage.from(BUCKET).getPublicUrl(storagePath);
+
+      // Borrar la imagen anterior (best-effort — un huérfano es tolerable)
+      if (config.heroImageUrl) {
+        const oldPath = storagePathFromUrl(config.heroImageUrl);
+        if (oldPath) {
+          const removed = await supabaseAdmin.storage.from(BUCKET).remove([oldPath]);
+          if (removed.error) {
+            request.log.warn(`No se pudo borrar la imagen de hero anterior: ${removed.error.message}`);
+          }
+        }
+      }
+
+      const [row] = await db
+        .update(catalogConfigs)
+        .set({ heroImageUrl: pub.publicUrl })
+        .where(eq(catalogConfigs.orgId, orgId))
+        .returning();
+      return toAdminConfig(row);
+    }
+  );
+
   app.patch(
     "/admin/catalog-config/mp-integration",
     {

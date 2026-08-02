@@ -95,16 +95,19 @@ export async function publicRoutes(fastify: FastifyInstance) {
         bannerUrl: config.bannerUrl,
         whatsapp: config.whatsapp,
         instagram: config.instagram,
+        facebook: config.facebook,
         email: config.email,
         address: config.address,
         businessHours: config.businessHours,
         // T21/03 — null = StoreLayout.tsx autogenera desde zonas de envío
-        announcementText: config.announcementText,
+        announcementTexts: config.announcementTexts,
         // T21/04 — null = mid-banner del home sin overlay ni texto (T20/03)
         midBannerTitle: config.midBannerTitle,
         midBannerSubtitle: config.midBannerSubtitle,
         // T21/06 — null = la ficha de producto sigue derivando a WhatsApp (T20/06)
         returnPolicy: config.returnPolicy,
+        // null = fondo navy sólido en el hero del home (T20/03)
+        heroImageUrl: config.heroImageUrl,
       };
     }
   );

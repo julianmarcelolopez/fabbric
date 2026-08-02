@@ -6,7 +6,7 @@ import { CartDrawer } from "../cart/CartDrawer";
 import { CartProvider, useCart } from "../cart/CartContext";
 import "../catalog/catalog.css";
 import { CustomerAuthProvider, useCustomerAuth } from "./CustomerAuthContext";
-import { BagIcon, CheckIcon, InstagramIcon, SearchIcon, ShareIcon, UserIcon, WhatsAppIcon } from "./icons";
+import { BagIcon, CheckIcon, FacebookIcon, InstagramIcon, SearchIcon, ShareIcon, UserIcon, WhatsAppIcon } from "./icons";
 import type { PublicHomeSection, PublicStoreConfig, StoreContext } from "./types";
 
 // T20/02 — header/footer nuevos (docs/T20_UX-Store/mockups/*). Estructura y
@@ -14,6 +14,55 @@ import type { PublicHomeSection, PublicStoreConfig, StoreContext } from "./types
 // para las decisiones que el mockup no cubre (nav, announcement, buscador, etc).
 
 type ShippingZone = { id: string; name: string; cost: number; freeShippingFrom: number | null };
+
+// T21/08: con 1 solo mensaje se muestra fijo, sin flechas (un carrusel de un
+// ítem no tiene sentido). Con 2+, rota sola cada 5s (decisión del usuario) y
+// las flechas permiten saltar manualmente sin esperar — el timer se reinicia
+// desde el mensaje actual en cada click, no desde cero. Exportado para que
+// MyStorePage.tsx lo reuse tal cual en la vista previa del admin.
+export function AnnouncementBar({ messages }: { messages: string[] }) {
+  const [index, setIndex] = useState(0);
+
+  useEffect(() => {
+    if (messages.length < 2) return;
+    const id = setInterval(() => setIndex((i) => (i + 1) % messages.length), 5000);
+    return () => clearInterval(id);
+  }, [messages.length]);
+
+  useEffect(() => {
+    if (index >= messages.length) setIndex(0);
+  }, [messages, index]);
+
+  if (messages.length === 1) {
+    return <div className="announcement">{messages[0]}</div>;
+  }
+
+  // .announcement-carousel es un wrapper INTERNO — .announcement (el fondo
+  // navy) tiene que quedar sin max-width para ocupar el ancho completo.
+  return (
+    <div className="announcement">
+      <div className="announcement-carousel">
+        <button
+          type="button"
+          className="announcement-arrow"
+          onClick={() => setIndex((i) => (i - 1 + messages.length) % messages.length)}
+          aria-label="Mensaje anterior"
+        >
+          ‹
+        </button>
+        <span className="announcement-text">{messages[index]}</span>
+        <button
+          type="button"
+          className="announcement-arrow"
+          onClick={() => setIndex((i) => (i + 1) % messages.length)}
+          aria-label="Mensaje siguiente"
+        >
+          ›
+        </button>
+      </div>
+    </div>
+  );
+}
 
 function CartButton() {
   const cart = useCart();
@@ -123,6 +172,13 @@ export function StoreLayout() {
   const location = useLocation();
   const isCheckout = location.pathname.includes("/checkout");
   const checkoutDone = location.pathname.includes("/checkout/result");
+  // T21/08: el home (única página con mid-banner full-bleed) ya cancela el
+  // padding-bottom de .store-main con un margin-bottom negativo (catalog.css)
+  // para quedar pegado al borde real de <main> — el margin-top de 40px del
+  // footer (pensado como aire para el resto de las páginas, con contenido
+  // normal antes) rompe ese efecto acá, dejando una franja del fondo de
+  // .store visible entre el banner y el footer. Se cancela solo en el home.
+  const isHome = location.pathname === `/store/${slug}` || location.pathname === `/store/${slug}/`;
   const [state, setState] = useState<State>({ status: "loading" });
   const [shippingZones, setShippingZones] = useState<ShippingZone[] | null>(null);
   const [navCategories, setNavCategories] = useState<{ refName: string; refSlug: string }[] | null>(null);
@@ -194,17 +250,17 @@ export function StoreLayout() {
 
   const whatsappHref = config.whatsapp ? `https://wa.me/${config.whatsapp.replace(/\D/g, "")}` : null;
 
-  // T21/03 — texto propio del admin tiene prioridad; si no hay, el
-  // autogenerado de T20/02 sigue funcionando como fallback; si no hay
-  // ninguno de los dos, la barra no se muestra (mismo comportamiento de hoy).
-  const announcementText = config.announcementText?.trim() || null;
+  // T21/08 — mensajes propios del admin tienen prioridad; si no hay ninguno,
+  // el autogenerado de T20/02 sigue funcionando como fallback; si no hay
+  // nada de nada, la barra no se muestra (mismo comportamiento de hoy).
+  const announcementTexts = config.announcementTexts.map((t) => t.trim()).filter(Boolean);
 
   return (
     <CustomerAuthProvider slug={slug!}>
       <CartProvider slug={slug!}>
         <div className="store" style={{ "--accent": config.accentColor } as CSSProperties}>
-          {!isCheckout && announcementText && <div className="announcement">{announcementText}</div>}
-          {!isCheckout && !announcementText && cheapestFreeShipping && (
+          {!isCheckout && announcementTexts.length > 0 && <AnnouncementBar messages={announcementTexts} />}
+          {!isCheckout && announcementTexts.length === 0 && cheapestFreeShipping && (
             <div className="announcement">
               Envío gratis en {cheapestFreeShipping.name} en compras mayores a{" "}
               <strong>{formatPrice(cheapestFreeShipping.freeShippingFrom as number)}</strong>
@@ -274,15 +330,17 @@ export function StoreLayout() {
               enfocado, sin links de salida antes de pagar (patrón estándar de
               e-commerce). Se aplica el mismo criterio al whatsapp-float. */}
           {!isCheckout && (
-          <footer className="store-footer-v2">
+          <footer className={isHome ? "store-footer-v2 flush-top" : "store-footer-v2"}>
             <div className="footer-inner">
               <div className="footer-top">
                 <div className="footer-brand">
-                  {config.logoUrl ? (
-                    <img src={config.logoUrl} alt={config.storeName} className="footer-logo-img" />
-                  ) : (
-                    <span className="footer-logo-text">{config.storeName}</span>
-                  )}
+                  <Link to={`/store/${slug}`} className="footer-logo-link">
+                    {config.logoUrl ? (
+                      <img src={config.logoUrl} alt={config.storeName} className="footer-logo-img" />
+                    ) : (
+                      <span className="footer-logo-text">{config.storeName}</span>
+                    )}
+                  </Link>
                   {config.businessDescription && <p>{config.businessDescription}</p>}
                   <div className="footer-social">
                     {config.instagram && (
@@ -290,12 +348,16 @@ export function StoreLayout() {
                         <InstagramIcon />
                       </a>
                     )}
+                    {config.facebook && (
+                      <a href={config.facebook} target="_blank" rel="noreferrer" className="social-btn" title="Facebook">
+                        <FacebookIcon />
+                      </a>
+                    )}
                     {whatsappHref && (
                       <a href={whatsappHref} target="_blank" rel="noreferrer" className="social-btn" title="WhatsApp">
                         <WhatsAppIcon />
                       </a>
                     )}
-                    {/* T20/02: sin campo de Facebook en catalog_configs — se omite (ver analisis.md sección 6) */}
                   </div>
                 </div>
 
@@ -312,7 +374,7 @@ export function StoreLayout() {
                   </div>
                 )}
 
-                {(config.address || config.businessHours || whatsappHref || config.email) && (
+                {(config.address || config.businessHours || whatsappHref || config.email || config.facebook) && (
                   <div className="footer-col">
                     <h4>Contacto</h4>
                     <ul>
@@ -324,6 +386,11 @@ export function StoreLayout() {
                       {config.instagram && (
                         <li>
                           <a href={config.instagram} target="_blank" rel="noreferrer">Instagram</a>
+                        </li>
+                      )}
+                      {config.facebook && (
+                        <li>
+                          <a href={config.facebook} target="_blank" rel="noreferrer">Facebook</a>
                         </li>
                       )}
                       {config.email && (

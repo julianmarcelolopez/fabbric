@@ -166,7 +166,7 @@ export function CategoryPage({ mode = "category" }: Props) {
             <span className="breadcrumb-sep">›</span>
             <Link to={`/store/${slug}/categorias`}>{mode === "collection" ? "Colecciones" : "Categorías"}</Link>
             <span className="breadcrumb-sep">›</span>
-            <span>{item.name}</span>
+            <span className="breadcrumb-current">{item.name}</span>
           </div>
           <h1 className="cat-banner-title">{item.name}</h1>
           <p className="cat-banner-sub">

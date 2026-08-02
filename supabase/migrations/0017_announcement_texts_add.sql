@@ -1,0 +1,1 @@
+ALTER TABLE "catalog_configs" ADD COLUMN "announcement_texts" text[] DEFAULT '{}' NOT NULL;

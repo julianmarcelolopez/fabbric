@@ -19,10 +19,12 @@ import type { PublicHomeSection, StoreContext } from "../types";
 function Hero({
   storeName,
   businessDescription,
+  heroImageUrl,
   slug,
 }: {
   storeName: string;
   businessDescription: string | null;
+  heroImageUrl: string | null;
   slug: string;
 }) {
   // T20/03: el hero del mockup usa una foto de fondo genérica; la imagen real
@@ -31,8 +33,15 @@ function Hero({
   // quedaba ilegible/duplicado con el título. Se decidió dejar el hero en
   // fondo sólido (sin imagen) y reservar bannerUrl solo para el mid-banner,
   // donde se muestra tal cual, sin texto propio encima.
+  //
+  // T21/08: heroImageUrl es un campo dedicado y distinto de bannerUrl —
+  // pensado como una foto/textura ambiente, no promocional, con overlay
+  // (.has-image) para mantener el título legible encima.
   return (
-    <section className="home-hero">
+    <section
+      className={heroImageUrl ? "home-hero has-image" : "home-hero"}
+      style={heroImageUrl ? { backgroundImage: `url(${heroImageUrl})` } : undefined}
+    >
       <div className="home-hero-content">
         <h1 className="home-hero-title">{storeName}</h1>
         {businessDescription && <p className="home-hero-sub">{businessDescription}</p>}
@@ -154,7 +163,12 @@ export function CatalogHomePage() {
     // footer. .home-page hace que ese sobrante lo absorba el mid-banner en
     // vez de quedar como un espacio vacío desprolijo.
     <div className="home-page">
-      <Hero storeName={config.storeName} businessDescription={config.businessDescription} slug={slug} />
+      <Hero
+        storeName={config.storeName}
+        businessDescription={config.businessDescription}
+        heroImageUrl={config.heroImageUrl}
+        slug={slug}
+      />
       <CategoriesGrid sections={sections} slug={slug} />
       <div className="home-section">
         <HomeSectionsRenderer
