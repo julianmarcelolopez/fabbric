@@ -110,6 +110,7 @@ export function CheckoutPage() {
   return (
     <div className="checkout-layout">
       <form
+        id="checkout-form"
         onSubmit={(e) => {
           e.preventDefault();
           void pay();
@@ -321,7 +322,12 @@ export function CheckoutPage() {
           pagar con Mercado Pago.
         </p>
         <div className="summary-cta">
-          <button className="btn-confirm" type="button" onClick={() => void pay()} disabled={paying || !zone}>
+          {/* T21/08: type="submit" + form="checkout-form" (en vez de type="button"
+              con onClick propio) — el botón vive fuera del <form> por el layout
+              (sidebar aparte), pero así dispara su onSubmit igual, incluida la
+              validación nativa de los required. Antes esto se saltaba entero:
+              el onClick llamaba a pay() directo, sin pasar por el form. */}
+          <button className="btn-confirm" type="submit" form="checkout-form" disabled={paying || !zone}>
             {paying ? "Redirigiendo a Mercado Pago…" : "Confirmar y pagar →"}
           </button>
           <div className="security-note">🔒 Tu información está protegida</div>

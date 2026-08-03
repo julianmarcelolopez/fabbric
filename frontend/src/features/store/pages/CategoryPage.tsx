@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useOutletContext, useParams, useSearchParams } from "react-router-dom";
 import { ApiError, publicJson } from "../../../lib/api";
+import { pesosToCents } from "../../../lib/money";
 import { colorSwatchStyle } from "../../catalog/colorSwatch";
 import { ProductCard } from "../../catalog/ProductCard";
 import type { PublicCategoryProducts, PublicCollectionProducts, StoreContext } from "../types";
@@ -71,9 +72,18 @@ export function CategoryPage({ mode = "category" }: Props) {
 
   const [data, setData] = useState<PublicCategoryProducts | PublicCollectionProducts | null>(null);
   const [error, setError] = useState<string | null>(null);
+  // T21/08 — separado de `data`: antes cada refetch (ej. al tipear un precio)
+  // vaciaba `data`, lo que desmontaba TODA la página (sidebar de filtros
+  // incluida) y el input perdía el foco a mitad de escritura. Ahora `data`
+  // conserva lo último cargado mientras llega lo nuevo; `loading` solo atenúa
+  // la grilla.
+  const [loading, setLoading] = useState(false);
 
   // Al cambiar de categoría/colección, los filtros no tienen sentido que
-  // sigan aplicados — se limpian tanto el draft como la URL.
+  // sigan aplicados — se limpian tanto el draft como la URL. Acá sí se resetea
+  // `data` (a diferencia del efecto de fetch de abajo): es una categoría
+  // distinta de verdad, no un refetch por filtro — mostrar "Cargando…" es lo
+  // correcto, no hay nada de la anterior que tenga sentido seguir mostrando.
   const didMountFilters = useRef(false);
   useEffect(() => {
     setTalle("");
@@ -82,6 +92,7 @@ export function CategoryPage({ mode = "category" }: Props) {
     setPrecioMin("");
     setPrecioMax("");
     setSort("");
+    setData(null);
   }, [mode, itemSlug]);
 
   // Debounce: 300ms después del último cambio de filtro, recién ahí se
@@ -108,23 +119,35 @@ export function CategoryPage({ mode = "category" }: Props) {
   }, [talle, color, marca, precioMin, precioMax, sort]);
 
   useEffect(() => {
-    setData(null);
+    setLoading(true);
     setError(null);
     const params = new URLSearchParams();
     params.set("page", String(page));
     if (appliedTalle) params.set("talle", appliedTalle);
     if (appliedColor) params.set("color", appliedColor);
     if (appliedMarca) params.set("marca", appliedMarca);
-    if (appliedPrecioMin) params.set("precioMin", appliedPrecioMin);
-    if (appliedPrecioMax) params.set("precioMax", appliedPrecioMax);
+    // La URL guarda pesos (legible: precioMin=16000) — la API espera centavos
+    // (products.price está en centavos), así que la conversión pasa acá, justo
+    // antes del fetch. Bug real encontrado: antes se mandaba el valor de la URL
+    // tal cual, sin convertir, y el filtro comparaba pesos contra centavos.
+    const precioMinCents = pesosToCents(appliedPrecioMin);
+    if (precioMinCents !== null) params.set("precioMin", String(precioMinCents));
+    const precioMaxCents = pesosToCents(appliedPrecioMax);
+    if (precioMaxCents !== null) params.set("precioMax", String(precioMaxCents));
     if (appliedSort) params.set("sort", appliedSort);
     const path =
       mode === "collection"
         ? `/public/${slug}/collections/${itemSlug}/products?${params}`
         : `/public/${slug}/categories/${itemSlug}/products?${params}`;
     publicJson<PublicCategoryProducts | PublicCollectionProducts>(path)
-      .then(setData)
-      .catch((err) => setError(err instanceof ApiError ? err.message : String(err)));
+      .then((d) => {
+        setData(d);
+        setLoading(false);
+      })
+      .catch((err) => {
+        setError(err instanceof ApiError ? err.message : String(err));
+        setLoading(false);
+      });
   }, [slug, mode, itemSlug, page, appliedTalle, appliedColor, appliedMarca, appliedPrecioMin, appliedPrecioMax, appliedSort]);
 
   if (error) {
@@ -284,7 +307,7 @@ export function CategoryPage({ mode = "category" }: Props) {
             )}
           </aside>
 
-          <div className="products-area">
+          <div className="products-area" style={{ opacity: loading ? 0.5 : 1, transition: "opacity 0.15s" }}>
             {data.products.length === 0 ? (
               <p className="category-page-empty">
                 {hasActiveFilters

@@ -59,9 +59,12 @@ export function CustomerAuthProvider({ slug, children }: { slug: string; childre
   }, [refresh]);
 
   async function signInWithGoogle() {
+    // T21/08: antes volvía siempre al home de la tienda — ahora vuelve a la
+    // página exacta donde estaba el usuario (producto, checkout, etc.). Requiere
+    // que el dominio esté en la allowlist de Redirect URLs de Supabase Auth.
     await supabase.auth.signInWithOAuth({
       provider: "google",
-      options: { redirectTo: `${window.location.origin}/store/${slug}` },
+      options: { redirectTo: window.location.href },
     });
   }
 

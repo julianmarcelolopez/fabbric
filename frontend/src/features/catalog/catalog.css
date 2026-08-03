@@ -507,8 +507,12 @@
 .back-link:hover { color: var(--tenant-primary); }
 
 /* ── T20/07: carrito (drawer) ── */
-.cart-overlay { position: fixed; inset: 0; background: rgba(30, 42, 74, 0.25); z-index: 40; }
-.cart-drawer { position: fixed; top: 0; right: 0; bottom: 0; width: 420px; max-width: 92vw; background: var(--white); box-shadow: -4px 0 24px rgba(0, 0, 0, 0.12); z-index: 41; display: flex; flex-direction: column; }
+/* z-index por encima de todo lo demás (header sticky:100, account-dropdown:110,
+   whatsapp-float:999) — un drawer modal tiene que quedar arriba de cualquier
+   otra cosa fija en la página, si no el header lo tapa (bug reportado: el
+   título "Tu carrito" quedaba oculto detrás del header). */
+.cart-overlay { position: fixed; inset: 0; background: rgba(30, 42, 74, 0.25); z-index: 1000; }
+.cart-drawer { position: fixed; top: 0; right: 0; bottom: 0; width: 420px; max-width: 92vw; background: var(--white); box-shadow: -4px 0 24px rgba(0, 0, 0, 0.12); z-index: 1001; display: flex; flex-direction: column; }
 .cart-header { padding: 20px 24px; border-bottom: 1px solid var(--gray); display: flex; align-items: center; justify-content: space-between; }
 .cart-title { font-family: var(--tenant-font-display); font-size: 24px; font-weight: 300; color: var(--navy); }
 .cart-count { font-size: 13px; color: var(--muted); margin-top: 2px; }
