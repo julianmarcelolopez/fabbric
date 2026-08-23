@@ -8,7 +8,10 @@
       "Read(//c/projects/bordart-admin/src/app/**)",
       "Read(//c/projects/bordart-admin/src/lib/**)",
       "PowerShell(Stop-Process -Id 19256 -Force)",
-      "PowerShell(Get-NetTCPConnection -LocalPort 5173 -ErrorAction SilentlyContinue)"
+      "PowerShell(Get-NetTCPConnection -LocalPort 5173 -ErrorAction SilentlyContinue)",
+      "Bash(docker compose *)",
+      "Bash(node --env-file=.env.local t23-03-venta-local.mjs)",
+      "Bash(node --env-file=.env.local -e ' *)"
     ]
   }
 }
