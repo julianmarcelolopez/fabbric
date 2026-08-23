@@ -1,19 +1,70 @@
 import { createVariantSchema, updateVariantSchema } from "@fabbric/shared";
-import { and, eq, ne } from "drizzle-orm";
+import { and, asc, eq, ne } from "drizzle-orm";
 import type { FastifyInstance } from "fastify";
 import type { ZodTypeProvider } from "fastify-type-provider-zod";
 import { z } from "zod";
 import { db } from "../../db/client.js";
-import { products, productVariants } from "../../db/schema.js";
+import { categories, productImages, products, productVariants } from "../../db/schema.js";
 import { AppError } from "../../lib/errors.js";
 import { requireOrgId } from "../../lib/tenant.js";
 
 const idParam = z.object({ id: z.string().uuid() });
+const barcodeParam = z.object({ code: z.string().min(1) });
 const tag = { tags: ["variantes"], security: [{ bearerAuth: [] }] };
 
 export async function variantsRoutes(fastify: FastifyInstance) {
   const app = fastify.withTypeProvider<ZodTypeProvider>();
   const auth = { preHandler: fastify.requireAdminAuth };
+
+  // T23 — búsqueda por código de barras físico (distinto de sku): lo usa la
+  // PWA de escaneo para decidir entre mostrar la Ficha o el alta de un
+  // producto nuevo. 404 tanto si no existe como si es de otra organización.
+  app.get(
+    "/admin/variants/by-barcode/:code",
+    {
+      ...auth,
+      schema: {
+        ...tag,
+        summary: "Buscar variante por código de barras (org-scoped)",
+        params: barcodeParam,
+      },
+    },
+    async (request) => {
+      const orgId = requireOrgId(request);
+      const { code } = request.params;
+
+      const [row] = await db
+        .select({
+          id: productVariants.id,
+          barcode: productVariants.barcode,
+          talle: productVariants.talle,
+          color: productVariants.color,
+          stockLocal: productVariants.stockLocal,
+          priceOverride: productVariants.priceOverride,
+          product: {
+            id: products.id,
+            name: products.name,
+            brand: products.brand,
+            price: products.price,
+          },
+          category: { id: categories.id, name: categories.name },
+        })
+        .from(productVariants)
+        .innerJoin(products, eq(productVariants.productId, products.id))
+        .innerJoin(categories, eq(products.categoryId, categories.id))
+        .where(and(eq(productVariants.barcode, code), eq(productVariants.orgId, orgId)));
+      if (!row) throw new AppError(404, "not_found", "Código de barras no encontrado");
+
+      const [image] = await db
+        .select({ url: productImages.url })
+        .from(productImages)
+        .where(eq(productImages.productId, row.product.id))
+        .orderBy(asc(productImages.sortOrder))
+        .limit(1);
+
+      return { ...row, imageUrl: image?.url ?? null };
+    }
+  );
 
   app.post(
     "/admin/products/:id/variants",

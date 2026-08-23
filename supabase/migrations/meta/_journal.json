@@ -134,6 +134,13 @@
       "when": 1785691215741,
       "tag": "0018_announcement_text_drop",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1786937719982,
+      "tag": "0019_modern_praxagora",
+      "breakpoints": true
     }
   ]
 }

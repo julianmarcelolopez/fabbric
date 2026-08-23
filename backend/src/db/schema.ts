@@ -149,6 +149,9 @@ export const productVariants = pgTable(
       .notNull()
       .references(() => organizations.id),
     sku: text("sku"),
+    // Código de barras físico de la prenda (T23) — distinto de sku (código
+    // interno, sin unicidad). Nullable: las variantes viejas no lo tienen.
+    barcode: text("barcode"),
     talle: text("talle").notNull(),
     color: text("color").notNull(),
     // Stock omnicanal = split manual (decisión del plan): online y local por separado
@@ -161,7 +164,10 @@ export const productVariants = pgTable(
       .defaultNow()
       .$onUpdate(() => new Date()),
   },
-  (t) => [unique("product_variants_product_talle_color_unique").on(t.productId, t.talle, t.color)]
+  (t) => [
+    unique("product_variants_product_talle_color_unique").on(t.productId, t.talle, t.color),
+    unique("product_variants_org_barcode_unique").on(t.orgId, t.barcode),
+  ]
 );
 
 // ── Secciones del home (T3) ──────────────────────────────────────────────────

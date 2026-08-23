@@ -36,3 +36,22 @@ services:
       - /app/frontend/node_modules
     depends_on:
       - backend
+
+  pwa:
+    build:
+      context: .
+      dockerfile: pwa/Dockerfile
+      target: dev
+    env_file: .env.local
+    environment:
+      # Bind mounts Windows->WSL2 no propagan eventos de archivos: watch por polling
+      - CHOKIDAR_USEPOLLING=1
+      - CHOKIDAR_INTERVAL=1000
+    ports:
+      - "5174:5174"
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - /app/pwa/node_modules
+    depends_on:
+      - backend

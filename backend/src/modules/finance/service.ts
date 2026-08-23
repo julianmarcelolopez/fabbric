@@ -91,19 +91,25 @@ export async function monthSummary(orgId: string, from: string, to: string) {
 export const MP_WALLET_NAME = "Mercado Pago";
 
 /**
- * Cartera "Mercado Pago" de la org — lazy, patrón `ensureConfig`. La usa el
- * webhook para registrar los cobros online. Se usa aunque esté inactiva:
- * la plata entró a MP igual, desactivarla no detiene las ventas.
+ * Cartera lazy por nombre, dentro de la org — patrón `ensureConfig`
+ * generalizado (T23): antes solo existía para "Mercado Pago" (webhook de
+ * cobros online), ahora también la usa la venta presencial para resolver
+ * la cartera de cada medio de pago sin que el vendedor tenga que elegirla.
  */
-export async function ensureMpWallet(tx: Tx, orgId: string) {
+export async function ensureWallet(
+  tx: Tx,
+  orgId: string,
+  name: string,
+  opts?: { icon?: string; color?: string }
+) {
   const [existing] = await tx
     .select()
     .from(wallets)
-    .where(and(eq(wallets.orgId, orgId), eq(wallets.name, MP_WALLET_NAME)));
+    .where(and(eq(wallets.orgId, orgId), eq(wallets.name, name)));
   if (existing) return existing;
   const [created] = await tx
     .insert(wallets)
-    .values({ orgId, name: MP_WALLET_NAME, icon: "mercadopago", color: "#00b1ea" })
+    .values({ orgId, name, icon: opts?.icon ?? null, color: opts?.color ?? null })
     .onConflictDoNothing()
     .returning();
   if (created) return created;
@@ -111,8 +117,19 @@ export async function ensureMpWallet(tx: Tx, orgId: string) {
   const [row] = await tx
     .select()
     .from(wallets)
-    .where(and(eq(wallets.orgId, orgId), eq(wallets.name, MP_WALLET_NAME)));
+    .where(and(eq(wallets.orgId, orgId), eq(wallets.name, name)));
   return row;
+}
+
+/**
+ * Cartera "Mercado Pago" de la org. La usa el webhook para registrar los
+ * cobros online, y también la venta presencial (T23) cuando el medio de pago
+ * es "mercadopago" — misma cartera, es la misma cuenta recibiendo la plata.
+ * Se usa aunque esté inactiva: la plata entró a MP igual, desactivarla no
+ * detiene las ventas.
+ */
+export async function ensureMpWallet(tx: Tx, orgId: string) {
+  return ensureWallet(tx, orgId, MP_WALLET_NAME, { icon: "mercadopago", color: "#00b1ea" });
 }
 
 /**

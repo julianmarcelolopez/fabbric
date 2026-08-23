@@ -4,10 +4,12 @@ import {
   createManualOrderSchema,
   deriveOrderType,
   markPaidSchema,
+  type MedioPago,
   ORDER_TRANSITIONS,
   orderTypeSchema,
   orderStatusSchema,
   updateOrderStatusSchema,
+  ventaLocalSchema,
   type ManualBespokeItem,
   type ManualCatalogItem,
 } from "@fabbric/shared";
@@ -27,13 +29,31 @@ import {
 } from "../../db/schema.js";
 import { supabaseAdmin } from "../../lib/supabaseAdmin.js";
 import { orderStatusEmail, sendEmail } from "../../lib/email.js";
-import { AppError } from "../../lib/errors.js";
+import { AppError, isUniqueViolation } from "../../lib/errors.js";
 import { requireOrgId } from "../../lib/tenant.js";
 import { ensureConfig } from "../catalogConfig/service.js";
-import { recordOrderCharge, requireActiveWallet } from "../finance/service.js";
+import { ensureWallet, MP_WALLET_NAME, recordOrderCharge, requireActiveWallet } from "../finance/service.js";
 
 const idParam = z.object({ id: z.string().uuid() });
 const tag = { tags: ["pedidos (admin)"], security: [{ bearerAuth: [] }] };
+
+// T23 — venta presencial: el medio de pago que elige el vendedor resuelve
+// solo la cartera (creada lazy la primera vez), sin que la PWA sepa nada de
+// carteras. "mercadopago" reusa la MISMA cartera que ya usa el webhook del
+// checkout online — es la misma cuenta de MP recibiendo la plata.
+const LOCAL_SALE_WALLETS: Record<MedioPago, { name: string; icon?: string; color?: string }> = {
+  efectivo: { name: "Efectivo" },
+  transferencia: { name: "Transferencia" },
+  tarjeta: { name: "Tarjeta" },
+  mercadopago: { name: MP_WALLET_NAME, icon: "mercadopago", color: "#00b1ea" },
+};
+
+/** Aborta la transacción de `venta-local` sin comprometer los descuentos de stock ya aplicados en el intento. */
+class InsufficientStockError extends Error {
+  constructor(public readonly line: { name: string; talle: string | null; color: string | null; qty: number }) {
+    super("insufficient_stock");
+  }
+}
 
 const listQuery = z.object({
   status: orderStatusSchema.optional(),
@@ -356,7 +376,7 @@ export async function ordersRoutes(fastify: FastifyInstance) {
       try {
         order = await createOrder();
       } catch (err) {
-        if ((err as { code?: string }).code === "23505") order = await createOrder();
+        if (isUniqueViolation(err)) order = await createOrder();
         else throw err;
       }
 
@@ -366,6 +386,150 @@ export async function ordersRoutes(fastify: FastifyInstance) {
         type: deriveOrderType([...catalogLines, ...bespokeLines]),
         allowedTransitions: ORDER_TRANSITIONS[order.status],
       };
+    }
+  );
+
+  app.post(
+    "/admin/orders/venta-local",
+    {
+      ...auth,
+      schema: {
+        ...tag,
+        summary:
+          "Venta presencial (T23, PWA de escaneo): crea el pedido ya `paid`, descuenta stock local, y cobra en la cartera resuelta por el medio de pago — todo en una sola transacción, sin pasar por pending/mark-paid.",
+        body: ventaLocalSchema,
+      },
+    },
+    async (request, reply) => {
+      const orgId = requireOrgId(request);
+      const { items, medioPago } = request.body;
+
+      const variantIds = items.map((i) => i.variantId);
+      const rows = await db
+        .select({
+          variantId: productVariants.id,
+          talle: productVariants.talle,
+          color: productVariants.color,
+          priceOverride: productVariants.priceOverride,
+          productId: products.id,
+          productName: products.name,
+          price: products.price,
+          costPrice: products.costPrice,
+        })
+        .from(productVariants)
+        .innerJoin(products, eq(productVariants.productId, products.id))
+        .where(and(inArray(productVariants.id, variantIds), eq(productVariants.orgId, orgId)));
+      if (rows.length !== new Set(variantIds).size) {
+        throw new AppError(400, "invalid_items", "Alguna variante no existe en esta organización");
+      }
+
+      const lines = items.map((input) => {
+        const row = rows.find((r) => r.variantId === input.variantId)!;
+        const unitPrice = row.priceOverride ?? row.price;
+        return {
+          productId: row.productId,
+          variantId: row.variantId,
+          name: row.productName,
+          talle: row.talle,
+          color: row.color,
+          qty: input.qty,
+          channel: "local" as const,
+          unitPrice,
+          unitCostSnapshot: row.costPrice,
+          total: unitPrice * input.qty,
+        };
+      });
+      const subtotal = lines.reduce((acc, l) => acc + l.total, 0);
+      const wallet = LOCAL_SALE_WALLETS[medioPago];
+
+      async function attempt() {
+        return db.transaction(async (tx) => {
+          // Descuento atómico por línea (mismo patrón que /stock-movements: el
+          // guard va en el WHERE, no en un SELECT previo). Si CUALQUIER línea
+          // no tiene stock suficiente, se tira la excepción acá adentro — eso
+          // hace rollback de TODO el intento, incluidas las líneas anteriores
+          // que sí se habían descontado en este mismo loop.
+          for (const line of lines) {
+            const updated = await tx
+              .update(productVariants)
+              .set({ stockLocal: rawSql`${productVariants.stockLocal} - ${line.qty}` })
+              .where(
+                and(
+                  eq(productVariants.id, line.variantId),
+                  eq(productVariants.orgId, orgId),
+                  rawSql`${productVariants.stockLocal} - ${line.qty} >= 0`
+                )
+              )
+              .returning();
+            if (updated.length === 0) throw new InsufficientStockError(line);
+          }
+
+          const [{ maxNumber }] = await tx
+            .select({ maxNumber: max(orders.orderNumber) })
+            .from(orders)
+            .where(eq(orders.orgId, orgId));
+          const [order] = await tx
+            .insert(orders)
+            .values({
+              orgId,
+              orderNumber: (maxNumber ?? 0) + 1,
+              status: "paid",
+              subtotal,
+              total: subtotal,
+            })
+            .returning();
+
+          await tx.insert(orderItems).values(
+            lines.map((line) => ({ ...line, orderId: order.id, orgId }))
+          );
+
+          await tx.insert(stockMovements).values(
+            lines.map((line) => ({
+              orgId,
+              variantId: line.variantId,
+              channel: "local" as const,
+              type: "venta" as const,
+              delta: -line.qty,
+              note: `venta local #${order.orderNumber}`,
+            }))
+          );
+
+          const walletRow = await ensureWallet(tx, orgId, wallet.name, wallet);
+          await recordOrderCharge(tx, {
+            orgId,
+            walletId: walletRow.id,
+            orderId: order.id,
+            orderNumber: order.orderNumber,
+            amount: order.total,
+          });
+
+          return order;
+        });
+      }
+
+      let order;
+      for (let attemptNum = 0; ; attemptNum++) {
+        try {
+          order = await attempt();
+          break;
+        } catch (err) {
+          if (err instanceof InsufficientStockError) {
+            throw new AppError(
+              400,
+              "insufficient_stock",
+              `Sin stock local para ${err.line.name}${
+                err.line.talle || err.line.color ? ` ${err.line.talle}/${err.line.color}` : ""
+              } (pediste ${err.line.qty})`
+            );
+          }
+          // Colisión de orderNumber por concurrencia (retry una sola vez)
+          if (isUniqueViolation(err) && attemptNum === 0) continue;
+          throw err;
+        }
+      }
+
+      reply.status(201);
+      return { ...order, allowedTransitions: ORDER_TRANSITIONS[order.status] };
     }
   );
 

@@ -1,5 +1,5 @@
 {
   "name": "fabbric",
   "private": true,
-  "workspaces": ["frontend", "backend", "packages/*"]
+  "workspaces": ["frontend", "backend", "pwa", "packages/*"]
 }

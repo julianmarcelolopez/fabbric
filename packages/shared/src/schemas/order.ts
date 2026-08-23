@@ -136,3 +136,24 @@ export const createManualOrderSchema = z.object({
 export type ManualCatalogItem = z.infer<typeof manualCatalogItemSchema>;
 export type ManualBespokeItem = z.infer<typeof manualBespokeItemSchema>;
 export type CreateManualOrderInput = z.infer<typeof createManualOrderSchema>;
+
+// ── Venta presencial (T23): la PWA de escaneo confirma la venta como una
+// sola operación — nace directamente `paid`, no pasa por `pending`/mark-paid.
+// Solo ítems de catálogo (channel local implícito) — sin bespoke, sin cliente,
+// sin zona de envío: es una venta de mostrador, no un pedido a domicilio.
+
+export const medioPagoSchema = z.enum(["efectivo", "transferencia", "tarjeta", "mercadopago"]);
+
+export const ventaLocalItemSchema = z.object({
+  variantId: z.string().uuid(),
+  qty: z.number().int().min(1).max(99),
+});
+
+export const ventaLocalSchema = z.object({
+  items: z.array(ventaLocalItemSchema).min(1),
+  medioPago: medioPagoSchema,
+});
+
+export type MedioPago = z.infer<typeof medioPagoSchema>;
+export type VentaLocalItem = z.infer<typeof ventaLocalItemSchema>;
+export type VentaLocalInput = z.infer<typeof ventaLocalSchema>;

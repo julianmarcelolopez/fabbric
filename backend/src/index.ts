@@ -89,7 +89,13 @@ app.setErrorHandler((err, request, reply) => {
 await app.register(cors, {
   // FRONTEND_URL ya existe para las back_urls de MP (default http://localhost:5173
   // en dev) — se reusa acá para no mantener el origen permitido por duplicado.
-  origin: [env.FRONTEND_URL],
+  // PWA_URL (T23) es un segundo cliente autenticado (mismo backend, otro origen).
+  // El regex de *.trycloudflare.com habilita probar la PWA desde un celular
+  // real vía el túnel cloudflared (T23, Fase 3) — la URL cambia cada vez que
+  // se reinicia el túnel, así que no se puede poner como string exacto. Solo
+  // importa en dev: en producción el dominio real (FRONTEND_URL/PWA_URL) ya
+  // cubre todo, ningún tráfico real pasa por trycloudflare.com.
+  origin: [env.FRONTEND_URL, env.PWA_URL, /\.trycloudflare\.com$/],
   // El default de @fastify/cors solo permite GET/HEAD/POST en el preflight —
   // sin esto, PATCH/PUT/DELETE fallan desde el navegador (no desde tests Node)
   methods: ["GET", "HEAD", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],

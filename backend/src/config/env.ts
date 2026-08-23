@@ -16,6 +16,9 @@ const envSchema = z.object({
   MP_ACCESS_TOKEN: z.string().min(1, "MP_ACCESS_TOKEN falta — ver docs/T6_Checkout/01"),
   // Base del SPA para las back_urls del checkout
   FRONTEND_URL: z.string().url().default("http://localhost:5173"),
+  // Base de la PWA de ingreso/egreso de productos (T23) — origen CORS aparte,
+  // mismo criterio que FRONTEND_URL (no back_urls, la PWA no usa checkout de MP)
+  PWA_URL: z.string().url().default("http://localhost:5174"),
   // URL pública del backend para el webhook de MP (túnel en dev) — opcional hasta T6 tarea 7
   MP_WEBHOOK_URL: z.string().url().optional(),
   // Secret de firma del webhook — requerido recién cuando el webhook exista

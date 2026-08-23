@@ -1,4 +1,5 @@
 import {
+  altaRapidaSchema,
   createProductSchema,
   setProductCollectionsSchema,
   updateProductSchema,
@@ -16,7 +17,7 @@ import {
   products,
   productVariants,
 } from "../../db/schema.js";
-import { AppError } from "../../lib/errors.js";
+import { AppError, isUniqueViolation } from "../../lib/errors.js";
 import { supabaseAdmin } from "../../lib/supabaseAdmin.js";
 import { requireOrgId } from "../../lib/tenant.js";
 
@@ -148,6 +149,45 @@ export async function productsRoutes(fastify: FastifyInstance) {
       const [row] = await db.insert(products).values({ ...input, orgId }).returning();
       reply.status(201);
       return row;
+    }
+  );
+
+  app.post(
+    "/admin/products/alta-rapida",
+    {
+      ...auth,
+      schema: {
+        ...tag,
+        summary:
+          "Alta rápida por escaneo (T23): crea producto + variante en una sola transacción — visibleInCatalog false y stockLocal 1 fijos, nunca queda un producto sin variante.",
+        body: altaRapidaSchema,
+      },
+    },
+    async (request, reply) => {
+      const orgId = requireOrgId(request);
+      const { categoryId, name, brand, price, talle, color, barcode } = request.body;
+      await assertCategoryInOrg(categoryId, orgId);
+
+      try {
+        const result = await db.transaction(async (tx) => {
+          const [product] = await tx
+            .insert(products)
+            .values({ orgId, categoryId, name, brand: brand ?? null, price, visibleInCatalog: false })
+            .returning();
+          const [variant] = await tx
+            .insert(productVariants)
+            .values({ orgId, productId: product.id, talle, color, barcode, stockLocal: 1 })
+            .returning();
+          return { product, variant };
+        });
+        reply.status(201);
+        return result;
+      } catch (err) {
+        if (isUniqueViolation(err)) {
+          throw new AppError(409, "conflict", `Ya existe una variante con el código de barras ${barcode}`);
+        }
+        throw err;
+      }
     }
   );
 
