@@ -46,6 +46,7 @@ export default function App() {
         ...prev,
         {
           variantId: variant.id,
+          barcode: variant.barcode,
           name: variant.product.name,
           brand: variant.product.brand,
           talle: variant.talle,

@@ -1,8 +1,12 @@
 import type { MedioPago } from "@fabbric/shared";
+import { useEffect, useState } from "react";
+import { apiJson } from "../lib/api";
 import { formatPrice } from "../lib/money";
+import type { VariantByBarcode } from "../types";
 
 export type CartItem = {
   variantId: string;
+  barcode: string | null;
   name: string;
   brand: string | null;
   talle: string;
@@ -39,6 +43,30 @@ export function CarritoScreen({
 }: Props) {
   const total = items.reduce((sum, it) => sum + it.unitPrice * it.qty, 0);
 
+  // Stock en vivo por ítem — se pide fresco cada vez que se entra/cambia el
+  // carrito (no el que tenía la variante al momento de escanearla), así se ve
+  // enseguida si alcanza sin tener que re-escanear ni esperar el error al
+  // confirmar (caso real: se registra una entrada mientras hay una venta en
+  // curso del mismo producto).
+  const [liveStock, setLiveStock] = useState<Record<string, number | null>>({});
+
+  useEffect(() => {
+    let cancelled = false;
+    items.forEach((item) => {
+      if (!item.barcode) return;
+      apiJson<VariantByBarcode>(`/admin/variants/by-barcode/${item.barcode}`)
+        .then((v) => {
+          if (!cancelled) setLiveStock((prev) => ({ ...prev, [item.variantId]: v.stockLocal }));
+        })
+        .catch(() => {
+          if (!cancelled) setLiveStock((prev) => ({ ...prev, [item.variantId]: null }));
+        });
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [items]);
+
   return (
     <div style={{ padding: 14, display: "flex", flexDirection: "column", minHeight: "calc(100vh - 56px)" }}>
       <p style={{ fontSize: 14, fontWeight: 500, marginBottom: 12 }}>Venta en curso</p>
@@ -49,36 +77,44 @@ export function CarritoScreen({
             Todavía no agregaste productos
           </p>
         )}
-        {items.map((item) => (
-          <div
-            key={item.variantId}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 10,
-              border: "1px solid #e2e0d8",
-              borderRadius: 8,
-              padding: 8,
-            }}
-          >
-            <div style={{ flex: 1 }}>
-              <p style={{ fontSize: 13 }}>
-                {item.brand ? `${item.brand} — ` : ""}
-                {item.name} ({item.talle}/{item.color})
-              </p>
-              <p style={{ fontSize: 12, color: "#888780" }}>
-                {formatPrice(item.unitPrice)} x{item.qty}
-              </p>
-            </div>
-            <button
-              onClick={() => onRemove(item.variantId)}
-              aria-label="Quitar del carrito"
-              style={{ border: "none", background: "none", color: "#888780", cursor: "pointer", fontSize: 18 }}
+        {items.map((item) => {
+          const stock = liveStock[item.variantId];
+          const short = stock != null && stock < item.qty;
+          return (
+            <div
+              key={item.variantId}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 10,
+                border: "1px solid #e2e0d8",
+                borderRadius: 8,
+                padding: 8,
+              }}
             >
-              ×
-            </button>
-          </div>
-        ))}
+              <div style={{ flex: 1 }}>
+                <p style={{ fontSize: 13 }}>
+                  {item.brand ? `${item.brand} — ` : ""}
+                  {item.name} ({item.talle}/{item.color})
+                </p>
+                <p style={{ fontSize: 12, color: "#888780" }}>
+                  {formatPrice(item.unitPrice)} x{item.qty}
+                </p>
+                <p style={{ fontSize: 11, color: short ? "#a32d2d" : "#888780", marginTop: 2 }}>
+                  Stock actual: {stock === undefined ? "…" : (stock ?? "—")}
+                  {short ? " · no alcanza" : ""}
+                </p>
+              </div>
+              <button
+                onClick={() => onRemove(item.variantId)}
+                aria-label="Quitar del carrito"
+                style={{ border: "none", background: "none", color: "#888780", cursor: "pointer", fontSize: 18 }}
+              >
+                ×
+              </button>
+            </div>
+          );
+        })}
       </div>
 
       <p style={{ fontSize: 12, color: "#5f5e5a", margin: "10px 0 6px" }}>Medio de pago</p>
