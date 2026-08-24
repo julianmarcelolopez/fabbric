@@ -2,6 +2,8 @@
 
 **Estado:** ✅ Hecha (2026-08-17) — verificada de punta a punta con datos reales, incluyendo el caso de stock insuficiente. Sin cambios de backend (el endpoint `venta-local` ya existía desde la Fase 1).
 
+**Fix post-deploy (2026-08-23)**: en producción real, el usuario detectó que el carrito no reflejaba una entrada de stock registrada *mientras* había una venta en curso del mismo producto (ej. carrito con 3 unidades cargadas cuando el stock real era 1, y mientras tanto se registraba una entrada de +10). El servidor validaba bien al confirmar (no dejaba vender de más), pero el carrito no mostraba ningún número de stock — el vendedor no tenía forma de saber si alcanzaba sin confirmar y esperar el error. Arreglado reusando el endpoint `by-barcode` ya existente (cada ítem del carrito guarda su `barcode` desde que se escaneó): `CarritoScreen` ahora pide el `stockLocal` fresco de cada ítem al entrar/cambiar el carrito, con aviso visual ("no alcanza") si la cantidad pedida supera el stock real. Verificado con Playwright reproduciendo el escenario exacto reportado — 7/7 PASS, datos de prueba limpiados.
+
 ## Objetivo (según plan.md)
 
 Implementar el carrito como estado local de la app y la confirmación de venta en un solo toque contra el endpoint combinado `POST /admin/orders/venta-local` (Fase 01) — pensado para que la PWA funcione como una pistola de punto de venta.
