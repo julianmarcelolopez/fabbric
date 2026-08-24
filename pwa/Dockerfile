@@ -40,10 +40,5 @@ RUN npm run build
 
 FROM nginx:alpine AS prod
 COPY --from=build /app/pwa/dist /usr/share/nginx/html
-# SPA: cualquier ruta que no matchee un archivo real cae a index.html (igual que
-# frontend/Dockerfile). sw.js lo sirve bien el default de nginx (.js), pero
-# .webmanifest no está en su tabla de mime.types por default y cae a
-# application/octet-stream — verificado al probar el build de producción, se
-# fuerza acá el tipo correcto.
-RUN printf 'server {\n    listen 80;\n    location / {\n        root /usr/share/nginx/html;\n        try_files $uri /index.html;\n    }\n    location ~* \\.webmanifest$ {\n        root /usr/share/nginx/html;\n        default_type application/manifest+json;\n    }\n}\n' > /etc/nginx/conf.d/default.conf
+COPY pwa/nginx.conf /etc/nginx/conf.d/default.conf
 EXPOSE 80
