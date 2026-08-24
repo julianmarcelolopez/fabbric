@@ -60,6 +60,9 @@ function VariantRow({ variant, onChange, onError }: { variant: Variant; onChange
       <td><input style={{ width: 64 }} value={talle} onChange={(e) => setTalle(e.target.value)} /></td>
       <td><input style={{ width: 96 }} value={color} onChange={(e) => setColor(e.target.value)} /></td>
       <td><input style={{ width: 96 }} value={sku} onChange={(e) => setSku(e.target.value)} placeholder="—" /></td>
+      <td title="Se carga al escanear desde la PWA de local (T23) — no editable acá todavía">
+        {variant.barcode ?? "—"}
+      </td>
       <td title="El stock se mueve desde la página Stock">{variant.stockOnline}</td>
       <td title="El stock se mueve desde la página Stock">{variant.stockLocal}</td>
       <td><input style={{ width: 96 }} value={priceOverride} onChange={(e) => setPriceOverride(e.target.value)} placeholder="base" inputMode="decimal" /></td>
@@ -117,6 +120,7 @@ export function VariantEditor({ productId, variants, onChange }: Props) {
               <th>Talle</th>
               <th>Color</th>
               <th>SKU</th>
+              <th>Código de barras</th>
               <th>Stock online</th>
               <th>Stock local</th>
               <th>Precio override ($)</th>

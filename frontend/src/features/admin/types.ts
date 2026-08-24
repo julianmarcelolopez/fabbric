@@ -38,6 +38,7 @@ export type Variant = {
   sku: string | null;
   talle: string;
   color: string;
+  barcode: string | null;
   stockOnline: number;
   stockLocal: number;
   priceOverride: number | null;
