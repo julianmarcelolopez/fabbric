@@ -1,6 +1,7 @@
 import type { FacturaAfipInput, MedioPago } from "@fabbric/shared";
 import { useEffect, useState } from "react";
 import { apiJson } from "../lib/api";
+import { colors, fonts, radius } from "../lib/theme";
 import { formatPrice } from "../lib/money";
 import type { VariantByBarcode } from "../types";
 
@@ -101,11 +102,13 @@ export function CarritoScreen({
 
   return (
     <div style={{ padding: 14, display: "flex", flexDirection: "column", minHeight: "calc(100vh - 56px)" }}>
-      <p style={{ fontSize: 14, fontWeight: 500, marginBottom: 12 }}>Venta en curso</p>
+      <p style={{ fontFamily: fonts.display, fontSize: 19, fontWeight: 600, color: colors.navy, marginBottom: 12 }}>
+        Venta en curso
+      </p>
 
       <div style={{ display: "flex", flexDirection: "column", gap: 8, flex: 1, overflow: "auto" }}>
         {items.length === 0 && (
-          <p style={{ fontSize: 13, color: "#888780", textAlign: "center", marginTop: 20 }}>
+          <p style={{ fontSize: 13, color: colors.muted, textAlign: "center", marginTop: 20 }}>
             Todavía no agregaste productos
           </p>
         )}
@@ -119,8 +122,8 @@ export function CarritoScreen({
                 display: "flex",
                 alignItems: "center",
                 gap: 10,
-                border: "1px solid #e2e0d8",
-                borderRadius: 8,
+                border: `1px solid ${colors.gray}`,
+                borderRadius: radius,
                 padding: 8,
               }}
             >
@@ -129,10 +132,10 @@ export function CarritoScreen({
                   {item.brand ? `${item.brand} — ` : ""}
                   {item.name} ({item.talle}/{item.color})
                 </p>
-                <p style={{ fontSize: 12, color: "#888780" }}>
+                <p style={{ fontSize: 12, color: colors.muted }}>
                   {formatPrice(item.unitPrice)} x{item.qty}
                 </p>
-                <p style={{ fontSize: 11, color: short ? "#a32d2d" : "#888780", marginTop: 2 }}>
+                <p style={{ fontSize: 11, color: short ? colors.danger : colors.muted, marginTop: 2 }}>
                   Stock actual: {stock === undefined ? "…" : (stock ?? "—")}
                   {short ? " · no alcanza" : ""}
                 </p>
@@ -140,7 +143,7 @@ export function CarritoScreen({
               <button
                 onClick={() => onRemove(item.variantId)}
                 aria-label="Quitar del carrito"
-                style={{ border: "none", background: "none", color: "#888780", cursor: "pointer", fontSize: 18 }}
+                style={{ border: "none", background: "none", color: colors.muted, cursor: "pointer", fontSize: 18 }}
               >
                 ×
               </button>
@@ -149,7 +152,7 @@ export function CarritoScreen({
         })}
       </div>
 
-      <p style={{ fontSize: 12, color: "#5f5e5a", margin: "10px 0 6px" }}>Medio de pago</p>
+      <p style={{ fontSize: 12, color: colors.muted, margin: "10px 0 6px" }}>Medio de pago</p>
       <div style={{ display: "flex", gap: 6, marginBottom: 10 }}>
         {MEDIOS.map((m) => (
           <button
@@ -159,10 +162,10 @@ export function CarritoScreen({
               flex: 1,
               fontSize: 12,
               padding: "6px 4px",
-              borderRadius: 8,
-              border: medioPago === m.value ? "none" : "1px solid #cac7ba",
-              background: medioPago === m.value ? "#FF6B4A" : "transparent",
-              color: medioPago === m.value ? "#fff" : "#201f1c",
+              borderRadius: radius,
+              border: medioPago === m.value ? "none" : `1px solid ${colors.gray}`,
+              background: medioPago === m.value ? colors.navy : "transparent",
+              color: medioPago === m.value ? colors.white : colors.text,
               cursor: "pointer",
             }}
           >
@@ -197,7 +200,7 @@ export function CarritoScreen({
             placeholder="Nombre del cliente"
             value={facturaForm.nombre}
             onChange={(e) => onFacturaFormChange({ ...facturaForm, nombre: e.target.value })}
-            style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #cac7ba", fontSize: 14 }}
+            style={{ padding: "8px 10px", borderRadius: radius, border: `1px solid ${colors.gray}`, fontSize: 14 }}
           />
           <input
             type="email"
@@ -205,7 +208,7 @@ export function CarritoScreen({
             placeholder="Email (para enviar la factura)"
             value={facturaForm.email}
             onChange={(e) => onFacturaFormChange({ ...facturaForm, email: e.target.value })}
-            style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #cac7ba", fontSize: 14 }}
+            style={{ padding: "8px 10px", borderRadius: radius, border: `1px solid ${colors.gray}`, fontSize: 14 }}
           />
           <input
             type="text"
@@ -213,19 +216,21 @@ export function CarritoScreen({
             placeholder="DNI"
             value={facturaForm.dni}
             onChange={(e) => onFacturaFormChange({ ...facturaForm, dni: e.target.value })}
-            style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #cac7ba", fontSize: 14 }}
+            style={{ padding: "8px 10px", borderRadius: radius, border: `1px solid ${colors.gray}`, fontSize: 14 }}
           />
         </div>
       )}
 
-      <div style={{ display: "flex", justifyContent: "space-between", margin: "0 0 14px", fontSize: 14 }}>
-        <span style={{ color: "#5f5e5a" }}>Total</span>
-        <span style={{ fontWeight: 500 }}>{formatPrice(total)}</span>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", margin: "0 0 14px" }}>
+        <span style={{ fontSize: 12, color: colors.muted }}>Total</span>
+        <span style={{ fontFamily: fonts.display, fontSize: 21, fontWeight: 600, color: colors.navy }}>
+          {formatPrice(total)}
+        </span>
       </div>
 
-      {error && <p style={{ color: "#a32d2d", fontSize: 13, margin: "0 0 8px", textAlign: "center" }}>{error}</p>}
+      {error && <p style={{ color: colors.danger, fontSize: 13, margin: "0 0 8px", textAlign: "center" }}>{error}</p>}
       {facturaIncompleta && (
-        <p style={{ color: "#a32d2d", fontSize: 12, margin: "0 0 8px", textAlign: "center" }}>
+        <p style={{ color: colors.danger, fontSize: 12, margin: "0 0 8px", textAlign: "center" }}>
           Completá nombre, email y DNI para poder facturar
         </p>
       )}
@@ -235,12 +240,14 @@ export function CarritoScreen({
         disabled={items.length === 0 || submitting || facturaIncompleta}
         style={{
           width: "100%",
+          minHeight: 44,
           padding: 10,
-          borderRadius: 8,
+          borderRadius: radius,
           border: "none",
-          background: "#FF6B4A",
-          color: "#fff",
+          background: colors.accent,
+          color: colors.white,
           fontSize: 14,
+          fontWeight: 500,
           cursor: items.length === 0 || submitting || facturaIncompleta ? "default" : "pointer",
           opacity: items.length === 0 || submitting || facturaIncompleta ? 0.6 : 1,
         }}

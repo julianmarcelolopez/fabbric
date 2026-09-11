@@ -1,6 +1,7 @@
 import type { InvoiceStatus, MedioPago } from "@fabbric/shared";
 import { useState } from "react";
 import { apiDownload, ApiError } from "../lib/api";
+import { colors, fonts, radius } from "../lib/theme";
 import { formatPrice } from "../lib/money";
 
 const MEDIO_LABELS: Record<MedioPago, string> = {
@@ -51,18 +52,20 @@ export function ConfirmarScreen({ total, medioPago, factura, onDone }: Props) {
           width: 52,
           height: 52,
           borderRadius: "50%",
-          background: "#eaf3de",
+          background: colors.greenBg,
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
           fontSize: 26,
-          color: "#3b6d11",
+          color: colors.green,
         }}
       >
         ✓
       </div>
-      <p style={{ fontSize: 15, fontWeight: 500 }}>Venta registrada</p>
-      <p style={{ fontSize: 13, color: "#5f5e5a" }}>
+      <p style={{ fontFamily: fonts.display, fontSize: 20, fontWeight: 600, color: colors.navy, marginTop: 6 }}>
+        Venta registrada
+      </p>
+      <p style={{ fontSize: 13, color: colors.muted }}>
         Total {formatPrice(total)} · {MEDIO_LABELS[medioPago]}
       </p>
 
@@ -75,11 +78,12 @@ export function ConfirmarScreen({ total, medioPago, factura, onDone }: Props) {
             disabled={descargando}
             style={{
               width: "100%",
+              minHeight: 44,
               padding: 10,
-              borderRadius: 8,
-              border: "1px solid #cac7ba",
-              background: "#fff",
-              color: "#201f1c",
+              borderRadius: radius,
+              border: `1px solid ${colors.gray}`,
+              background: colors.white,
+              color: colors.text,
               fontSize: 14,
               cursor: descargando ? "default" : "pointer",
               opacity: descargando ? 0.6 : 1,
@@ -88,7 +92,7 @@ export function ConfirmarScreen({ total, medioPago, factura, onDone }: Props) {
             {descargando ? "Descargando..." : "Descargar factura (PDF)"}
           </button>
           {descargaError && (
-            <p style={{ color: "#a32d2d", fontSize: 12, marginTop: 6, textAlign: "center" }}>{descargaError}</p>
+            <p style={{ color: colors.danger, fontSize: 12, marginTop: 6, textAlign: "center" }}>{descargaError}</p>
           )}
         </div>
       )}
@@ -96,22 +100,28 @@ export function ConfirmarScreen({ total, medioPago, factura, onDone }: Props) {
       {/* pendiente/error: aviso tranquilo, sin sugerir que el vendedor tiene
           que hacer algo — el reintento es cosa del admin de escritorio (Fase 6). */}
       {(factura?.estado === "pendiente" || factura?.estado === "error") && (
-        <p style={{ fontSize: 12, color: "#888780", textAlign: "center", marginTop: 6 }}>
+        <p style={{ fontSize: 12, color: colors.muted, textAlign: "center", marginTop: 6 }}>
           La factura se está terminando de procesar. No hace falta que hagas nada — se va a resolver solo.
         </p>
       )}
 
+      {/* T27, Fase 3: navy (no coral) — a diferencia de las confirmaciones de
+          entrada/venta, que usan el color de su propia acción, esta pantalla
+          cierra el circuito completo (venta ya cobrada), calcado de
+          mockups_v5.html:194. */}
       <button
         onClick={onDone}
         style={{
           width: "100%",
+          minHeight: 44,
           marginTop: 16,
           padding: 10,
-          borderRadius: 8,
+          borderRadius: radius,
           border: "none",
-          background: "#FF6B4A",
-          color: "#fff",
+          background: colors.navy,
+          color: colors.white,
           fontSize: 14,
+          fontWeight: 500,
           cursor: "pointer",
         }}
       >

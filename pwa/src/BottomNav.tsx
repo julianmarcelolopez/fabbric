@@ -1,3 +1,5 @@
+import { colors } from "./lib/theme";
+
 type Dest = "escanear" | "carrito";
 
 type Props = {
@@ -8,6 +10,8 @@ type Props = {
 
 // Únicos dos destinos reales de la navegación (overview.md/analisis.md) —
 // Alta y Ficha son estados a los que se llega por una acción, no por acá.
+// T27, Fase 3: fondo navy sólido, calcado de mockups_v5.html — antes fondo
+// blanco/gris genérico, sin relación con la identidad de la tienda.
 export function BottomNav({ active, onNavigate, cartCount }: Props) {
   return (
     <nav
@@ -17,8 +21,7 @@ export function BottomNav({ active, onNavigate, cartCount }: Props) {
         left: 0,
         right: 0,
         display: "flex",
-        borderTop: "1px solid #e2e0d8",
-        background: "#fff",
+        background: colors.navy,
       }}
     >
       {(["escanear", "carrito"] as const).map((dest) => (
@@ -33,7 +36,7 @@ export function BottomNav({ active, onNavigate, cartCount }: Props) {
             padding: 10,
             fontSize: 11,
             cursor: "pointer",
-            color: active === dest ? "#FF6B4A" : "#5f5e5a",
+            color: active === dest ? colors.accent : "rgba(255, 255, 255, 0.55)",
           }}
         >
           {dest === "escanear" ? "Escanear" : "Carrito"}
@@ -43,8 +46,8 @@ export function BottomNav({ active, onNavigate, cartCount }: Props) {
                 position: "absolute",
                 top: 2,
                 right: "calc(50% - 28px)",
-                background: "#FF6B4A",
-                color: "#fff",
+                background: colors.accent,
+                color: colors.white,
                 fontSize: 10,
                 borderRadius: 8,
                 minWidth: 15,

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { apiJson, apiUpload, ApiError } from "../lib/api";
 import { pesosToCents } from "../lib/money";
+import { colors, fonts, radius } from "../lib/theme";
 
 type Props = {
   barcode: string;
@@ -97,8 +98,10 @@ export function AltaScreen({ barcode, onDone }: Props) {
   if (productId) {
     return (
       <div style={{ padding: 14 }}>
-        <p style={{ fontSize: 14, fontWeight: 500, marginBottom: 12 }}>Foto del producto</p>
-        <p style={{ fontSize: 13, color: "#5f5e5a", marginBottom: 16 }}>
+        <p style={{ fontFamily: fonts.display, fontSize: 17, fontWeight: 600, color: colors.navy, marginBottom: 12 }}>
+          Foto del producto
+        </p>
+        <p style={{ fontSize: 13, color: colors.muted, marginBottom: 16 }}>
           El producto ya se guardó. Sacale una foto (opcional, se puede agregar después).
         </p>
 
@@ -119,11 +122,12 @@ export function AltaScreen({ barcode, onDone }: Props) {
           disabled={uploadingPhoto}
           style={{
             width: "100%",
+            minHeight: 44,
             padding: "12px",
-            borderRadius: 10,
+            borderRadius: radius,
             border: "none",
-            background: "#FF6B4A",
-            color: "#fff",
+            background: colors.accent,
+            color: colors.white,
             fontSize: 14,
             cursor: uploadingPhoto ? "default" : "pointer",
             opacity: uploadingPhoto ? 0.7 : 1,
@@ -133,7 +137,7 @@ export function AltaScreen({ barcode, onDone }: Props) {
         </button>
 
         {photoError && (
-          <p style={{ color: "#a32d2d", fontSize: 13, marginTop: 12, textAlign: "center" }}>
+          <p style={{ color: colors.danger, fontSize: 13, marginTop: 12, textAlign: "center" }}>
             {photoError}
           </p>
         )}
@@ -145,7 +149,7 @@ export function AltaScreen({ barcode, onDone }: Props) {
             margin: "14px auto 0",
             border: "none",
             background: "none",
-            color: "#5f5e5a",
+            color: colors.muted,
             fontSize: 13,
             cursor: "pointer",
             textDecoration: "underline",
@@ -164,9 +168,11 @@ export function AltaScreen({ barcode, onDone }: Props) {
         <button onClick={onDone} style={{ border: "none", background: "none", cursor: "pointer" }}>
           ←
         </button>
-        <p style={{ fontSize: 14, fontWeight: 500 }}>Producto nuevo</p>
+        <p style={{ fontFamily: fonts.display, fontSize: 17, fontWeight: 600, color: colors.navy }}>
+          Producto nuevo
+        </p>
       </div>
-      <p style={{ fontSize: 12, color: "#888780", marginBottom: 12 }}>Código {barcode}</p>
+      <p style={{ fontSize: 12, color: colors.muted, marginBottom: 12 }}>Código {barcode}</p>
 
       <form onSubmit={(e) => void handleSubmit(e)} style={{ display: "flex", flexDirection: "column", gap: 8 }}>
         <input
@@ -217,7 +223,7 @@ export function AltaScreen({ barcode, onDone }: Props) {
         />
 
         {formError && (
-          <p style={{ color: "#a32d2d", fontSize: 13, margin: 0 }}>{formError}</p>
+          <p style={{ color: colors.danger, fontSize: 13, margin: 0 }}>{formError}</p>
         )}
 
         <button
@@ -225,11 +231,12 @@ export function AltaScreen({ barcode, onDone }: Props) {
           disabled={submitting}
           style={{
             width: "100%",
+            minHeight: 44,
             padding: "10px",
-            borderRadius: 8,
+            borderRadius: radius,
             border: "none",
-            background: "#FF6B4A",
-            color: "#fff",
+            background: colors.accent,
+            color: colors.white,
             fontSize: 14,
             cursor: submitting ? "default" : "pointer",
             opacity: submitting ? 0.7 : 1,
@@ -246,7 +253,7 @@ export function AltaScreen({ barcode, onDone }: Props) {
 const inputStyle: React.CSSProperties = {
   width: "100%",
   padding: "8px 10px",
-  borderRadius: 8,
-  border: "1px solid #cac7ba",
+  borderRadius: radius,
+  border: `1px solid ${colors.gray}`,
   fontSize: 14,
 };

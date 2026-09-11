@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Mockups v2 T23 — confirmaciones de pantalla completa</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tabler-icons/2.44.0/iconfont/tabler-icons.min.css">
+<style>
+  :root {
+    --surface-0: #f6f5f2;
+    --surface-1: #eeece6;
+    --surface-2: #ffffff;
+    --border: #e2e0d8;
+    --border-strong: #cac7ba;
+    --border-accent: #378add;
+    --text-primary: #201f1c;
+    --text-secondary: #5f5e5a;
+    --text-muted: #888780;
+    --text-accent: #185fa5;
+    --bg-accent: #e6f1fb;
+    --fill-accent: #378add;
+    --on-accent: #ffffff;
+    --bg-success: #eaf3de;
+    --text-success: #3b6d11;
+    --bg-warning: #faeeda;
+    --text-warning: #854f0b;
+    --radius: 8px;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: 2rem 1rem;
+    background: var(--surface-0);
+    font-family: -apple-system, "Segoe UI", Roboto, sans-serif;
+    color: var(--text-primary);
+  }
+  input, button, select {
+    font-family: inherit;
+    font-size: 14px;
+    border-radius: var(--radius);
+    border: 0.5px solid var(--border-strong);
+    padding: 8px 10px;
+    background: var(--surface-2);
+    color: var(--text-primary);
+  }
+  button { cursor: pointer; }
+  p { margin: 0; }
+  @keyframes scanline { 0% { transform: translateY(0); } 50% { transform: translateY(150px); } 100% { transform: translateY(0); } }
+  .scan-line { animation: scanline 1.8s ease-in-out infinite; }
+</style>
+</head>
+<body>
+
+<h1 style="font-size:18px;font-weight:500;text-align:center;margin:0 0 0.5rem;">Mockups v2 — T23, confirmaciones de pantalla completa</h1>
+<p style="font-size:13px;color:var(--text-secondary);text-align:center;margin:0 0 1.5rem;max-width:420px;margin-left:auto;margin-right:auto;">Reemplaza el toast chico (que pasaba desapercibido) por el mismo patrón de pantalla completa que ya funciona bien en "Venta registrada": check grande + detalle + botón para seguir. Se aplica también a "Registrar entrada" y "Agregar a la venta". El circuito de pantallas no cambió.</p>
+
+<div style="max-width: 360px; margin: 0 auto;">
+  <div style="background: var(--surface-1); border-radius: 12px; padding: 20px; display: flex; justify-content: center;">
+    <div style="background: var(--surface-2); border: 0.5px solid var(--border); border-radius: 22px; width: 320px; overflow: hidden; display:flex; flex-direction:column;">
+      <div style="height: 20px; display: flex; align-items: center; justify-content: center; padding-top: 6px; flex-shrink:0;">
+        <div style="width: 60px; height: 5px; border-radius: 3px; background: var(--border-strong);"></div>
+      </div>
+      <div id="screens" style="height: 580px; padding: 14px; position:relative;">
+
+        <div class="screen" data-screen="login" style="height:100%;">
+          <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; gap: 14px;">
+            <div style="width:56px;height:56px;border-radius:14px;background:var(--bg-accent);display:flex;align-items:center;justify-content:center;">
+              <i class="ti ti-shirt" style="font-size:26px;color:var(--text-accent);"></i>
+            </div>
+            <p style="font-size:16px;font-weight:500;">Eliathi Modas</p>
+            <div style="width:100%;display:flex;flex-direction:column;gap:10px;margin-top:8px;">
+              <input type="text" placeholder="Email" style="width:100%;">
+              <input type="password" placeholder="Contraseña" style="width:100%;">
+              <button id="btn-login" style="width:100%;background:var(--fill-accent);color:var(--on-accent);border:none;border-radius:12px;padding:10px;">Ingresar</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="screen" data-screen="home" style="height:100%; display:flex; flex-direction:column;">
+          <p style="font-size:14px;font-weight:500;color:var(--text-secondary);margin-bottom:12px;">Escanear</p>
+          <div style="flex:1;background:var(--surface-1);border-radius:12px;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;">
+            <i class="ti ti-barcode" style="font-size:40px;color:var(--text-muted);"></i>
+            <div style="position:absolute;top:16px;left:16px;width:22px;height:22px;border-left:2px solid var(--text-accent);border-top:2px solid var(--text-accent);"></div>
+            <div style="position:absolute;top:16px;right:16px;width:22px;height:22px;border-right:2px solid var(--text-accent);border-top:2px solid var(--text-accent);"></div>
+            <div style="position:absolute;bottom:16px;left:16px;width:22px;height:22px;border-left:2px solid var(--text-accent);border-bottom:2px solid var(--text-accent);"></div>
+            <div style="position:absolute;bottom:16px;right:16px;width:22px;height:22px;border-right:2px solid var(--text-accent);border-bottom:2px solid var(--text-accent);"></div>
+            <div class="scan-line" style="position:absolute;left:20px;right:20px;top:20px;height:2px;background:var(--text-accent);opacity:0.6;"></div>
+            <span style="position:absolute;bottom:8px;left:0;right:0;text-align:center;font-size:11px;color:var(--text-accent);">Cámara lista — apuntá al código</span>
+          </div>
+          <div style="display:flex;gap:6px;margin:10px 0;">
+            <input id="manual-code" type="text" placeholder="Ingresar código a mano" style="flex:1;">
+            <button id="btn-buscar" style="background:var(--fill-accent);color:var(--on-accent);border:none;border-radius:10px;">Buscar</button>
+          </div>
+          <div style="display:flex;gap:8px;justify-content:center;border-top:0.5px solid var(--border);padding-top:8px;">
+            <button id="btn-scan-nuevo" style="font-size:11px;color:var(--text-muted);border-style:dashed;">Demo: código nuevo</button>
+            <button id="btn-scan-existente" style="font-size:11px;color:var(--text-muted);border-style:dashed;">Demo: código existente</button>
+          </div>
+        </div>
+
+        <div class="screen" data-screen="alta" style="height:100%;overflow:auto;">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+            <i class="ti ti-arrow-left back-home" style="font-size:18px;cursor:pointer;"></i>
+            <p style="font-size:14px;font-weight:500;">Producto nuevo</p>
+          </div>
+          <p style="font-size:12px;color:var(--text-muted);margin-bottom:12px;">Código 7791234560012</p>
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            <input type="text" placeholder="Marca" style="width:100%;">
+            <input type="text" placeholder="Modelo" style="width:100%;">
+            <select style="width:100%;"><option>Categoría</option><option>Remeras</option><option>Sweaters</option></select>
+            <div style="display:flex;gap:8px;">
+              <input type="text" placeholder="Talle" style="width:100%;">
+              <input type="text" placeholder="Color" style="width:100%;">
+            </div>
+            <input type="text" placeholder="Precio" style="width:100%;">
+            <div style="height:64px;border-radius:var(--radius);border:0.5px dashed var(--border-strong);display:flex;align-items:center;justify-content:center;gap:6px;color:var(--text-muted);font-size:13px;">
+              <i class="ti ti-camera" style="font-size:18px;"></i> Sacar foto
+            </div>
+            <button id="btn-guardar-alta" style="width:100%;background:var(--fill-accent);color:var(--on-accent);border:none;border-radius:12px;padding:10px;margin-top:4px;">Guardar producto</button>
+          </div>
+        </div>
+
+        <div class="screen" data-screen="ficha" style="height:100%;">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+            <i class="ti ti-arrow-left back-home" style="font-size:18px;cursor:pointer;"></i>
+            <p style="font-size:14px;font-weight:500;">Ficha de producto</p>
+          </div>
+          <div style="height:110px;border-radius:12px;background:var(--surface-1);display:flex;align-items:center;justify-content:center;margin-bottom:12px;">
+            <i class="ti ti-shirt" style="font-size:30px;color:var(--text-muted);"></i>
+          </div>
+          <p style="font-size:16px;font-weight:500;">Zara — Sweter Urbano</p>
+          <p style="font-size:13px;color:var(--text-secondary);margin:2px 0 8px;">Talle M · Blanco · $100,00</p>
+          <span id="ficha-stock-badge" style="display:inline-flex;align-items:center;gap:4px;background:var(--bg-success);color:var(--text-success);font-size:12px;padding:4px 10px;border-radius:20px;margin-bottom:14px;"><i class="ti ti-package" style="font-size:13px;"></i>Stock: 2</span>
+
+          <div style="border:0.5px solid var(--border);border-radius:14px;padding:12px;margin-bottom:10px;">
+            <p style="font-size:11px;color:var(--text-muted);margin-bottom:8px;">Reponer stock (mercadería que llega)</p>
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+              <button id="qty-minus" style="width:32px;padding:4px;border-radius:8px;">-</button>
+              <span id="qty-value" style="font-size:14px;min-width:20px;text-align:center;">1</span>
+              <button id="qty-plus" style="width:32px;padding:4px;border-radius:8px;">+</button>
+            </div>
+            <button id="btn-entrada" style="width:100%;background:var(--bg-accent);border:0.5px solid var(--border-accent);color:var(--text-accent);border-radius:10px;padding:10px;"><i class="ti ti-plus" style="font-size:16px;vertical-align:-3px;margin-right:4px;"></i>Registrar entrada</button>
+          </div>
+
+          <button id="btn-agregar-venta" style="width:100%;background:var(--fill-accent);color:var(--on-accent);border:none;border-radius:10px;padding:10px;"><i class="ti ti-shopping-cart" style="font-size:16px;vertical-align:-3px;margin-right:4px;"></i>Agregar a la venta</button>
+        </div>
+
+        <div class="screen" data-screen="entrada-ok" style="height:100%;">
+          <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:10px;">
+            <div style="width:56px;height:56px;border-radius:50%;background:var(--bg-success);display:flex;align-items:center;justify-content:center;">
+              <i class="ti ti-check" style="font-size:28px;color:var(--text-success);"></i>
+            </div>
+            <p style="font-size:16px;font-weight:500;">Entrada registrada</p>
+            <p style="font-size:13px;color:var(--text-secondary);" id="entrada-detalle">+1 unidad · Stock ahora: 3</p>
+            <button class="back-home" style="width:100%;background:var(--fill-accent);color:var(--on-accent);border:none;border-radius:12px;padding:10px;margin-top:16px;">Seguir escaneando</button>
+          </div>
+        </div>
+
+        <div class="screen" data-screen="venta-agregada-ok" style="height:100%;">
+          <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:10px;">
+            <div style="width:56px;height:56px;border-radius:50%;background:var(--bg-accent);display:flex;align-items:center;justify-content:center;">
+              <i class="ti ti-shopping-cart-plus" style="font-size:26px;color:var(--text-accent);"></i>
+            </div>
+            <p style="font-size:16px;font-weight:500;">Agregado al carrito</p>
+            <p style="font-size:13px;color:var(--text-secondary);" id="venta-detalle">Zara Sweter Urbano · 1 producto en el carrito</p>
+            <button class="back-home" style="width:100%;background:var(--fill-accent);color:var(--on-accent);border:none;border-radius:12px;padding:10px;margin-top:16px;">Seguir escaneando</button>
+            <button id="btn-ir-carrito" style="width:100%;border:none;background:transparent;color:var(--text-accent);">Ir al carrito</button>
+          </div>
+        </div>
+
+        <div class="screen" data-screen="carrito" style="height:100%; display:flex; flex-direction:column;">
+          <p style="font-size:14px;font-weight:500;margin-bottom:10px;">Venta en curso</p>
+          <div id="carrito-lista" style="display:flex;flex-direction:column;gap:8px;flex:1;overflow:auto;"></div>
+          <p style="font-size:12px;color:var(--text-secondary);margin:10px 0 6px;">Medio de pago</p>
+          <div id="medio-pago-chips" style="display:flex;gap:6px;margin-bottom:10px;">
+            <button data-medio="Efectivo" style="flex:1;font-size:11px;padding:6px 2px;border-radius:8px;">Efectivo</button>
+            <button data-medio="Transferencia" style="flex:1;font-size:11px;padding:6px 2px;border-radius:8px;">Transf.</button>
+            <button data-medio="Tarjeta" style="flex:1;font-size:11px;padding:6px 2px;border-radius:8px;">Tarjeta</button>
+            <button data-medio="Mercado Pago" style="flex:1;font-size:11px;padding:6px 2px;border-radius:8px;">MP</button>
+          </div>
+          <div style="display:flex;justify-content:space-between;margin:0 0 14px;font-size:14px;">
+            <span style="color:var(--text-secondary);">Total</span>
+            <span style="font-weight:500;" id="carrito-total">$0</span>
+          </div>
+          <button id="btn-confirmar" style="width:100%;background:var(--fill-accent);color:var(--on-accent);border:none;border-radius:12px;padding:10px;">Confirmar venta</button>
+        </div>
+
+        <div class="screen" data-screen="confirmar" style="height:100%;">
+          <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:10px;">
+            <div style="width:56px;height:56px;border-radius:50%;background:var(--bg-success);display:flex;align-items:center;justify-content:center;">
+              <i class="ti ti-check" style="font-size:28px;color:var(--text-success);"></i>
+            </div>
+            <p style="font-size:16px;font-weight:500;">Venta registrada</p>
+            <p style="font-size:13px;color:var(--text-secondary);" id="confirmar-total">Total $0 · Efectivo</p>
+            <span style="font-size:12px;background:var(--bg-warning);color:var(--text-warning);padding:3px 10px;border-radius:var(--radius);margin-top:6px;">Factura ARCA: a pedido</span>
+            <button class="back-home" style="width:100%;background:var(--fill-accent);color:var(--on-accent);border:none;border-radius:12px;padding:10px;margin-top:16px;">Volver a escanear</button>
+          </div>
+        </div>
+
+      </div>
+      <div id="bottomnav" style="display:none;border-top:0.5px solid var(--border);flex-shrink:0;">
+        <div style="display:flex;">
+          <button data-nav="home" style="flex:1;border:none;border-radius:0;background:transparent;padding:10px;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:11px;">
+            <i class="ti ti-barcode" style="font-size:18px;"></i>Escanear
+          </button>
+          <button data-nav="carrito" style="flex:1;border:none;border-radius:0;background:transparent;padding:10px;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:11px;position:relative;">
+            <i class="ti ti-shopping-cart" style="font-size:18px;"></i>Carrito
+            <span id="cart-badge" style="display:none;position:absolute;top:4px;right:28px;background:var(--fill-accent);color:var(--on-accent);font-size:10px;border-radius:8px;min-width:15px;height:15px;line-height:15px;text-align:center;padding:0 3px;"></span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const screens = document.querySelectorAll('.screen');
+const bottomnav = document.getElementById('bottomnav');
+let cart = [];
+let entradaQty = 1;
+let stockActual = 2;
+let medioPago = 'Efectivo';
+let autoTimer = null;
+
+function showScreen(name) {
+  clearTimeout(autoTimer);
+  screens.forEach(s => s.style.display = s.dataset.screen === name ? 'block' : 'none');
+  bottomnav.style.display = (name === 'home' || name === 'carrito') ? 'block' : 'none';
+  bottomnav.querySelectorAll('button[data-nav]').forEach(b => {
+    b.style.color = b.dataset.nav === name ? 'var(--text-accent)' : 'var(--text-secondary)';
+  });
+  if (name === 'carrito') renderCarrito();
+}
+
+function showConfirm(name, autoTarget) {
+  showScreen(name);
+  autoTimer = setTimeout(() => showScreen(autoTarget), 1800);
+}
+
+function renderCarrito() {
+  const list = document.getElementById('carrito-lista');
+  list.innerHTML = '';
+  if (cart.length === 0) {
+    list.innerHTML = '<p style="font-size:13px;color:var(--text-muted);text-align:center;margin-top:20px;">Todavía no agregaste productos</p>';
+  }
+  cart.forEach((item, i) => {
+    const row = document.createElement('div');
+    row.style.cssText = 'display:flex;align-items:center;gap:10px;border:0.5px solid var(--border);border-radius:10px;padding:8px;';
+    row.innerHTML = '<div style="width:36px;height:36px;border-radius:8px;background:var(--surface-1);display:flex;align-items:center;justify-content:center;flex-shrink:0;"><i class="ti ti-shirt" style="font-size:16px;color:var(--text-muted);"></i></div><div style="flex:1;"><p style="font-size:13px;">' + item.nombre + '</p><p style="font-size:12px;color:var(--text-muted);">$' + item.precio.toLocaleString('es-AR') + ' x' + item.cantidad + '</p></div>';
+    const x = document.createElement('i');
+    x.className = 'ti ti-x';
+    x.style.cssText = 'font-size:16px;color:var(--text-muted);cursor:pointer;';
+    x.addEventListener('click', () => { cart.splice(i, 1); renderCarrito(); updateBadge(); });
+    row.appendChild(x);
+    list.appendChild(row);
+  });
+  const total = cart.reduce((sum, it) => sum + it.precio * it.cantidad, 0);
+  document.getElementById('carrito-total').textContent = '$' + total.toLocaleString('es-AR');
+}
+
+function updateBadge() {
+  const count = cart.reduce((sum, it) => sum + it.cantidad, 0);
+  const badge = document.getElementById('cart-badge');
+  if (count > 0) { badge.style.display = 'block'; badge.textContent = count; }
+  else { badge.style.display = 'none'; }
+}
+
+document.getElementById('btn-login').addEventListener('click', () => showScreen('home'));
+document.getElementById('btn-scan-nuevo').addEventListener('click', () => showScreen('alta'));
+document.getElementById('btn-buscar').addEventListener('click', () => { entradaQty = 1; stockActual = 2; document.getElementById('qty-value').textContent = '1'; document.getElementById('ficha-stock-badge').innerHTML = '<i class="ti ti-package" style="font-size:13px;"></i>Stock: 2'; showScreen('ficha'); });
+document.getElementById('btn-scan-existente').addEventListener('click', () => { entradaQty = 1; stockActual = 2; document.getElementById('qty-value').textContent = '1'; document.getElementById('ficha-stock-badge').innerHTML = '<i class="ti ti-package" style="font-size:13px;"></i>Stock: 2'; showScreen('ficha'); });
+document.getElementById('qty-minus').addEventListener('click', () => { entradaQty = Math.max(1, entradaQty - 1); document.getElementById('qty-value').textContent = entradaQty; });
+document.getElementById('qty-plus').addEventListener('click', () => { entradaQty += 1; document.getElementById('qty-value').textContent = entradaQty; });
+document.getElementById('btn-guardar-alta').addEventListener('click', () => showScreen('home'));
+document.getElementById('btn-entrada').addEventListener('click', () => {
+  stockActual += entradaQty;
+  document.getElementById('ficha-stock-badge').innerHTML = '<i class="ti ti-package" style="font-size:13px;"></i>Stock: ' + stockActual;
+  document.getElementById('entrada-detalle').textContent = '+' + entradaQty + (entradaQty === 1 ? ' unidad' : ' unidades') + ' · Stock ahora: ' + stockActual;
+  showConfirm('entrada-ok', 'home');
+});
+document.getElementById('btn-agregar-venta').addEventListener('click', () => {
+  const existing = cart.find(it => it.nombre === 'Zara Sweter Urbano');
+  if (existing) existing.cantidad += 1;
+  else cart.push({ nombre: 'Zara Sweter Urbano', precio: 100, cantidad: 1 });
+  updateBadge();
+  const count = cart.reduce((sum, it) => sum + it.cantidad, 0);
+  document.getElementById('venta-detalle').textContent = 'Zara Sweter Urbano · ' + count + (count === 1 ? ' producto en el carrito' : ' productos en el carrito');
+  showConfirm('venta-agregada-ok', 'home');
+});
+document.getElementById('btn-ir-carrito').addEventListener('click', () => showScreen('carrito'));
+document.querySelectorAll('#medio-pago-chips button').forEach(chip => {
+  chip.addEventListener('click', () => {
+    medioPago = chip.dataset.medio;
+    document.querySelectorAll('#medio-pago-chips button').forEach(c => { c.style.background=''; c.style.color=''; c.style.border=''; });
+    chip.style.background = 'var(--fill-accent)'; chip.style.color = 'var(--on-accent)'; chip.style.border = 'none';
+  });
+});
+document.getElementById('btn-confirmar').addEventListener('click', () => {
+  const total = cart.reduce((sum, it) => sum + it.precio * it.cantidad, 0);
+  document.getElementById('confirmar-total').textContent = 'Total $' + total.toLocaleString('es-AR') + ' · ' + medioPago;
+  cart = [];
+  updateBadge();
+  showScreen('confirmar');
+});
+document.querySelectorAll('.back-home').forEach(el => el.addEventListener('click', () => showScreen('home')));
+bottomnav.querySelectorAll('button[data-nav]').forEach(b => b.addEventListener('click', () => showScreen(b.dataset.nav)));
+
+document.querySelector('#medio-pago-chips button[data-medio="Efectivo"]').click();
+showScreen('login');
+</script>
+</body>
+</html>

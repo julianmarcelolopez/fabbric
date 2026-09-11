@@ -1,0 +1,10 @@
+/* T27, Fase 3: hasta ahora pwa/ no tenía ningún CSS global — solo
+   LoginScreen.tsx fijaba fontFamily por su cuenta, así que las otras 6
+   pantallas quedaban a merced del default serif del navegador (ver Hallazgo 3
+   de docs/T27_UX-PWA/analisis.md). Esta es la única regla global de la app:
+   el resto de los estilos se sigue resolviendo con estilos inline por
+   componente, migrando a los tokens de pwa/src/lib/theme.ts pantalla por
+   pantalla (Tareas 2 a 4 de esta fase). */
+body {
+  font-family: "DM Sans", system-ui, sans-serif;
+}

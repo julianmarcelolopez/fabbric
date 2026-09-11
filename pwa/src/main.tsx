@@ -1,6 +1,7 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import App from "./App";
+import "./index.css";
 
 // DIAGNÓSTICO TEMPORAL (T23, debugging de escaneo en iOS): el visor de
 // consola remota que se está usando no imprime bien objetos ni los format

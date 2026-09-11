@@ -1,9 +1,13 @@
 import { useState, type FormEvent } from "react";
+import { colors, fonts, radius } from "./lib/theme";
 import { supabase } from "./lib/supabaseClient";
 
 // Email/contraseña reales contra Supabase Auth — mismo login que ya usa el
 // panel admin de escritorio (frontend/), sin mapeo a ningún dominio falso
 // (decisión revisada en overview.md tras integrar con el backend existente).
+// T27, Fase 3: hero navy + logotipo en Alex Brush, calcado del tratamiento de
+// marca que ya usa la tienda pública (StoreLayout.tsx), no un estilo nuevo
+// inventado para la PWA.
 export function LoginScreen() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -27,20 +31,23 @@ export function LoginScreen() {
     <div
       style={{
         display: "flex",
+        flexDirection: "column",
         minHeight: "100vh",
         alignItems: "center",
         justifyContent: "center",
-        background: "#F7F3EC",
-        fontFamily: "system-ui, sans-serif",
+        background: colors.navy,
+        fontFamily: fonts.body,
+        padding: 24,
       }}
     >
+      <p style={{ fontFamily: fonts.script, fontSize: 48, color: colors.white, margin: 0 }}>Eliathi</p>
+      <p style={{ fontSize: 11, letterSpacing: 4, color: "rgba(255,255,255,0.7)", margin: "-8px 0 24px" }}>
+        MODAS
+      </p>
       <form
         onSubmit={onSubmit}
-        style={{ display: "flex", flexDirection: "column", gap: 10, width: 280 }}
+        style={{ display: "flex", flexDirection: "column", gap: 10, width: "100%", maxWidth: 280 }}
       >
-        <p style={{ textAlign: "center", fontWeight: 500, color: "#201f1c", marginBottom: 8 }}>
-          Eliathi Modas
-        </p>
         <input
           type="email"
           placeholder="Email"
@@ -59,7 +66,20 @@ export function LoginScreen() {
           autoComplete="current-password"
           style={inputStyle}
         />
-        {error && <p style={{ color: "#a32d2d", fontSize: 13, margin: 0 }}>{error}</p>}
+        {error && (
+          <p
+            style={{
+              background: colors.dangerBg,
+              color: colors.danger,
+              fontSize: 13,
+              margin: 0,
+              padding: "6px 10px",
+              borderRadius: radius,
+            }}
+          >
+            {error}
+          </p>
+        )}
         <button type="submit" disabled={submitting} style={buttonStyle}>
           {submitting ? "Ingresando..." : "Ingresar"}
         </button>
@@ -69,18 +89,22 @@ export function LoginScreen() {
 }
 
 const inputStyle: React.CSSProperties = {
-  padding: "10px",
-  borderRadius: 8,
-  border: "1px solid #cac7ba",
+  padding: "11px 12px",
+  borderRadius: radius,
+  border: "none",
+  background: colors.white,
+  color: colors.text,
   fontSize: 14,
 };
 
 const buttonStyle: React.CSSProperties = {
-  padding: "10px",
-  borderRadius: 8,
+  minHeight: 44,
+  padding: "12px",
+  borderRadius: radius,
   border: "none",
-  background: "#FF6B4A",
-  color: "#fff",
+  background: colors.accent,
+  color: colors.white,
   fontSize: 14,
+  fontWeight: 500,
   cursor: "pointer",
 };

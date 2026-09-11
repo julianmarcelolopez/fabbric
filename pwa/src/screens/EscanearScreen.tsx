@@ -1,12 +1,19 @@
-import { useRef, useState, type ChangeEvent, type FormEvent } from "react";
+import { useEffect, useRef, useState, type ChangeEvent, type FormEvent } from "react";
 import { readBarcodes } from "zxing-wasm/reader";
 import { ApiError, apiJson } from "../lib/api";
+import { colors, fonts, radius } from "../lib/theme";
 import type { VariantByBarcode } from "../types";
 
+type Modo = "venta" | "entrada";
+
 type Props = {
+  modo: Modo;
+  onModoChange: (modo: Modo) => void;
   onFound: (variant: VariantByBarcode) => void;
   onNotFound: (barcode: string) => void;
 };
+
+const WARNING_MS = 2200;
 
 // Enfoque final (T23, Fase 3 Tarea 2), tras una sesión larga de pruebas en un
 // iPhone 13 real:
@@ -22,12 +29,26 @@ type Props = {
 //    iOS — no pasa por getUserMedia ni por el bug de selección de cámara) +
 //    `zxing-wasm` para decodificar (el motor REAL de ZXing en C++,
 //    compilado a WebAssembly — mucho más preciso que la versión JS).
-export function EscanearScreen({ onFound, onNotFound }: Props) {
+//
+// T27, Fase 3: el mockup (mockups_v5.html:70-78) dibuja una caja navy con
+// "CÁMARA LISTA" y scanline animado, simulando una cámara en vivo — esta app
+// NO tiene eso (no hay viewfinder, se toma una foto y se decodifica aparte).
+// Se decidió no agregar esa caja decorativa: mostraría una funcionalidad que
+// no existe. En su lugar, el tratamiento navy del mockup se aplica donde sí
+// hay un paralelo funcional real: el botón "Buscar" del código manual.
+export function EscanearScreen({ modo, onModoChange, onFound, onNotFound }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [decoding, setDecoding] = useState(false);
   const [manualCode, setManualCode] = useState("");
   const [manualSubmitting, setManualSubmitting] = useState(false);
+  // T27, Fase 2: en modo "Vender", un código no encontrado no lleva a Alta
+  // (evita dar de alta productos nuevos por error en medio de una venta) —
+  // se avisa acá y se queda en Escanear.
+  const [warning, setWarning] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const warningTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+
+  useEffect(() => () => clearTimeout(warningTimer.current), []);
 
   async function handleCode(code: string) {
     try {
@@ -37,6 +58,12 @@ export function EscanearScreen({ onFound, onNotFound }: Props) {
       onFound(variant);
     } catch (err) {
       if (err instanceof ApiError && err.status === 404) {
+        if (modo === "venta") {
+          setWarning(true);
+          clearTimeout(warningTimer.current);
+          warningTimer.current = setTimeout(() => setWarning(false), WARNING_MS);
+          return;
+        }
         onNotFound(code);
         return;
       }
@@ -82,9 +109,57 @@ export function EscanearScreen({ onFound, onNotFound }: Props) {
     setManualSubmitting(false);
   }
 
+  const titulo = modo === "venta" ? "Escanear para vender" : "Escanear para recibir mercadería";
+
   return (
     <div style={{ padding: 14 }}>
-      <p style={{ fontSize: 14, fontWeight: 500, color: "#5f5e5a", marginBottom: 12 }}>Escanear</p>
+      <p style={{ fontFamily: fonts.script, fontSize: 20, color: colors.navy, margin: "0 0 10px" }}>Eliathi</p>
+
+      <div style={{ display: "flex", background: colors.gray, borderRadius: radius, padding: 3, marginBottom: 14 }}>
+        {(
+          [
+            { value: "venta", label: "Vender" },
+            { value: "entrada", label: "Recibir mercadería" },
+          ] as const
+        ).map((opt) => (
+          <button
+            key={opt.value}
+            onClick={() => onModoChange(opt.value)}
+            style={{
+              flex: 1,
+              border: "none",
+              borderRadius: radius - 2,
+              padding: "9px 4px",
+              fontSize: 12,
+              fontWeight: 500,
+              background: modo === opt.value ? colors.white : "transparent",
+              color: modo === opt.value ? colors.navy : colors.muted,
+              cursor: "pointer",
+            }}
+          >
+            {opt.label}
+          </button>
+        ))}
+      </div>
+
+      <p style={{ fontFamily: fonts.display, fontSize: 17, fontWeight: 600, color: colors.navy, marginBottom: 12 }}>
+        {titulo}
+      </p>
+
+      {warning && (
+        <p
+          style={{
+            background: colors.dangerBg,
+            color: colors.danger,
+            borderRadius: radius,
+            padding: "10px 12px",
+            fontSize: 12,
+            marginBottom: 12,
+          }}
+        >
+          Código no encontrado. Cambiá a "Recibir mercadería" para darlo de alta.
+        </p>
+      )}
 
       <input
         ref={fileInputRef}
@@ -102,8 +177,8 @@ export function EscanearScreen({ onFound, onNotFound }: Props) {
           padding: "14px",
           borderRadius: 12,
           border: "none",
-          background: "#FF6B4A",
-          color: "#fff",
+          background: colors.accent,
+          color: colors.white,
           fontSize: 15,
           cursor: decoding ? "default" : "pointer",
           opacity: decoding ? 0.7 : 1,
@@ -113,10 +188,10 @@ export function EscanearScreen({ onFound, onNotFound }: Props) {
       </button>
 
       {error && (
-        <p style={{ color: "#a32d2d", fontSize: 13, marginTop: 12, textAlign: "center" }}>{error}</p>
+        <p style={{ color: colors.danger, fontSize: 13, marginTop: 12, textAlign: "center" }}>{error}</p>
       )}
 
-      <p style={{ fontSize: 12, color: "#888780", textAlign: "center", margin: "16px 0 8px" }}>
+      <p style={{ fontSize: 12, color: colors.muted, textAlign: "center", margin: "16px 0 8px" }}>
         o escribilo a mano
       </p>
       <form onSubmit={(e) => void handleManualSubmit(e)} style={{ display: "flex", gap: 8 }}>
@@ -129,8 +204,8 @@ export function EscanearScreen({ onFound, onNotFound }: Props) {
           style={{
             flex: 1,
             padding: "8px 10px",
-            borderRadius: 8,
-            border: "1px solid #cac7ba",
+            borderRadius: radius,
+            border: `1px solid ${colors.gray}`,
             fontSize: 14,
           }}
         />
@@ -139,10 +214,10 @@ export function EscanearScreen({ onFound, onNotFound }: Props) {
           disabled={manualSubmitting || manualCode.trim() === ""}
           style={{
             padding: "8px 14px",
-            borderRadius: 8,
+            borderRadius: radius,
             border: "none",
-            background: "#FF6B4A",
-            color: "#fff",
+            background: colors.navy,
+            color: colors.white,
             fontSize: 14,
             cursor: manualSubmitting ? "default" : "pointer",
             opacity: manualSubmitting || manualCode.trim() === "" ? 0.6 : 1,

@@ -3,15 +3,23 @@
 // queda de placeholder hasta la Fase 5 del plan general.
 import { useState } from "react";
 import { apiJson, ApiError } from "../lib/api";
+import { colors, fonts, radius } from "../lib/theme";
 import type { VariantByBarcode } from "../types";
 
 type Props = {
   variant: VariantByBarcode;
+  modo: "venta" | "entrada";
   onDone: () => void;
+  onEntradaOk: (info: { qty: number; stockNuevo: number }) => void;
   onAddToCart: (variant: VariantByBarcode) => void;
 };
 
-export function FichaScreen({ variant, onDone, onAddToCart }: Props) {
+// El propio endpoint devuelve la variante ya actualizada — se usa ese
+// stockLocal como fuente de verdad para la confirmación (T27, Fase 1), en vez
+// de calcularlo a mano sumando qty al valor que tenía la Ficha al abrirse.
+type StockMovementResult = { variant: { stockLocal: number } };
+
+export function FichaScreen({ variant, modo, onDone, onEntradaOk, onAddToCart }: Props) {
   const [qty, setQty] = useState(1);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -20,11 +28,11 @@ export function FichaScreen({ variant, onDone, onAddToCart }: Props) {
     setError(null);
     setSubmitting(true);
     try {
-      await apiJson(`/admin/variants/${variant.id}/stock-movements`, {
+      const result = await apiJson<StockMovementResult>(`/admin/variants/${variant.id}/stock-movements`, {
         method: "POST",
         body: JSON.stringify({ channel: "local", type: "entrada", delta: qty }),
       });
-      onDone();
+      onEntradaOk({ qty, stockNuevo: result.variant.stockLocal });
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "No se pudo registrar la entrada");
     } finally {
@@ -40,18 +48,33 @@ export function FichaScreen({ variant, onDone, onAddToCart }: Props) {
 
   return (
     <div style={{ padding: 14 }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
-        <button onClick={onDone} style={{ border: "none", background: "none", cursor: "pointer" }}>
-          ←
-        </button>
-        <p style={{ fontSize: 14, fontWeight: 500 }}>Ficha de producto</p>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <button onClick={onDone} style={{ border: "none", background: "none", cursor: "pointer" }}>
+            ←
+          </button>
+          <p style={{ fontSize: 14, fontWeight: 500 }}>Ficha de producto</p>
+        </div>
+        {/* T27, Fase 2: contextualiza por qué acá solo se ve una acción, no las dos. */}
+        <span
+          style={{
+            fontSize: 10,
+            background: modo === "entrada" ? colors.gray : colors.accentSoft,
+            color: modo === "entrada" ? colors.navy : colors.accent,
+            padding: "3px 8px",
+            borderRadius: radius - 2,
+            fontWeight: 500,
+          }}
+        >
+          Modo: {modo === "entrada" ? "Recibir mercadería" : "Vender"}
+        </span>
       </div>
 
       <div
         style={{
           height: 140,
-          borderRadius: 8,
-          background: "#eeece6",
+          borderRadius: radius,
+          background: colors.gray,
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
@@ -66,85 +89,101 @@ export function FichaScreen({ variant, onDone, onAddToCart }: Props) {
             style={{ width: "100%", height: "100%", objectFit: "cover" }}
           />
         ) : (
-          <span style={{ color: "#888780", fontSize: 12 }}>Sin foto</span>
+          <span style={{ color: colors.muted, fontSize: 12 }}>Sin foto</span>
         )}
       </div>
 
-      <p style={{ fontSize: 15, fontWeight: 500 }}>
+      <p style={{ fontFamily: fonts.display, fontSize: 20, fontWeight: 600, color: colors.navy, margin: 0 }}>
         {variant.product.brand ? `${variant.product.brand} — ` : ""}
         {variant.product.name}
       </p>
-      <p style={{ fontSize: 13, color: "#5f5e5a", margin: "2px 0 8px" }}>
-        Talle {variant.talle} · {variant.color} · {priceLabel}
+      <p style={{ fontSize: 13, color: colors.muted, margin: "3px 0 8px" }}>
+        Talle {variant.talle} · {variant.color}
       </p>
-      <span
-        style={{
-          display: "inline-block",
-          background: "#eaf3de",
-          color: "#3b6d11",
-          fontSize: 12,
-          padding: "3px 10px",
-          borderRadius: 8,
-          marginBottom: 16,
-        }}
-      >
-        Stock: {variant.stockLocal}
-      </span>
-
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10, marginBottom: 6 }}>
-        <button
-          onClick={() => setQty((q) => Math.max(1, q - 1))}
-          disabled={submitting || qty <= 1}
-          style={{ width: 32, padding: 4 }}
-        >
-          −
-        </button>
-        <span style={{ fontSize: 14, minWidth: 20, textAlign: "center" }}>{qty}</span>
-        <button onClick={() => setQty((q) => q + 1)} disabled={submitting} style={{ width: 32, padding: 4 }}>
-          +
-        </button>
-      </div>
-      <p style={{ fontSize: 11, color: "#888780", textAlign: "center", margin: "0 0 10px" }}>
-        Cantidad (aplica a "Registrar entrada")
-      </p>
-
-      {error && (
-        <p style={{ color: "#a32d2d", fontSize: 13, margin: "0 0 8px", textAlign: "center" }}>{error}</p>
-      )}
-
-      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-        <button
-          onClick={() => void handleEntrada()}
-          disabled={submitting}
+      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
+        <span style={{ fontFamily: fonts.display, fontSize: 19, fontWeight: 600, color: colors.accent }}>
+          {priceLabel}
+        </span>
+        <span
           style={{
-            width: "100%",
-            padding: 10,
-            borderRadius: 8,
-            border: "none",
-            background: "#eeece6",
-            fontSize: 14,
-            cursor: submitting ? "default" : "pointer",
-            opacity: submitting ? 0.7 : 1,
+            display: "inline-flex",
+            alignItems: "center",
+            background: colors.greenBg,
+            color: colors.green,
+            fontSize: 11,
+            padding: "4px 10px",
+            borderRadius: radius - 2,
+            fontWeight: 500,
           }}
         >
-          {submitting ? "Registrando..." : "Registrar entrada"}
-        </button>
+          Stock: {variant.stockLocal}
+        </span>
+      </div>
+
+      {error && (
+        <p style={{ color: colors.danger, fontSize: 13, margin: "0 0 8px", textAlign: "center" }}>{error}</p>
+      )}
+
+      {/* T27, Fase 2: una sola acción visible según el modo elegido en
+          Escanear — antes convivían siempre las dos (ver Hallazgo 2.2 de
+          docs/T27_UX-PWA/analisis.md). */}
+      {modo === "entrada" ? (
+        <div>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10, marginBottom: 6 }}>
+            <button
+              onClick={() => setQty((q) => Math.max(1, q - 1))}
+              disabled={submitting || qty <= 1}
+              style={{ width: 32, padding: 4 }}
+            >
+              −
+            </button>
+            <span style={{ fontSize: 14, minWidth: 20, textAlign: "center" }}>{qty}</span>
+            <button onClick={() => setQty((q) => q + 1)} disabled={submitting} style={{ width: 32, padding: 4 }}>
+              +
+            </button>
+          </div>
+          <p style={{ fontSize: 11, color: colors.muted, textAlign: "center", margin: "0 0 10px" }}>
+            Cantidad recibida
+          </p>
+          <button
+            onClick={() => void handleEntrada()}
+            disabled={submitting}
+            style={{
+              width: "100%",
+              minHeight: 44,
+              padding: 10,
+              borderRadius: radius,
+              border: "none",
+              background: colors.navy,
+              color: colors.white,
+              fontSize: 14,
+              fontWeight: 500,
+              cursor: submitting ? "default" : "pointer",
+              opacity: submitting ? 0.7 : 1,
+            }}
+          >
+            {submitting ? "Registrando..." : "Registrar entrada"}
+          </button>
+        </div>
+      ) : (
         <button
           onClick={() => onAddToCart(variant)}
           style={{
             width: "100%",
+            minHeight: 44,
             padding: 10,
-            borderRadius: 8,
+            borderRadius: radius,
             border: "none",
-            background: "#FF6B4A",
-            color: "#fff",
+            background: colors.accent,
+            color: colors.white,
             fontSize: 14,
+            fontWeight: 500,
             cursor: "pointer",
           }}
         >
           Agregar a la venta
         </button>
-      </div>
+      )}
     </div>
   );
 }
