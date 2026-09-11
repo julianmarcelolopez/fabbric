@@ -20,6 +20,7 @@ import { z } from "zod";
 import { db } from "../../db/client.js";
 import {
   customers,
+  invoices,
   orderItems,
   orders,
   products,
@@ -33,6 +34,7 @@ import { AppError, isUniqueViolation } from "../../lib/errors.js";
 import { requireOrgId } from "../../lib/tenant.js";
 import { ensureConfig } from "../catalogConfig/service.js";
 import { ensureWallet, MP_WALLET_NAME, recordOrderCharge, requireActiveWallet } from "../finance/service.js";
+import { intentarEmision } from "../invoices/service.js";
 
 const idParam = z.object({ id: z.string().uuid() });
 const tag = { tags: ["pedidos (admin)"], security: [{ bearerAuth: [] }] };
@@ -152,9 +154,24 @@ export async function ordersRoutes(fastify: FastifyInstance) {
       const orgId = requireOrgId(request);
       const { id } = request.params;
       const [row] = await db
-        .select({ order: orders, customerName: customers.name, customerEmail: customers.email, customerPhone: customers.phone, customerAddress: customers.address })
+        .select({
+          order: orders,
+          customerName: customers.name,
+          customerEmail: customers.email,
+          customerPhone: customers.phone,
+          customerAddress: customers.address,
+          // T25 — a lo sumo una factura por pedido (constraint de unicidad en
+          // invoices.orderId), de ahí el left join simple sin duplicar filas.
+          invoiceId: invoices.id,
+          invoiceEstado: invoices.estado,
+          invoiceNumero: invoices.numero,
+          invoiceCae: invoices.cae,
+          invoiceCaeVencimiento: invoices.caeVencimiento,
+          invoiceMensajeError: invoices.mensajeError,
+        })
         .from(orders)
         .leftJoin(customers, eq(orders.customerId, customers.id))
+        .leftJoin(invoices, eq(invoices.orderId, orders.id))
         .where(and(eq(orders.id, id), eq(orders.orgId, orgId)));
       if (!row) throw new AppError(404, "not_found", "Pedido no encontrado");
 
@@ -168,6 +185,16 @@ export async function ordersRoutes(fastify: FastifyInstance) {
         items,
         type: deriveOrderType(items),
         allowedTransitions: ORDER_TRANSITIONS[row.order.status],
+        invoice: row.invoiceId
+          ? {
+              id: row.invoiceId,
+              estado: row.invoiceEstado!,
+              numero: row.invoiceNumero,
+              cae: row.invoiceCae,
+              caeVencimiento: row.invoiceCaeVencimiento,
+              mensajeError: row.invoiceMensajeError,
+            }
+          : null,
       };
     }
   );
@@ -402,7 +429,7 @@ export async function ordersRoutes(fastify: FastifyInstance) {
     },
     async (request, reply) => {
       const orgId = requireOrgId(request);
-      const { items, medioPago } = request.body;
+      const { items, medioPago, factura } = request.body;
 
       const variantIds = items.map((i) => i.variantId);
       const rows = await db
@@ -503,14 +530,36 @@ export async function ordersRoutes(fastify: FastifyInstance) {
             amount: order.total,
           });
 
-          return order;
+          // T25 — si se pidió factura, la fila nace `pendiente` DENTRO de esta
+          // misma transacción (es solo un insert, no una llamada externa: si
+          // el intento entero se revierte por colisión de orderNumber, esta
+          // fila se revierte con él). El pedido a AFIP en sí queda afuera, en
+          // el bloque de después — un fallo de AFIP no debe echar atrás una
+          // venta que ya está cobrada y con el stock descontado.
+          let invoiceId: string | null = null;
+          if (factura) {
+            const [invoiceRow] = await tx
+              .insert(invoices)
+              .values({
+                orgId,
+                orderId: order.id,
+                clienteNombre: factura.nombre,
+                clienteEmail: factura.email,
+                clienteDni: factura.dni,
+              })
+              .returning({ id: invoices.id });
+            invoiceId = invoiceRow.id;
+          }
+
+          return { order, invoiceId };
         });
       }
 
       let order;
+      let invoiceId: string | null;
       for (let attemptNum = 0; ; attemptNum++) {
         try {
-          order = await attempt();
+          ({ order, invoiceId } = await attempt());
           break;
         } catch (err) {
           if (err instanceof InsufficientStockError) {
@@ -528,8 +577,26 @@ export async function ordersRoutes(fastify: FastifyInstance) {
         }
       }
 
+      // T25 — recién acá, con la venta ya confirmada y comiteada, se intenta
+      // la emisión real contra AFIP. El resultado (emitida/error) queda
+      // reflejado en la respuesta, pero nunca puede hacer fallar este endpoint.
+      let facturaStatus = null;
+      if (invoiceId) {
+        const invoiceRow = await intentarEmision(orgId, invoiceId, request.log);
+        if (invoiceRow) {
+          facturaStatus = {
+            id: invoiceRow.id,
+            estado: invoiceRow.estado,
+            numero: invoiceRow.numero,
+            cae: invoiceRow.cae,
+            caeVencimiento: invoiceRow.caeVencimiento,
+            mensajeError: invoiceRow.mensajeError,
+          };
+        }
+      }
+
       reply.status(201);
-      return { ...order, allowedTransitions: ORDER_TRANSITIONS[order.status] };
+      return { ...order, allowedTransitions: ORDER_TRANSITIONS[order.status], factura: facturaStatus };
     }
   );
 

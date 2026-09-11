@@ -1,4 +1,4 @@
-import type { MedioPago } from "@fabbric/shared";
+import type { FacturaAfipInput, InvoiceStatus, MedioPago } from "@fabbric/shared";
 import type { Session } from "@supabase/supabase-js";
 import { useEffect, useState } from "react";
 import { BottomNav } from "./BottomNav";
@@ -20,7 +20,9 @@ type Screen =
   | { kind: "alta"; barcode: string }
   | { kind: "ficha"; variant: VariantByBarcode }
   | { kind: "carrito" }
-  | { kind: "confirmar"; total: number; medioPago: MedioPago };
+  | { kind: "confirmar"; total: number; medioPago: MedioPago; factura: InvoiceStatus | null };
+
+const FACTURA_FORM_VACIO: FacturaAfipInput = { nombre: "", email: "", dni: "" };
 
 export default function App() {
   const [session, setSession] = useState<Session | null>(null);
@@ -33,6 +35,10 @@ export default function App() {
   const [medioPago, setMedioPago] = useState<MedioPago>("efectivo");
   const [confirmSubmitting, setConfirmSubmitting] = useState(false);
   const [confirmError, setConfirmError] = useState<string | null>(null);
+  // T25 — apagado por default: no cambia nada del comportamiento de T23 hasta
+  // que el vendedor lo activa a propósito.
+  const [facturar, setFacturar] = useState(false);
+  const [facturaForm, setFacturaForm] = useState<FacturaAfipInput>(FACTURA_FORM_VACIO);
 
   function addToCart(variant: VariantByBarcode) {
     setCart((prev) => {
@@ -67,15 +73,21 @@ export default function App() {
     setConfirmError(null);
     setConfirmSubmitting(true);
     try {
-      const order = await apiJson<{ total: number }>("/admin/orders/venta-local", {
-        method: "POST",
-        body: JSON.stringify({
-          items: cart.map((it) => ({ variantId: it.variantId, qty: it.qty })),
-          medioPago,
-        }),
-      });
+      const order = await apiJson<{ total: number; factura: InvoiceStatus | null }>(
+        "/admin/orders/venta-local",
+        {
+          method: "POST",
+          body: JSON.stringify({
+            items: cart.map((it) => ({ variantId: it.variantId, qty: it.qty })),
+            medioPago,
+            ...(facturar ? { factura: facturaForm } : {}),
+          }),
+        }
+      );
       setCart([]);
-      setScreen({ kind: "confirmar", total: order.total, medioPago });
+      setFacturar(false);
+      setFacturaForm(FACTURA_FORM_VACIO);
+      setScreen({ kind: "confirmar", total: order.total, medioPago, factura: order.factura });
     } catch (err) {
       setConfirmError(err instanceof ApiError ? err.message : "No se pudo confirmar la venta");
     } finally {
@@ -127,12 +139,21 @@ export default function App() {
           onMedioPagoChange={setMedioPago}
           onRemove={removeFromCart}
           onConfirm={() => void confirmVenta()}
+          facturar={facturar}
+          onFacturarChange={setFacturar}
+          facturaForm={facturaForm}
+          onFacturaFormChange={setFacturaForm}
           submitting={confirmSubmitting}
           error={confirmError}
         />
       )}
       {screen.kind === "confirmar" && (
-        <ConfirmarScreen total={screen.total} medioPago={screen.medioPago} onDone={backToEscanear} />
+        <ConfirmarScreen
+          total={screen.total}
+          medioPago={screen.medioPago}
+          factura={screen.factura}
+          onDone={backToEscanear}
+        />
       )}
 
       {(screen.kind === "escanear" || screen.kind === "carrito") && (

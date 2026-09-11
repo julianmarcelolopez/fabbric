@@ -50,17 +50,26 @@ function maskSecret(encrypted: string | null): string | null {
 }
 
 /**
- * Enmascara mpAccessToken/mpWebhookSecret antes de mandar la config al admin —
- * NUNCA devolver la fila cruda de `ensureConfig` en una respuesta HTTP (T16).
- * Usar en los 5 puntos que responden la config: GET, PATCH general, upload de
- * logo, upload de banner, y el PATCH de integración de MP.
+ * Enmascara los campos cifrados (Mercado Pago T16, AFIP T25) antes de mandar
+ * la config al admin — NUNCA devolver la fila cruda de `ensureConfig` en una
+ * respuesta HTTP. Usar en todos los puntos que responden la config: GET,
+ * PATCH general, upload de logo/banner, y los PATCH de integración (MP/AFIP).
  */
-export function toAdminConfig<T extends { mpAccessToken: string | null; mpWebhookSecret: string | null }>(
-  config: T
-): T {
+export function toAdminConfig<
+  T extends {
+    mpAccessToken: string | null;
+    mpWebhookSecret: string | null;
+    afipCertificado: string | null;
+    afipClavePrivada: string | null;
+    afipAccessToken: string | null;
+  },
+>(config: T): T {
   return {
     ...config,
     mpAccessToken: maskSecret(config.mpAccessToken),
     mpWebhookSecret: maskSecret(config.mpWebhookSecret),
+    afipCertificado: maskSecret(config.afipCertificado),
+    afipClavePrivada: maskSecret(config.afipClavePrivada),
+    afipAccessToken: maskSecret(config.afipAccessToken),
   };
 }

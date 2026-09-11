@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { updateCatalogConfigSchema, updateMpIntegrationSchema } from "@fabbric/shared";
+import { updateAfipIntegrationSchema, updateCatalogConfigSchema, updateMpIntegrationSchema } from "@fabbric/shared";
 import { and, eq, ne } from "drizzle-orm";
 import type { FastifyInstance } from "fastify";
 import type { ZodTypeProvider } from "fastify-type-provider-zod";
@@ -237,6 +237,43 @@ export async function catalogConfigRoutes(fastify: FastifyInstance) {
         .set({
           mpAccessToken: mpAccessToken ? encrypt(mpAccessToken) : null,
           mpWebhookSecret: mpWebhookSecret ? encrypt(mpWebhookSecret) : null,
+        })
+        .where(eq(catalogConfigs.orgId, orgId))
+        .returning();
+      return toAdminConfig(row);
+    }
+  );
+
+  // T25 — config de facturación AFIP de la org: certificado/clave/access_token
+  // cifrados en reposo (mismo patrón que mp-integration), cuit/puntoVenta/
+  // ambiente en texto plano porque no son secretos. Sin UI de alta todavía
+  // (ver overview.md T25, "fuera de alcance") — hoy se carga a mano contra
+  // este endpoint, no desde un formulario del admin.
+  app.patch(
+    "/admin/catalog-config/afip-integration",
+    {
+      ...auth,
+      schema: {
+        ...tag,
+        summary: "Configurar facturación AFIP de la org (T25) — certificado/clave/token cifrados en reposo",
+        body: updateAfipIntegrationSchema,
+      },
+    },
+    async (request) => {
+      const orgId = requireOrgId(request);
+      await ensureConfig(orgId);
+      const { afipCuit, afipPuntoVenta, afipAmbiente, afipCertificado, afipClavePrivada, afipAccessToken } =
+        request.body;
+
+      const [row] = await db
+        .update(catalogConfigs)
+        .set({
+          afipCuit,
+          afipPuntoVenta,
+          afipAmbiente,
+          afipCertificado: afipCertificado ? encrypt(afipCertificado) : null,
+          afipClavePrivada: afipClavePrivada ? encrypt(afipClavePrivada) : null,
+          afipAccessToken: afipAccessToken ? encrypt(afipAccessToken) : null,
         })
         .where(eq(catalogConfigs.orgId, orgId))
         .returning();

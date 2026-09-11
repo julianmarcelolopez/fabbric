@@ -35,6 +35,16 @@ export const catalogConfigSchema = z.object({
   // cifrado. Ver updateMpIntegrationSchema para cómo se setean.
   mpAccessToken: z.string().nullable(),
   mpWebhookSecret: z.string().nullable(),
+  // Facturación electrónica AFIP de la org (T25) — mismo criterio que MP: acá
+  // certificado/clave/accessToken llegan ya enmascarados, nunca en texto
+  // plano. cuit/puntoVenta/ambiente no son secretos, viajan tal cual.
+  // Ver updateAfipIntegrationSchema para cómo se setean.
+  afipCuit: z.string().nullable(),
+  afipPuntoVenta: z.number().int().nullable(),
+  afipAmbiente: z.enum(["homologacion", "produccion"]).nullable(),
+  afipCertificado: z.string().nullable(),
+  afipClavePrivada: z.string().nullable(),
+  afipAccessToken: z.string().nullable(),
   lowStockThreshold: z.number().int().min(0),
   active: z.boolean(),
   createdAt: z.coerce.date(),
@@ -85,7 +95,21 @@ export const updateMpIntegrationSchema = z.object({
   mpWebhookSecret: z.string().min(1).max(300).nullable(),
 });
 
+// Config de facturación AFIP de la org (T25) — endpoint aparte, mismo motivo
+// que Mercado Pago: certificado/clave/token nunca se mezclan con el PATCH
+// general de texto libre. `puntoVenta` nullable porque hoy puede no estar
+// habilitado todavía (ver overview.md, decisión #8) — se carga cuando se sepa.
+export const updateAfipIntegrationSchema = z.object({
+  afipCuit: z.string().min(11).max(11).nullable(),
+  afipPuntoVenta: z.number().int().positive().nullable(),
+  afipAmbiente: z.enum(["homologacion", "produccion"]).nullable(),
+  afipCertificado: z.string().min(1).nullable(),
+  afipClavePrivada: z.string().min(1).nullable(),
+  afipAccessToken: z.string().min(1).max(300).nullable(),
+});
+
 export type CatalogConfig = z.infer<typeof catalogConfigSchema>;
 export type UpdateLowStockThresholdInput = z.infer<typeof updateLowStockThresholdSchema>;
 export type UpdateCatalogConfigInput = z.infer<typeof updateCatalogConfigSchema>;
 export type UpdateMpIntegrationInput = z.infer<typeof updateMpIntegrationSchema>;
+export type UpdateAfipIntegrationInput = z.infer<typeof updateAfipIntegrationSchema>;

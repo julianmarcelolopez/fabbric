@@ -21,6 +21,7 @@ import { financeRoutes } from "./modules/finance/routes.js";
 import { metricsRoutes } from "./modules/metrics/routes.js";
 import { homeSectionsRoutes } from "./modules/homeSections/routes.js";
 import { imagesRoutes } from "./modules/images/routes.js";
+import { invoicesRoutes } from "./modules/invoices/routes.js";
 import { onboardingRoutes } from "./modules/onboarding/routes.js";
 import { ordersRoutes } from "./modules/orders/routes.js";
 import { paymentsRoutes } from "./modules/payments/routes.js";
@@ -99,6 +100,11 @@ await app.register(cors, {
   // El default de @fastify/cors solo permite GET/HEAD/POST en el preflight —
   // sin esto, PATCH/PUT/DELETE fallan desde el navegador (no desde tests Node)
   methods: ["GET", "HEAD", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+  // T25 — Content-Disposition no está en la safelist de headers que el
+  // navegador expone a JS en un fetch cross-origin por default; sin esto,
+  // `res.headers.get("content-disposition")` devuelve null en el cliente
+  // aunque el backend sí lo mande (GET /admin/invoices/:id/pdf).
+  exposedHeaders: ["Content-Disposition"],
 });
 
 // Upload de imágenes: límite 10 MB por archivo (lección de bordart — sin límite
@@ -140,6 +146,7 @@ await app.register(portalRoutes);
 await app.register(paymentsRoutes);
 await app.register(webhookRoutes);
 await app.register(ordersRoutes);
+await app.register(invoicesRoutes);
 await app.register(customersRoutes);
 await app.register(financeRoutes);
 await app.register(metricsRoutes);

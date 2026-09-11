@@ -206,6 +206,18 @@ export type AdminOrderItem = {
   referenceImageUrl: string | null;
 };
 
+// T25 — mismo shape que expone el backend en venta-local/retry/orders detail
+export type AdminInvoiceEstado = "pendiente" | "emitida" | "error";
+
+export type AdminInvoiceStatus = {
+  id: string;
+  estado: AdminInvoiceEstado;
+  numero: number | null;
+  cae: string | null;
+  caeVencimiento: string | null;
+  mensajeError: string | null;
+};
+
 export type AdminOrderDetail = {
   id: string;
   orderNumber: number;
@@ -226,6 +238,7 @@ export type AdminOrderDetail = {
   items: AdminOrderItem[];
   type: AdminOrderType;
   allowedTransitions: AdminOrderStatus[];
+  invoice: AdminInvoiceStatus | null;
 };
 
 export type AdminCustomerRow = {

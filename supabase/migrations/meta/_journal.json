@@ -141,6 +141,27 @@
       "when": 1786937719982,
       "tag": "0019_modern_praxagora",
       "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1787685505081,
+      "tag": "0020_panoramic_the_professor",
+      "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1788473690449,
+      "tag": "0021_sticky_wind_dancer",
+      "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1788477759326,
+      "tag": "0022_salty_piledriver",
+      "breakpoints": true
     }
   ]
 }

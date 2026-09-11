@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { ApiError, apiJson } from "../../../lib/api";
+import { ApiError, apiDownload, apiJson } from "../../../lib/api";
 import { formatPrice } from "../../../lib/money";
 import {
   ADMIN_ORDER_STATUS,
   ADMIN_ORDER_TYPE_LABELS,
+  type AdminInvoiceStatus,
   type AdminOrderDetail,
   type AdminOrderStatus,
   type AdminWallet,
@@ -16,6 +17,68 @@ const ACTION_LABELS: Partial<Record<AdminOrderStatus, string>> = {
   delivered: "Marcar entregado",
   cancelled: "Cancelar",
 };
+
+// T25 — estado de la factura AFIP del pedido (a lo sumo una por pedido).
+// Reintentar reusa el mismo endpoint que el botón "Reintentar" de otras
+// pantallas administrativas no tiene todavía (Fase 6 es la primera UI de esto).
+function InvoiceCard({ invoice, onRetried }: { invoice: AdminInvoiceStatus; onRetried: () => Promise<void> }) {
+  const [busy, setBusy] = useState(false);
+  const [localError, setLocalError] = useState<string | null>(null);
+
+  async function retry() {
+    setLocalError(null);
+    setBusy(true);
+    try {
+      await apiJson(`/admin/invoices/${invoice.id}/retry`, { method: "POST" });
+      await onRetried();
+    } catch (err) {
+      setLocalError(err instanceof ApiError ? err.message : String(err));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function download() {
+    setLocalError(null);
+    setBusy(true);
+    try {
+      await apiDownload(`/admin/invoices/${invoice.id}/pdf`, `factura-${invoice.numero}.pdf`);
+    } catch (err) {
+      setLocalError(err instanceof ApiError ? err.message : String(err));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="card">
+      <h2>Factura AFIP</h2>
+      {invoice.estado === "emitida" && (
+        <>
+          <p>
+            Factura C N.º <strong>{invoice.numero}</strong> · CAE <code>{invoice.cae}</code>
+            {invoice.caeVencimiento && <span className="muted"> (vence {invoice.caeVencimiento})</span>}
+          </p>
+          <button className="btn" disabled={busy} onClick={() => void download()}>
+            {busy ? "Descargando…" : "Descargar factura (PDF)"}
+          </button>
+        </>
+      )}
+      {invoice.estado === "pendiente" && (
+        <p className="muted">La factura se está terminando de procesar.</p>
+      )}
+      {invoice.estado === "error" && (
+        <>
+          <p className="error">{invoice.mensajeError ?? "No se pudo emitir la factura."}</p>
+          <button className="btn primary" disabled={busy} onClick={() => void retry()}>
+            {busy ? "Reintentando…" : "Reintentar"}
+          </button>
+        </>
+      )}
+      {localError && <p className="error" style={{ marginTop: 8 }}>{localError}</p>}
+    </div>
+  );
+}
 
 export function OrderAdminDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -162,6 +225,10 @@ export function OrderAdminDetailPage() {
           {order.shippingCost === 0 ? "—" : formatPrice(order.shippingCost)} · <strong>Total: {formatPrice(order.total)}</strong>
         </p>
       </div>
+
+      {/* T25 — sin factura (toggle nunca activado en la venta), esta tarjeta
+          no aparece: cero cambio respecto de un pedido de T23. */}
+      {order.invoice && <InvoiceCard invoice={order.invoice} onRetried={load} />}
 
       <div className="card">
         <h2>Acciones</h2>

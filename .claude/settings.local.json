@@ -11,7 +11,24 @@
       "PowerShell(Get-NetTCPConnection -LocalPort 5173 -ErrorAction SilentlyContinue)",
       "Bash(docker compose *)",
       "Bash(node --env-file=.env.local t23-03-venta-local.mjs)",
-      "Bash(node --env-file=.env.local -e ' *)"
+      "Bash(node --env-file=.env.local -e ' *)",
+      "WebSearch",
+      "WebFetch(domain:docs.afipsdk.com)",
+      "WebFetch(domain:afipsdk.com)",
+      "Bash(openssl version *)",
+      "Bash(npm run *)",
+      "Bash(npx tsc *)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" -X PATCH http://localhost:4000/admin/catalog-config/afip-integration -H \"Content-Type: application/json\" -d '{}')",
+      "Bash(curl -s -X PATCH http://localhost:4000/admin/catalog-config/afip-integration -H \"Content-Type: application/json\" -d '{}')",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" -X PATCH http://localhost:4000/admin/catalog-config/mp-integration -H \"Content-Type: application/json\" -d '{}')",
+      "Bash(node --env-file=../.env.local t25-01-afip-config.mjs)",
+      "Bash(node --env-file=../.env.local \"/c/Users/JULIAN~1/AppData/Local/Temp/claude/c--projects-fabbric/4050fb60-013f-42eb-baaf-0229210dce3a/scratchpad/cargar-config-eliathi.mjs\")",
+      "Bash(cp \"/c/Users/JULIAN~1/AppData/Local/Temp/claude/c--projects-fabbric/4050fb60-013f-42eb-baaf-0229210dce3a/scratchpad/cargar-config-eliathi.mjs\" /c/projects/fabbric/backend/_tmp-cargar-config-eliathi.mjs *)",
+      "Bash(git -C /c/projects/fabbric status --porcelain)",
+      "Bash(node --env-file=../.env.local _tmp-verificar-config-eliathi.mjs)"
+    ],
+    "additionalDirectories": [
+      "C:\\Users\\JULIAN~1\\AppData\\Local\\Temp\\claude\\c--projects-fabbric\\4050fb60-013f-42eb-baaf-0229210dce3a\\scratchpad"
     ]
   }
 }

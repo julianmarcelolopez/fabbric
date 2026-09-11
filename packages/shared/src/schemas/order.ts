@@ -149,11 +149,36 @@ export const ventaLocalItemSchema = z.object({
   qty: z.number().int().min(1).max(99),
 });
 
+// T25 — facturación AFIP opcional de la venta: si el vendedor activa el
+// toggle en la PWA, se manda este bloque; si no, se omite del todo (no un
+// objeto vacío) y la venta se comporta exactamente igual que en T23.
+export const facturaAfipSchema = z.object({
+  nombre: z.string().min(1).max(200),
+  email: z.string().email(),
+  dni: z.string().min(1).max(20),
+});
+
 export const ventaLocalSchema = z.object({
   items: z.array(ventaLocalItemSchema).min(1),
   medioPago: medioPagoSchema,
+  factura: facturaAfipSchema.optional(),
+});
+
+export const invoiceEstadoSchema = z.enum(["pendiente", "emitida", "error"]);
+
+// T25 — estado de la factura devuelto por POST /admin/orders/venta-local y
+// por POST /admin/invoices/:id/retry — mismo shape en los dos endpoints.
+export const invoiceStatusSchema = z.object({
+  id: z.string().uuid(),
+  estado: invoiceEstadoSchema,
+  numero: z.number().int().nullable(),
+  cae: z.string().nullable(),
+  caeVencimiento: z.string().nullable(),
+  mensajeError: z.string().nullable(),
 });
 
 export type MedioPago = z.infer<typeof medioPagoSchema>;
 export type VentaLocalItem = z.infer<typeof ventaLocalItemSchema>;
+export type FacturaAfipInput = z.infer<typeof facturaAfipSchema>;
 export type VentaLocalInput = z.infer<typeof ventaLocalSchema>;
+export type InvoiceStatus = z.infer<typeof invoiceStatusSchema>;

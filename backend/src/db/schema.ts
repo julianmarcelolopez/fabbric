@@ -28,6 +28,13 @@ export const orderStatus = pgEnum("order_status", [
   "cancelled",
 ]);
 export const movementType = pgEnum("movement_type", ["income", "expense"]);
+// T25 — ambiente AFIP de la config de facturación de una org: nunca se emite
+// en producción sin que la org lo haya pasado explícitamente a "produccion".
+export const afipAmbiente = pgEnum("afip_ambiente", ["homologacion", "produccion"]);
+// T25 — estado de una factura AFIP: `pendiente` recién creada dentro de la
+// transacción de venta-local, antes de intentar la emisión; `error` si AFIP
+// rechazó/falló (la venta ya quedó `paid`, no se revierte); `emitida` con CAE.
+export const invoiceEstado = pgEnum("invoice_estado", ["pendiente", "emitida", "error"]);
 
 export const organizations = pgTable("organizations", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -435,6 +442,17 @@ export const catalogConfigs = pgTable("catalog_configs", {
   // en texto plano; nunca en updateCatalogConfigSchema, se setean aparte
   mpAccessToken: text("mp_access_token"),
   mpWebhookSecret: text("mp_webhook_secret"),
+  // Facturación electrónica AFIP de la org (T25) — mismo criterio que Mercado
+  // Pago: certificado/clave/access_token cifrados, nunca en texto plano, nunca
+  // en updateCatalogConfigSchema, se setean por su propio endpoint. `afipCuit`
+  // y `afipPuntoVenta` no son secretos pero viven acá igual, junto al resto de
+  // la config de facturación de la org.
+  afipCuit: text("afip_cuit"),
+  afipPuntoVenta: integer("afip_punto_venta"),
+  afipAmbiente: afipAmbiente("afip_ambiente"),
+  afipCertificado: text("afip_certificado"),
+  afipClavePrivada: text("afip_clave_privada"),
+  afipAccessToken: text("afip_access_token"),
   lowStockThreshold: integer("low_stock_threshold").notNull().default(3),
   active: boolean("active").notNull().default(true),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
@@ -443,3 +461,44 @@ export const catalogConfigs = pgTable("catalog_configs", {
     .defaultNow()
     .$onUpdate(() => new Date()),
 });
+
+// T25 — comprobante AFIP de una venta local. 1 a 1 con `orders` (nunca dos
+// facturas del mismo pedido). `numero`/`cae`/`caeVencimiento` quedan null
+// hasta que `estado` pasa a `emitida`; `mensajeError` solo se usa en `error`.
+export const invoices = pgTable(
+  "invoices",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    orgId: uuid("org_id")
+      .notNull()
+      .references(() => organizations.id),
+    orderId: uuid("order_id")
+      .notNull()
+      .unique()
+      .references(() => orders.id),
+    // Texto libre (no enum cerrado) — hoy siempre "C", pero no bloquea si el
+    // día de mañana se suma Factura A/B para responsables inscriptos.
+    tipo: text("tipo").notNull().default("C"),
+    numero: integer("numero"),
+    cae: text("cae"),
+    // AFIP/el SDK la devuelven como texto "AAAA-MM-DD" — se guarda tal cual,
+    // no como date, para no depender de un parseo propio de ese formato.
+    caeVencimiento: text("cae_vencimiento"),
+    // T25 Fase 3 — fecha real que se le mandó a AFIP en `CbteFch` (formato
+    // "AAAA-MM-DD"), NO la fecha de creación de la factura: hace falta tal
+    // cual para el JSON del QR (RG 4892), y sin guardarla no hay forma de
+    // reconstruirla con precisión después de emitida.
+    fecha: text("fecha"),
+    estado: invoiceEstado("estado").notNull().default("pendiente"),
+    clienteNombre: text("cliente_nombre"),
+    clienteEmail: text("cliente_email"),
+    clienteDni: text("cliente_dni"),
+    mensajeError: text("mensaje_error"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow()
+      .$onUpdate(() => new Date()),
+  },
+  (t) => [index("invoices_org_idx").on(t.orgId)]
+);

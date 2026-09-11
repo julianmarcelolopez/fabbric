@@ -4,10 +4,16 @@ import { env } from "../config/env.js";
 // MODO DEGRADADO: sin RESEND_API_KEY el contenido se loguea en vez de enviarse,
 // así el flujo de pedidos funciona entero en dev sin cuenta de Resend.
 
+// T25 — adjunto para Resend: `content` en base64 (soportado en todos sus
+// planes, incluido el gratuito, hasta ~40MB en bruto — muy por encima de lo
+// que pesa un PDF de factura).
+type EmailAttachment = { filename: string; content: string };
+
 type SendEmailInput = {
   to: string;
   subject: string;
   html: string;
+  attachments?: EmailAttachment[];
 };
 
 export async function sendEmail(
@@ -16,7 +22,9 @@ export async function sendEmail(
 ): Promise<void> {
   if (!env.RESEND_API_KEY) {
     log.info(
-      `[email degradado — sin RESEND_API_KEY] to=${input.to} subject="${input.subject}"\n${input.html}`
+      `[email degradado — sin RESEND_API_KEY] to=${input.to} subject="${input.subject}"${
+        input.attachments?.length ? ` (con ${input.attachments.length} adjunto/s)` : ""
+      }\n${input.html}`
     );
     return;
   }
@@ -32,6 +40,7 @@ export async function sendEmail(
         to: [input.to],
         subject: input.subject,
         html: input.html,
+        ...(input.attachments?.length ? { attachments: input.attachments } : {}),
       }),
     });
     if (!res.ok) {
@@ -95,6 +104,32 @@ export function orderStatusEmail(input: {
             ? `<p>Número de seguimiento: <strong>${input.trackingNumber}</strong></p>`
             : ""
         }
+        <p style="color: #9ca3af; font-size: 12px; margin-top: 24px;">tienda creada con fabbric</p>
+      </div>
+    `.trim(),
+  };
+}
+
+// T25 — mismo mail para el cliente y para la copia de la tienda (Eliathi): el
+// PDF va adjunto, este cuerpo es solo el aviso, no repite el detalle de ítems.
+export function invoiceEmail(input: {
+  storeName: string;
+  numeroFormateado: string;
+  totalCents: number;
+  cae: string;
+}): { subject: string; html: string } {
+  const total = (input.totalCents / 100).toLocaleString("es-AR", {
+    style: "currency",
+    currency: "ARS",
+  });
+  return {
+    subject: `Tu factura ${input.numeroFormateado} — ${input.storeName}`,
+    html: `
+      <div style="font-family: system-ui, sans-serif; max-width: 480px; margin: 0 auto; color: #1a1a1a;">
+        <h2 style="margin-bottom: 4px;">${input.storeName}</h2>
+        <p style="color: #6b7280; margin-top: 0;">Factura ${input.numeroFormateado} · ${total}</p>
+        <p>Adjuntamos el comprobante de tu compra en PDF.</p>
+        <p style="color: #6b7280; font-size: 13px;">CAE: ${input.cae}</p>
         <p style="color: #9ca3af; font-size: 12px; margin-top: 24px;">tienda creada con fabbric</p>
       </div>
     `.trim(),
