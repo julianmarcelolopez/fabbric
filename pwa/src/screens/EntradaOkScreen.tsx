@@ -1,24 +1,19 @@
-import { useEffect } from "react";
 import { colors, fonts, radius } from "../lib/theme";
 
 // T27, Fase 1: confirmación visible tras "Registrar entrada" (hoy la app
 // vuelve a Escanear sin ninguna señal de que la operación se ejecutó). Solo
 // se llega acá después de que el backend confirmó el movimiento — ver
 // FichaScreen.handleEntrada, que espera la respuesta real antes de navegar.
+// Sin auto-avance a propósito (ajuste posterior): un cartel que desaparece
+// solo no garantiza que el vendedor lo haya visto — tiene que confirmarlo
+// tocando el botón.
 type Props = {
   qty: number;
   stockNuevo: number;
   onDone: () => void;
 };
 
-const AUTO_AVANCE_MS = 1900;
-
 export function EntradaOkScreen({ qty, stockNuevo, onDone }: Props) {
-  useEffect(() => {
-    const id = setTimeout(onDone, AUTO_AVANCE_MS);
-    return () => clearTimeout(id);
-  }, [onDone]);
-
   return (
     <div
       style={{

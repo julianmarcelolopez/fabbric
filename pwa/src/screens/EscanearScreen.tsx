@@ -79,11 +79,19 @@ export function EscanearScreen({ modo, onModoChange, onFound, onNotFound }: Prop
     setError(null);
     setDecoding(true);
     try {
-      // "AllLinear": todos los formatos de código de barras lineales
-      // (EAN/UPC/Code128/Code39/ITF/Codabar/DataBar/...) — nunca QR, no hace
-      // falta para etiquetas de indumentaria.
+      // Formatos de indumentaria/retail: EAN/UPC (el caso normal), + Code128/
+      // Code39/Codabar/DataBar por si algún proveedor usa otro esquema.
+      // Deliberadamente SIN "ITF"/"ITF14" (a diferencia del "AllLinear" que
+      // se usaba antes): ITF es un formato de logística (cajas/embalaje,
+      // siempre con cantidad par de dígitos) que nunca aparece en una
+      // etiqueta de indumentaria real — pero zxing a veces confunde un
+      // EAN-13 borroso/con mal encuadre con un ITF válido y devuelve un
+      // resultado con un dígito de más, con total confianza (caso real:
+      // "0333242180304" de 13 dígitos leído como "03332421803043" de 14).
+      // Sacando ITF del set, esa lectura ambigua ahora falla limpio en vez
+      // de guardar un código incorrecto sin que nadie se dé cuenta.
       const results = await readBarcodes(file, {
-        formats: ["AllLinear"],
+        formats: ["EAN13", "EAN8", "UPCA", "UPCE", "Code128", "Code39", "Codabar", "DataBar"],
         tryHarder: true,
       });
       if (results.length === 0) {

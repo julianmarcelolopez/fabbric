@@ -64,6 +64,17 @@ function ProductsList() {
     }
   }
 
+  async function deleteProduct(p: ProductListItem) {
+    if (!confirm(`¿Borrar el producto "${p.name}"? Esto borra también sus variantes, imágenes y stock.`)) return;
+    setError(null);
+    try {
+      await apiJson(`/admin/products/${p.id}`, { method: "DELETE" });
+      await load();
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : String(err));
+    }
+  }
+
   // Búsqueda y filtros: client-side sobre la lista ya cargada (T19/02) — sin tocar el backend.
   const visibleProducts = useMemo(() => {
     if (!products) return null;
@@ -152,6 +163,7 @@ function ProductsList() {
                   <th>Visible</th>
                   <th>Variantes</th>
                   <th>Colecciones</th>
+                  <th></th>
                 </tr>
               </thead>
               <tbody>
@@ -183,6 +195,11 @@ function ProductsList() {
                       {p.collections.map((c) => (
                         <span key={c.id} className="badge">{c.name}</span>
                       ))}
+                    </td>
+                    <td>
+                      <button className="btn small danger" onClick={() => void deleteProduct(p)}>
+                        Borrar
+                      </button>
                     </td>
                   </tr>
                 ))}

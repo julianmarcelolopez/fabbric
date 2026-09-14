@@ -14,12 +14,14 @@ function VariantRow({ variant, onChange, onError }: { variant: Variant; onChange
   const [talle, setTalle] = useState(variant.talle);
   const [color, setColor] = useState(variant.color);
   const [sku, setSku] = useState(variant.sku ?? "");
+  const [barcode, setBarcode] = useState(variant.barcode ?? "");
   const [priceOverride, setPriceOverride] = useState(centsToPesosInput(variant.priceOverride));
 
   const dirty =
     talle !== variant.talle ||
     color !== variant.color ||
     sku !== (variant.sku ?? "") ||
+    barcode !== (variant.barcode ?? "") ||
     priceOverride !== centsToPesosInput(variant.priceOverride);
 
   async function save() {
@@ -36,6 +38,9 @@ function VariantRow({ variant, onChange, onError }: { variant: Variant; onChange
           talle,
           color,
           sku: sku.trim() === "" ? null : sku,
+          // T27: código de barras corregible a mano (ej. lectura errónea del
+          // escaneo por foto) — antes solo se cargaba al escanear en la PWA.
+          barcode: barcode.trim() === "" ? null : barcode.trim(),
           priceOverride: override,
         }),
       });
@@ -60,8 +65,14 @@ function VariantRow({ variant, onChange, onError }: { variant: Variant; onChange
       <td><input style={{ width: 64 }} value={talle} onChange={(e) => setTalle(e.target.value)} /></td>
       <td><input style={{ width: 96 }} value={color} onChange={(e) => setColor(e.target.value)} /></td>
       <td><input style={{ width: 96 }} value={sku} onChange={(e) => setSku(e.target.value)} placeholder="—" /></td>
-      <td title="Se carga al escanear desde la PWA de local (T23) — no editable acá todavía">
-        {variant.barcode ?? "—"}
+      <td>
+        <input
+          style={{ width: 120 }}
+          value={barcode}
+          onChange={(e) => setBarcode(e.target.value)}
+          placeholder="—"
+          title="Se carga normalmente al escanear desde la PWA — corregible acá si el escaneo leyó mal (T27)"
+        />
       </td>
       <td title="El stock se mueve desde la página Stock">{variant.stockOnline}</td>
       <td title="El stock se mueve desde la página Stock">{variant.stockLocal}</td>

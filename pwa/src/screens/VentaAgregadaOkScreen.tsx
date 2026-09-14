@@ -1,10 +1,12 @@
-import { useEffect } from "react";
 import { colors, fonts, radius } from "../lib/theme";
 
 // T27, Fase 1: confirmación visible tras "Agregar a la venta" (hoy la app
 // vuelve a Escanear sin ninguna señal — la única pista era el badge chico del
 // carrito en la bottom nav). addToCart es local/síncrono (no pega al
 // backend), así que se llega acá al instante, sin estado de carga.
+// Sin auto-avance a propósito (ajuste posterior): el vendedor elige a
+// propósito "Seguir vendiendo" o "Ir al carrito" — un cartel que desaparece
+// solo no garantiza que lo haya visto.
 type Props = {
   nombre: string;
   countCarrito: number;
@@ -12,14 +14,7 @@ type Props = {
   onIrCarrito: () => void;
 };
 
-const AUTO_AVANCE_MS = 1900;
-
 export function VentaAgregadaOkScreen({ nombre, countCarrito, onDone, onIrCarrito }: Props) {
-  useEffect(() => {
-    const id = setTimeout(onDone, AUTO_AVANCE_MS);
-    return () => clearTimeout(id);
-  }, [onDone]);
-
   return (
     <div
       style={{

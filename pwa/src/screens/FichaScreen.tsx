@@ -11,13 +11,46 @@ type Props = {
   modo: "venta" | "entrada";
   onDone: () => void;
   onEntradaOk: (info: { qty: number; stockNuevo: number }) => void;
-  onAddToCart: (variant: VariantByBarcode) => void;
+  onAddToCart: (variant: VariantByBarcode, qty: number) => void;
 };
 
 // El propio endpoint devuelve la variante ya actualizada — se usa ese
 // stockLocal como fuente de verdad para la confirmación (T27, Fase 1), en vez
 // de calcularlo a mano sumando qty al valor que tenía la Ficha al abrirse.
 type StockMovementResult = { variant: { stockLocal: number } };
+
+// Reusado en los dos modos (T27): "cantidad recibida" para entrada, "cantidad
+// a vender" para venta — mismo control, misma cantidad mínima (1).
+function QtyStepper({
+  qty,
+  onChange,
+  disabled,
+  label,
+}: {
+  qty: number;
+  onChange: (qty: number) => void;
+  disabled: boolean;
+  label: string;
+}) {
+  return (
+    <div style={{ marginBottom: 6 }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10 }}>
+        <button
+          onClick={() => onChange(Math.max(1, qty - 1))}
+          disabled={disabled || qty <= 1}
+          style={{ width: 32, padding: 4 }}
+        >
+          −
+        </button>
+        <span style={{ fontSize: 14, minWidth: 20, textAlign: "center" }}>{qty}</span>
+        <button onClick={() => onChange(qty + 1)} disabled={disabled} style={{ width: 32, padding: 4 }}>
+          +
+        </button>
+      </div>
+      <p style={{ fontSize: 11, color: colors.muted, textAlign: "center", margin: "6px 0 10px" }}>{label}</p>
+    </div>
+  );
+}
 
 export function FichaScreen({ variant, modo, onDone, onEntradaOk, onAddToCart }: Props) {
   const [qty, setQty] = useState(1);
@@ -69,6 +102,13 @@ export function FichaScreen({ variant, modo, onDone, onEntradaOk, onAddToCart }:
           Modo: {modo === "entrada" ? "Recibir mercadería" : "Vender"}
         </span>
       </div>
+
+      {/* Ayuda a detectar de un vistazo si el código escaneado/tipeado no es
+          el que uno esperaba (ver análisis de códigos compartidos entre
+          variantes) — antes no había forma de comparar sin ir a la base. */}
+      <p style={{ fontSize: 11, color: colors.muted, letterSpacing: 0.3, margin: "0 0 10px" }}>
+        Código {variant.barcode ?? "—"}
+      </p>
 
       <div
         style={{
@@ -129,22 +169,7 @@ export function FichaScreen({ variant, modo, onDone, onEntradaOk, onAddToCart }:
           docs/T27_UX-PWA/analisis.md). */}
       {modo === "entrada" ? (
         <div>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10, marginBottom: 6 }}>
-            <button
-              onClick={() => setQty((q) => Math.max(1, q - 1))}
-              disabled={submitting || qty <= 1}
-              style={{ width: 32, padding: 4 }}
-            >
-              −
-            </button>
-            <span style={{ fontSize: 14, minWidth: 20, textAlign: "center" }}>{qty}</span>
-            <button onClick={() => setQty((q) => q + 1)} disabled={submitting} style={{ width: 32, padding: 4 }}>
-              +
-            </button>
-          </div>
-          <p style={{ fontSize: 11, color: colors.muted, textAlign: "center", margin: "0 0 10px" }}>
-            Cantidad recibida
-          </p>
+          <QtyStepper qty={qty} onChange={setQty} disabled={submitting} label="Cantidad recibida" />
           <button
             onClick={() => void handleEntrada()}
             disabled={submitting}
@@ -166,23 +191,26 @@ export function FichaScreen({ variant, modo, onDone, onEntradaOk, onAddToCart }:
           </button>
         </div>
       ) : (
-        <button
-          onClick={() => onAddToCart(variant)}
-          style={{
-            width: "100%",
-            minHeight: 44,
-            padding: 10,
-            borderRadius: radius,
-            border: "none",
-            background: colors.accent,
-            color: colors.white,
-            fontSize: 14,
-            fontWeight: 500,
-            cursor: "pointer",
-          }}
-        >
-          Agregar a la venta
-        </button>
+        <div>
+          <QtyStepper qty={qty} onChange={setQty} disabled={false} label="Cantidad a vender" />
+          <button
+            onClick={() => onAddToCart(variant, qty)}
+            style={{
+              width: "100%",
+              minHeight: 44,
+              padding: 10,
+              borderRadius: radius,
+              border: "none",
+              background: colors.accent,
+              color: colors.white,
+              fontSize: 14,
+              fontWeight: 500,
+              cursor: "pointer",
+            }}
+          >
+            Agregar a la venta
+          </button>
+        </div>
       )}
     </div>
   );

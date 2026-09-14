@@ -8,6 +8,9 @@ export const productVariantSchema = z.object({
   productId: z.string().uuid(),
   orgId: z.string().uuid(),
   sku: z.string().nullable(),
+  // Código de barras físico (T23) — nullable, único por org. Editable desde
+  // el admin (T27) para corregir lecturas erróneas del escaneo por foto.
+  barcode: z.string().nullable(),
   talle: z.string().min(1),
   color: z.string().min(1),
   stockOnline: stock,
@@ -34,6 +37,9 @@ export const updateVariantSchema = z
     talle: z.string().min(1),
     color: z.string().min(1),
     sku: z.string().nullable(),
+    // T27: corregir un código mal cargado (ej. lectura errónea del escaneo
+    // por foto) — antes solo se podía fijar al crear la variante.
+    barcode: z.string().min(1).nullable(),
     priceOverride: priceCents.nullable(),
   })
   .partial();

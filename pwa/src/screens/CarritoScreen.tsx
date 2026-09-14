@@ -21,6 +21,7 @@ type Props = {
   medioPago: MedioPago;
   onMedioPagoChange: (medioPago: MedioPago) => void;
   onRemove: (variantId: string) => void;
+  onUpdateQty: (variantId: string, qty: number) => void;
   onConfirm: () => void;
   submitting: boolean;
   error: string | null;
@@ -51,6 +52,7 @@ export function CarritoScreen({
   medioPago,
   onMedioPagoChange,
   onRemove,
+  onUpdateQty,
   onConfirm,
   submitting,
   error,
@@ -120,7 +122,7 @@ export function CarritoScreen({
               key={item.variantId}
               style={{
                 display: "flex",
-                alignItems: "center",
+                alignItems: "flex-start",
                 gap: 10,
                 border: `1px solid ${colors.gray}`,
                 borderRadius: radius,
@@ -132,10 +134,27 @@ export function CarritoScreen({
                   {item.brand ? `${item.brand} — ` : ""}
                   {item.name} ({item.talle}/{item.color})
                 </p>
-                <p style={{ fontSize: 12, color: colors.muted }}>
-                  {formatPrice(item.unitPrice)} x{item.qty}
-                </p>
-                <p style={{ fontSize: 11, color: short ? colors.danger : colors.muted, marginTop: 2 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, margin: "6px 0" }}>
+                  <button
+                    onClick={() => onUpdateQty(item.variantId, item.qty - 1)}
+                    aria-label="Restar unidad"
+                    style={{ width: 26, height: 26, padding: 0 }}
+                  >
+                    −
+                  </button>
+                  <span style={{ fontSize: 13, minWidth: 16, textAlign: "center" }}>{item.qty}</span>
+                  <button
+                    onClick={() => onUpdateQty(item.variantId, item.qty + 1)}
+                    aria-label="Sumar unidad"
+                    style={{ width: 26, height: 26, padding: 0 }}
+                  >
+                    +
+                  </button>
+                  <span style={{ fontSize: 12, color: colors.muted }}>
+                    {formatPrice(item.unitPrice)} c/u · {formatPrice(item.unitPrice * item.qty)}
+                  </span>
+                </div>
+                <p style={{ fontSize: 11, color: short ? colors.danger : colors.muted }}>
                   Stock actual: {stock === undefined ? "…" : (stock ?? "—")}
                   {short ? " · no alcanza" : ""}
                 </p>

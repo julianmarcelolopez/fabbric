@@ -52,20 +52,20 @@ export default function App() {
   const [facturar, setFacturar] = useState(false);
   const [facturaForm, setFacturaForm] = useState<FacturaAfipInput>(FACTURA_FORM_VACIO);
 
-  function addToCart(variant: VariantByBarcode) {
+  function addToCart(variant: VariantByBarcode, qty: number) {
     // Sin llamada al backend (estado local hasta confirmar la venta), así que
     // la confirmación se muestra al instante — no hace falta un estado de
     // "procesando" acá (T27, Fase 1).
     const nombre = variant.product.brand
       ? `${variant.product.brand} — ${variant.product.name}`
       : variant.product.name;
-    const countCarrito = cart.reduce((sum, it) => sum + it.qty, 0) + 1;
+    const countCarrito = cart.reduce((sum, it) => sum + it.qty, 0) + qty;
 
     setCart((prev) => {
       const idx = prev.findIndex((it) => it.variantId === variant.id);
       if (idx >= 0) {
         const copy = [...prev];
-        copy[idx] = { ...copy[idx], qty: copy[idx].qty + 1 };
+        copy[idx] = { ...copy[idx], qty: copy[idx].qty + qty };
         return copy;
       }
       return [
@@ -78,7 +78,7 @@ export default function App() {
           talle: variant.talle,
           color: variant.color,
           unitPrice: variant.priceOverride ?? variant.product.price,
-          qty: 1,
+          qty,
         },
       ];
     });
@@ -87,6 +87,13 @@ export default function App() {
 
   function removeFromCart(variantId: string) {
     setCart((prev) => prev.filter((it) => it.variantId !== variantId));
+  }
+
+  // Bajar a 0 quita el ítem — mismo criterio que un carrito de e-commerce
+  // común, no queda un ítem en cantidad 0 dando vueltas.
+  function updateCartQty(variantId: string, qty: number) {
+    if (qty <= 0) return removeFromCart(variantId);
+    setCart((prev) => prev.map((it) => (it.variantId === variantId ? { ...it, qty } : it)));
   }
 
   async function confirmVenta() {
@@ -177,6 +184,7 @@ export default function App() {
           medioPago={medioPago}
           onMedioPagoChange={setMedioPago}
           onRemove={removeFromCart}
+          onUpdateQty={updateCartQty}
           onConfirm={() => void confirmVenta()}
           facturar={facturar}
           onFacturarChange={setFacturar}

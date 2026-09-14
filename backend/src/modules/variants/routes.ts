@@ -5,7 +5,7 @@ import type { ZodTypeProvider } from "fastify-type-provider-zod";
 import { z } from "zod";
 import { db } from "../../db/client.js";
 import { categories, productImages, products, productVariants } from "../../db/schema.js";
-import { AppError } from "../../lib/errors.js";
+import { AppError, isUniqueViolation } from "../../lib/errors.js";
 import { requireOrgId } from "../../lib/tenant.js";
 
 const idParam = z.object({ id: z.string().uuid() });
@@ -151,12 +151,21 @@ export async function variantsRoutes(fastify: FastifyInstance) {
 
       // Stock: fuera del PATCH desde T4 — updateVariantSchema ya no acepta
       // stockOnline/stockLocal; los cambios van por /stock-movements.
-      const [row] = await db
-        .update(productVariants)
-        .set(input)
-        .where(and(eq(productVariants.id, id), eq(productVariants.orgId, orgId)))
-        .returning();
-      return row;
+      try {
+        const [row] = await db
+          .update(productVariants)
+          .set(input)
+          .where(and(eq(productVariants.id, id), eq(productVariants.orgId, orgId)))
+          .returning();
+        return row;
+      } catch (err) {
+        // T27: corrección manual de un código de barras mal cargado — mismo
+        // criterio que alta-rapida para el duplicado (unique por org).
+        if (isUniqueViolation(err) && input.barcode) {
+          throw new AppError(409, "conflict", `Ya existe una variante con el código de barras ${input.barcode}`);
+        }
+        throw err;
+      }
     }
   );
 
