@@ -293,15 +293,20 @@ export function StoreLayout() {
                   )}
                 </Link>
 
+                {/* T30/03 — antes: categorías reales del tenant + "Ver todo" (dinámico,
+                    variaba según cuántas categorías tuviera cada org). Ahora: 4 links
+                    fijos, iguales para cualquier tenant. `end` en "Inicio" — sin él,
+                    NavLink matchea por prefijo y quedaría marcado activo en /categorias,
+                    /novedades y /ofertas también (todas empiezan con /store/:slug). El
+                    footer (más abajo) sigue mostrando las categorías reales — decisión
+                    a propósito, no un olvido (ver analisis.md sección 5, decisión 4). */}
                 <nav className="store-nav">
-                  {navCategories?.map((c) => (
-                    <NavLink key={c.refSlug} to={`/store/${slug}/c/${c.refSlug}`}>
-                      {c.refName}
-                    </NavLink>
-                  ))}
-                  {/* T20/02: la página /categorias todavía no existe — el link ya
-                      queda armado para cuando la tarea 04 la construya. */}
-                  <NavLink to={`/store/${slug}/categorias`}>Ver todo</NavLink>
+                  <NavLink to={`/store/${slug}`} end>
+                    Inicio
+                  </NavLink>
+                  <NavLink to={`/store/${slug}/categorias`}>Explorar</NavLink>
+                  <NavLink to={`/store/${slug}/novedades`}>Novedades</NavLink>
+                  <NavLink to={`/store/${slug}/ofertas`}>Ofertas</NavLink>
                 </nav>
 
                 <div className="store-header-actions">

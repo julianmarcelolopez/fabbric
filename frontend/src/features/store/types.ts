@@ -122,3 +122,16 @@ export type PublicBrandSummary = PublicBrandRef & {
   imageUrl: string | null;
   productCount: number;
 };
+
+// T30/02 — mismo contrato que PublicCategoryProducts, pero SIN clave de
+// grupo: Novedades y Ofertas no son una entidad de la DB (no hay slug que
+// buscar), así que no hay `category`/`collection`/`brand` que devolver. El
+// título de la página se resuelve por `mode`, no por esta forma.
+export type PublicProductListing = {
+  products: PublicCategoryProducts["products"];
+  page: number;
+  pageSize: number;
+  totalCount: number;
+  totalPages: number;
+  availableFilters: PublicAvailableFilters;
+};

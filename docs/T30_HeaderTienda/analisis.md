@@ -104,3 +104,33 @@ nuevo.
 
 Sin puntos pendientes. El home (`CatalogHomePage.tsx`) no se toca — solo se
 cablea el link "Inicio" del nav hacia la ruta índice que ya existe.
+
+## 7. Actualización — lo que cambió con T29_Marcas (releer antes de codear)
+
+Este análisis se escribió antes de implementar `T29_Marcas`, que terminó
+tocando los mismos archivos que toca este plan (`CategoryPage.tsx`,
+`router.tsx`, `public/routes.ts`). El código real hoy es distinto a lo que
+`plan.md` asumía en algunos puntos — releer esto antes de tocar código:
+
+- `CategoryPage.tsx` ya tiene un tercer modo real: `mode?: "category" |
+  "collection" | "brand"` (no dos como cuando se escribió `plan.md` T30/02).
+  Sumar `"novedades" | "ofertas"` es extender esa misma unión, no crear una
+  nueva de dos valores.
+- La resolución del `item` para el banner/breadcrumb hoy es
+  `"collection" in data ? data.collection : "brand" in data ? data.brand :
+  data.category` (`CategoryPage.tsx:175`) — basada en qué clave tiene la
+  respuesta. Para Novedades/Ofertas **no hay ninguna clave de grupo** en la
+  respuesta (no hay una entidad "Novedades" en la DB, a diferencia de
+  categoría/colección/marca) — este patrón por presencia de clave no
+  extiende bien. Ver decisión en `plan.md` T30/02 actualizado: pasar a
+  resolver por `mode` directamente en vez de por forma de `data`.
+- `extraFilterConditions()`/`resolveSort()` siguen en el mismo lugar
+  (`public/routes.ts`), sin cambios de firma — se reusan tal cual, como ya
+  decía el plan. El filtro de marca (`brandSlugCondition`, ex
+  `brandNameCondition`) ya matchea por **slug** (T29/06) — Novedades/Ofertas
+  lo heredan gratis, sin trabajo extra.
+- `isNotNull` se **sacó** del import de `drizzle-orm` en `public/routes.ts`
+  durante T29/05 (quedó sin uso en ese momento) — T30/01 lo necesita de
+  vuelta para el filtro de Ofertas (`isNotNull(products.compareAtPrice)`).
+- `availableFilters.marcas` ya es `{name, slug}[]` (no `string[]`) desde
+  T29/06 — Novedades/Ofertas heredan ese tipo tal cual, sin decisión nueva.

@@ -1,9 +1,21 @@
 # Plan — Header fijo (Inicio / Explorar / Novedades / Ofertas)
 
-Basado en `analisis.md` (decisiones 1-6, sección 5). Novedades y Ofertas
+Basado en `analisis.md` (decisiones 1-6, sección 5, y sección 7 — leer antes
+de codear: ajustes por lo que cambió con T29_Marcas). Novedades y Ofertas
 quedan funcionalmente idénticas a categoría/colección salvo el filtro de
 scope inicial — se implementan como dos modos más del mismo patrón, no como
 algo nuevo desde cero.
+
+## Desglose en tareas
+
+| # | Tarea | Depende de | Estado |
+|---|---|---|---|
+| 1 | [01-backend-novedades-ofertas](tareas/01-backend-novedades-ofertas/01-backend-novedades-ofertas.md) — endpoints públicos nuevos | nada | ✅ Hecha |
+| 2 | [02-frontend-paginas-novedades-ofertas](tareas/02-frontend-paginas-novedades-ofertas/02-frontend-paginas-novedades-ofertas.md) — rutas + modos en `CategoryPage.tsx` | 1 | ✅ Hecha |
+| 3 | [03-header-nav-fija](tareas/03-header-nav-fija/03-header-nav-fija.md) — reemplazar la nav dinámica del header | 2 | ✅ Hecha |
+| 4 | [04-verificacion-final](tareas/04-verificacion-final/04-verificacion-final.md) — checklist en vivo | 1-3 | ✅ Hecha |
+
+**T30_HeaderTienda completo — las 4 tareas hechas y verificadas.**
 
 ## T30/01 — Backend: endpoints de Novedades y Ofertas
 
@@ -19,12 +31,20 @@ algo nuevo desde cero.
 - `GET /public/:slug/ofertas/products` — mismo `scopeFilter` + agrega
   `isNotNull(products.compareAtPrice)` (sección 3 del análisis: alcanza solo
   con eso, el schema garantiza `compareAtPrice > price` cuando está seteado).
+  **`isNotNull` hay que volver a importarlo de `drizzle-orm`** — se sacó en
+  T29/05 al quedar sin uso en ese momento (`analisis.md` sección 7).
 - Ambos reusan `extraFilterConditions()`, `resolveSort()`, `productListQuery`
   y `availableFilters` (talles/colores/marcas) tal cual — mismo querystring
   que categoría/colección (`?talle=&color=&marca=&precioMin=&precioMax=&sort=&page=`).
+  El filtro de marca ya funciona por slug (heredado de T29/06) sin nada
+  adicional que hacer acá.
 - Sin paso de "buscar por slug" (no hay una entidad Novedades/Ofertas en la
   DB) — directo al `scopeFilter`.
 - Paginado igual (`CATEGORY_PAGE_SIZE = 24`, sin recorte curado, decisión 5).
+- Respuesta **sin clave de grupo** (a diferencia de `category`/`collection`/
+  `brand`) — solo `{ products, page, pageSize, totalCount, totalPages,
+  availableFilters }`. No hay una entidad "Novedades" que devolver, y el
+  frontend (T30/02) va a resolver el título por `mode`, no por esa clave.
 
 **Criterio de aceptación**: `GET /public/:slug/novedades/products` devuelve
 productos ordenados por más nuevos primero, paginados, con los mismos filtros
@@ -37,14 +57,38 @@ con precio tachado.
 un componente aparte.
 
 **Alcance**
-- `CategoryPage.tsx` — extender `mode` a `"category" | "collection" |
-  "novedades" | "ofertas"` (y `"brand"` si T29 ya está implementado en ese
-  momento). Para `novedades`/`ofertas` no hay `item` que buscar por slug —
-  el título/breadcrumb del banner es fijo (`"Novedades"` / `"Ofertas"`), y el
-  `totalCount` viene directo de la respuesta del endpoint de T30/01.
+- `CategoryPage.tsx` — `mode` ya es `"category" | "collection" | "brand"`
+  (T29/06): se extiende a sumar `"novedades" | "ofertas"`, no se crea desde
+  dos valores como asumía la versión vieja de este plan.
+- **Cambio real de enfoque, necesario porque no hay entidad "Novedades" en
+  la DB**: la resolución de `item` hoy es por forma de `data`
+  (`"collection" in data ? ... : "brand" in data ? ... : data.category`,
+  `CategoryPage.tsx:175`) — no extiende bien a un modo sin clave de grupo.
+  Pasa a resolverse por `mode` directamente:
+  ```ts
+  const item =
+    mode === "collection" ? (data as PublicCollectionProducts).collection :
+    mode === "brand" ? (data as PublicBrandProducts).brand :
+    mode === "novedades" ? { name: "Novedades" } :
+    mode === "ofertas" ? { name: "Ofertas" } :
+    (data as PublicCategoryProducts).category;
+  ```
+  (o el equivalente con un discriminated union prolijo si al implementar se
+  prefiere evitar los `as` — queda a criterio de quien lo escriba, el punto
+  es que la resolución sea por `mode`, no por presencia de clave).
+- **El breadcrumb tiene un nivel menos**: categoría/colección/marca son
+  `Inicio › [Categorías|Colecciones|Marcas] › {item.name}` (3 niveles, con
+  link al índice `/categorias`). Novedades/Ofertas no tienen un "índice" del
+  que cuelguen — son ítems de nav de primer nivel — así que el breadcrumb
+  queda en 2 niveles: `Inicio › Novedades` / `Inicio › Ofertas`, sin el nivel
+  del medio.
 - `router.tsx:65-78` — nuevas rutas:
   `{ path: "novedades", element: <CategoryPage mode="novedades" /> }`
   `{ path: "ofertas", element: <CategoryPage mode="ofertas" /> }`
+- Tipos nuevos en `store/types.ts`: `PublicNovedadesProducts`/
+  `PublicOfertasProducts` (o un solo tipo genérico reusado por ambos, ya que
+  la respuesta es idéntica salvo el significado) — mismo shape que
+  `PublicCategoryProducts` pero sin la clave `category`.
 - Mismo sidebar de filtros completo (decisión 6) — sin cambios de UI, solo de
   endpoint/mode.
 

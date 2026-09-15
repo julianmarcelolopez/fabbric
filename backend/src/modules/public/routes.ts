@@ -1,4 +1,4 @@
-import { and, asc, count, desc, eq, exists, gt, gte, inArray, lte, ne } from "drizzle-orm";
+import { and, asc, count, desc, eq, exists, gt, gte, inArray, isNotNull, lte, ne } from "drizzle-orm";
 import type { FastifyInstance } from "fastify";
 import type { ZodTypeProvider } from "fastify-type-provider-zod";
 import { z } from "zod";
@@ -454,6 +454,199 @@ export async function publicRoutes(fastify: FastifyInstance) {
 
       return {
         collection: { name: collection.name, slug: collection.slug, imageUrl: collection.imageUrl },
+        products: rows.map((p) => ({
+          id: p.id,
+          name: p.name,
+          price: p.price,
+          compareAtPrice: p.compareAtPrice,
+          brand: brandObj(p.brandName, p.brandSlug),
+          imageUrl: imageOf(p.id),
+        })),
+        page,
+        pageSize: CATEGORY_PAGE_SIZE,
+        totalCount,
+        totalPages: Math.max(1, Math.ceil(totalCount / CATEGORY_PAGE_SIZE)),
+        availableFilters: {
+          talles: talles.map((t) => t.talle).sort(),
+          colores: colores.map((c) => c.color).sort(),
+          marcas: marcas.map((m) => ({ name: m.name, slug: m.slug })).sort((a, b) => a.name.localeCompare(b.name)),
+        },
+      };
+    }
+  );
+
+  // T30/01 — Novedades y Ofertas: mismo patrón que categoría/colección/marca
+  // (paginado, extraFilterConditions, availableFilters), pero sin scope de
+  // taxonomía — no hay una entidad "Novedades"/"Ofertas" en la DB, así que
+  // no hay paso de "buscar por slug" y la respuesta no lleva clave de grupo
+  // (a diferencia de category/collection/brand). El frontend (T30/02)
+  // resuelve el título por el `mode` de la ruta, no por esa clave.
+  app.get(
+    "/public/:slug/novedades/products",
+    {
+      schema: {
+        ...tag,
+        summary: "Productos más nuevos de la org, paginados y filtrables/ordenables (mismo contrato que categoría)",
+        params: slugParam,
+        querystring: productListQuery,
+      },
+    },
+    async (request) => {
+      const config = await resolveStore(request.params.slug);
+      const orgId = config.orgId;
+      const query = request.query;
+      const { page } = query;
+
+      const scopeFilter = and(
+        eq(products.orgId, orgId),
+        eq(products.visibleInCatalog, true),
+        ne(products.status, "paused")
+      );
+      const productFilter = and(scopeFilter, ...extraFilterConditions(query));
+
+      const [[{ totalCount }], rows, talles, colores, marcas] = await Promise.all([
+        db.select({ totalCount: count() }).from(products).where(productFilter),
+        db
+          .select({
+            id: products.id,
+            name: products.name,
+            price: products.price,
+            compareAtPrice: products.compareAtPrice,
+            brandName: brands.name,
+            brandSlug: brands.slug,
+          })
+          .from(products)
+          .leftJoin(brands, eq(products.brandId, brands.id))
+          .where(productFilter)
+          // Orden por defecto: más nuevos primero — a diferencia del resto de
+          // los endpoints (que caen a sortOrder/name), acá "nuevos" es el
+          // criterio propio de la página, no una opción más del toolbar.
+          // `?sort=precio_asc/desc` sigue pudiendo pisarlo.
+          .orderBy(...resolveSort(query.sort ?? "nuevos"))
+          .limit(CATEGORY_PAGE_SIZE)
+          .offset((page - 1) * CATEGORY_PAGE_SIZE),
+        db
+          .selectDistinct({ talle: productVariants.talle })
+          .from(productVariants)
+          .innerJoin(products, eq(productVariants.productId, products.id))
+          .where(and(scopeFilter, gt(productVariants.stockOnline, 0))),
+        db
+          .selectDistinct({ color: productVariants.color })
+          .from(productVariants)
+          .innerJoin(products, eq(productVariants.productId, products.id))
+          .where(and(scopeFilter, gt(productVariants.stockOnline, 0))),
+        db
+          .selectDistinct({ name: brands.name, slug: brands.slug })
+          .from(products)
+          .innerJoin(brands, eq(products.brandId, brands.id))
+          .where(scopeFilter),
+      ]);
+
+      const productIds = rows.map((p) => p.id);
+      const firstImages = productIds.length
+        ? await db
+            .select({ productId: productImages.productId, url: productImages.url })
+            .from(productImages)
+            .where(inArray(productImages.productId, productIds))
+            .orderBy(asc(productImages.sortOrder))
+        : [];
+      const imageOf = (id: string) => firstImages.find((i) => i.productId === id)?.url ?? null;
+
+      return {
+        products: rows.map((p) => ({
+          id: p.id,
+          name: p.name,
+          price: p.price,
+          compareAtPrice: p.compareAtPrice,
+          brand: brandObj(p.brandName, p.brandSlug),
+          imageUrl: imageOf(p.id),
+        })),
+        page,
+        pageSize: CATEGORY_PAGE_SIZE,
+        totalCount,
+        totalPages: Math.max(1, Math.ceil(totalCount / CATEGORY_PAGE_SIZE)),
+        availableFilters: {
+          talles: talles.map((t) => t.talle).sort(),
+          colores: colores.map((c) => c.color).sort(),
+          marcas: marcas.map((m) => ({ name: m.name, slug: m.slug })).sort((a, b) => a.name.localeCompare(b.name)),
+        },
+      };
+    }
+  );
+
+  app.get(
+    "/public/:slug/ofertas/products",
+    {
+      schema: {
+        ...tag,
+        summary: "Productos con precio tachado (compareAtPrice), paginados y filtrables/ordenables",
+        params: slugParam,
+        querystring: productListQuery,
+      },
+    },
+    async (request) => {
+      const config = await resolveStore(request.params.slug);
+      const orgId = config.orgId;
+      const query = request.query;
+      const { page } = query;
+
+      // isNotNull(compareAtPrice) alcanza solo con eso: el schema garantiza
+      // por convención que compareAtPrice solo se guarda cuando es mayor que
+      // price (schema.ts, products.compareAtPrice) — no hace falta comparar
+      // los dos campos acá.
+      const scopeFilter = and(
+        eq(products.orgId, orgId),
+        eq(products.visibleInCatalog, true),
+        ne(products.status, "paused"),
+        isNotNull(products.compareAtPrice)
+      );
+      const productFilter = and(scopeFilter, ...extraFilterConditions(query));
+
+      const [[{ totalCount }], rows, talles, colores, marcas] = await Promise.all([
+        db.select({ totalCount: count() }).from(products).where(productFilter),
+        db
+          .select({
+            id: products.id,
+            name: products.name,
+            price: products.price,
+            compareAtPrice: products.compareAtPrice,
+            brandName: brands.name,
+            brandSlug: brands.slug,
+          })
+          .from(products)
+          .leftJoin(brands, eq(products.brandId, brands.id))
+          .where(productFilter)
+          .orderBy(...resolveSort(query.sort))
+          .limit(CATEGORY_PAGE_SIZE)
+          .offset((page - 1) * CATEGORY_PAGE_SIZE),
+        db
+          .selectDistinct({ talle: productVariants.talle })
+          .from(productVariants)
+          .innerJoin(products, eq(productVariants.productId, products.id))
+          .where(and(scopeFilter, gt(productVariants.stockOnline, 0))),
+        db
+          .selectDistinct({ color: productVariants.color })
+          .from(productVariants)
+          .innerJoin(products, eq(productVariants.productId, products.id))
+          .where(and(scopeFilter, gt(productVariants.stockOnline, 0))),
+        db
+          .selectDistinct({ name: brands.name, slug: brands.slug })
+          .from(products)
+          .innerJoin(brands, eq(products.brandId, brands.id))
+          .where(scopeFilter),
+      ]);
+
+      const productIds = rows.map((p) => p.id);
+      const firstImages = productIds.length
+        ? await db
+            .select({ productId: productImages.productId, url: productImages.url })
+            .from(productImages)
+            .where(inArray(productImages.productId, productIds))
+            .orderBy(asc(productImages.sortOrder))
+        : [];
+      const imageOf = (id: string) => firstImages.find((i) => i.productId === id)?.url ?? null;
+
+      return {
         products: rows.map((p) => ({
           id: p.id,
           name: p.name,

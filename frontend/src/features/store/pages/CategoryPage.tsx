@@ -4,7 +4,13 @@ import { ApiError, publicJson } from "../../../lib/api";
 import { pesosToCents } from "../../../lib/money";
 import { colorSwatchStyle } from "../../catalog/colorSwatch";
 import { ProductCard } from "../../catalog/ProductCard";
-import type { PublicBrandProducts, PublicCategoryProducts, PublicCollectionProducts, StoreContext } from "../types";
+import type {
+  PublicBrandProducts,
+  PublicCategoryProducts,
+  PublicCollectionProducts,
+  PublicProductListing,
+  StoreContext,
+} from "../types";
 
 // T20/05 — rediseño visual de la página que ya existía desde T19/10. Mismo
 // fetch/paginación de siempre, layout nuevo (banner + toolbar + grilla +
@@ -43,7 +49,19 @@ function pageNumbers(current: number, total: number): (number | "…")[] {
   return out;
 }
 
-type Props = { mode?: "category" | "collection" | "brand" };
+type Mode = "category" | "collection" | "brand" | "novedades" | "ofertas";
+type Props = { mode?: Mode };
+
+// T30/02 — textos que varían por modo, centralizados en un solo lugar en vez
+// de repetir la misma ternera de 5 ramas en cada punto del render que los
+// necesita (breadcrumb, error, estado vacío).
+const MODE_TEXT: Record<Mode, { indexLabel: string | null; notFound: string; empty: string }> = {
+  category: { indexLabel: "Categorías", notFound: "esta categoría", empty: "Todavía no hay productos en esta categoría." },
+  collection: { indexLabel: "Colecciones", notFound: "esta colección", empty: "Todavía no hay productos en esta colección." },
+  brand: { indexLabel: "Marcas", notFound: "esta marca", empty: "Todavía no hay productos de esta marca." },
+  novedades: { indexLabel: null, notFound: "esta página", empty: "Todavía no hay productos nuevos." },
+  ofertas: { indexLabel: null, notFound: "esta página", empty: "Por ahora no hay productos en oferta." },
+};
 
 export function CategoryPage({ mode = "category" }: Props) {
   const { slug } = useOutletContext<StoreContext>();
@@ -74,9 +92,9 @@ export function CategoryPage({ mode = "category" }: Props) {
   const [precioMax, setPrecioMax] = useState(appliedPrecioMax);
   const [sort, setSort] = useState(appliedSort);
 
-  const [data, setData] = useState<PublicCategoryProducts | PublicCollectionProducts | PublicBrandProducts | null>(
-    null
-  );
+  const [data, setData] = useState<
+    PublicCategoryProducts | PublicCollectionProducts | PublicBrandProducts | PublicProductListing | null
+  >(null);
   const [error, setError] = useState<string | null>(null);
   // T21/08 — separado de `data`: antes cada refetch (ej. al tipear un precio)
   // vaciaba `data`, lo que desmontaba TODA la página (sidebar de filtros
@@ -146,8 +164,12 @@ export function CategoryPage({ mode = "category" }: Props) {
         ? `/public/${slug}/collections/${itemSlug}/products?${params}`
         : mode === "brand"
           ? `/public/${slug}/brands/${itemSlug}/products?${params}`
-          : `/public/${slug}/categories/${itemSlug}/products?${params}`;
-    publicJson<PublicCategoryProducts | PublicCollectionProducts | PublicBrandProducts>(path)
+          : mode === "novedades"
+            ? `/public/${slug}/novedades/products?${params}`
+            : mode === "ofertas"
+              ? `/public/${slug}/ofertas/products?${params}`
+              : `/public/${slug}/categories/${itemSlug}/products?${params}`;
+    publicJson<PublicCategoryProducts | PublicCollectionProducts | PublicBrandProducts | PublicProductListing>(path)
       .then((d) => {
         setData(d);
         setLoading(false);
@@ -161,9 +183,7 @@ export function CategoryPage({ mode = "category" }: Props) {
   if (error) {
     return (
       <div className="store-message">
-        <h1>
-          No encontramos {mode === "collection" ? "esta colección" : mode === "brand" ? "esta marca" : "esta categoría"}
-        </h1>
+        <h1>No encontramos {MODE_TEXT[mode].notFound}</h1>
         <p>
           <Link to={`/store/${slug}`}>← Volver a la tienda</Link>
         </p>
@@ -172,7 +192,19 @@ export function CategoryPage({ mode = "category" }: Props) {
   }
   if (data === null) return <p className="store-message">Cargando…</p>;
 
-  const item = "collection" in data ? data.collection : "brand" in data ? data.brand : data.category;
+  // T30/02 — antes se resolvía por qué clave tenía `data` ("collection" in
+  // data ? ... : ...), pero Novedades/Ofertas no tienen ninguna clave de
+  // grupo (no son una entidad de la DB) — se resuelve por `mode` directamente.
+  const item =
+    mode === "collection"
+      ? (data as PublicCollectionProducts).collection
+      : mode === "brand"
+        ? (data as PublicBrandProducts).brand
+        : mode === "novedades"
+          ? { name: "Novedades" }
+          : mode === "ofertas"
+            ? { name: "Ofertas" }
+            : (data as PublicCategoryProducts).category;
   const hasActiveFilters = !!(talle || color || marca || precioMin || precioMax);
 
   function goToPage(p: number) {
@@ -197,16 +229,23 @@ export function CategoryPage({ mode = "category" }: Props) {
           <div className="breadcrumb">
             <Link to={`/store/${slug}`}>Inicio</Link>
             <span className="breadcrumb-sep">›</span>
-            <Link
-              to={
-                mode === "brand"
-                  ? `/store/${slug}/categorias?tab=marcas`
-                  : `/store/${slug}/categorias`
-              }
-            >
-              {mode === "collection" ? "Colecciones" : mode === "brand" ? "Marcas" : "Categorías"}
-            </Link>
-            <span className="breadcrumb-sep">›</span>
+            {/* T30/02 — Novedades/Ofertas no tienen un índice del que cuelguen
+                (son ítems de nav de primer nivel, ver StoreLayout.tsx) — el
+                breadcrumb queda en 2 niveles en vez de 3. */}
+            {MODE_TEXT[mode].indexLabel && (
+              <>
+                <Link
+                  to={
+                    mode === "brand"
+                      ? `/store/${slug}/categorias?tab=marcas`
+                      : `/store/${slug}/categorias`
+                  }
+                >
+                  {MODE_TEXT[mode].indexLabel}
+                </Link>
+                <span className="breadcrumb-sep">›</span>
+              </>
+            )}
             <span className="breadcrumb-current">{item.name}</span>
           </div>
           <h1 className="cat-banner-title">{item.name}</h1>
@@ -332,9 +371,7 @@ export function CategoryPage({ mode = "category" }: Props) {
           <div className="products-area" style={{ opacity: loading ? 0.5 : 1, transition: "opacity 0.15s" }}>
             {data.products.length === 0 ? (
               <p className="category-page-empty">
-                {hasActiveFilters
-                  ? "Ningún producto coincide con estos filtros."
-                  : `Todavía no hay productos en ${mode === "collection" ? "esta colección" : "esta categoría"}.`}
+                {hasActiveFilters ? "Ningún producto coincide con estos filtros." : MODE_TEXT[mode].empty}
               </p>
             ) : (
               <div className="hsr-grid">
