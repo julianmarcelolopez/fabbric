@@ -1,36 +1,42 @@
+/* T32/01 — paleta de marca (navy/coral/crema), heredada de catalog.css
+   (T20/01) vía docs/T32_UX-Admin/spec-rediseno-admin.md. Mismos selectores
+   de siempre — ver docs/T32_UX-Admin/analisis.md para el porqué de cada
+   decisión (qué cambia de marca, qué queda semántico). */
+
 body {
   margin: 0;
-  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
-  color: #1a1a1a;
-  background: #f6f7f9;
+  font-family: 'DM Sans', system-ui, -apple-system, "Segoe UI", sans-serif;
+  color: #2C2C2C;
+  background: #F8F7F5;
 }
 
 .admin { display: grid; grid-template-columns: 220px 1fr; min-height: 100vh; }
 
-.sidebar { background: #111827; color: #e5e7eb; padding: 16px 12px; display: flex; flex-direction: column; gap: 4px; overflow-y: auto; }
-.sidebar h2 { font-size: 18px; margin: 0; color: #fff; }
-.sidebar a { color: #d1d5db; text-decoration: none; padding: 7px 10px; border-radius: 6px; font-size: 13.5px; display: block; }
-.sidebar a.active { background: #2563eb; color: #fff; }
-.sidebar a:hover:not(.active) { background: #1f2937; }
+.sidebar { background: #1E2A4A; color: rgba(248,247,245,0.85); padding: 16px 12px; display: flex; flex-direction: column; gap: 4px; overflow-y: auto; }
+.sidebar h2 { font-family: 'Cormorant Garamond', serif; font-weight: 600; font-size: 20px; margin: 0; color: #F8F7F5; }
+.sidebar a { color: rgba(248,247,245,0.75); text-decoration: none; padding: 7px 10px; border-radius: 6px; font-size: 13.5px; display: block; }
+.sidebar a.active { background: #F07058; color: #fff; }
+.sidebar a:hover:not(.active) { background: rgba(248,247,245,0.08); }
 .sidebar .spacer { flex: 1; }
-.sidebar .who { font-size: 12px; color: #9ca3af; padding: 8px 10px; word-break: break-all; }
+.sidebar .who { font-size: 12px; color: rgba(248,247,245,0.5); padding: 8px 10px; word-break: break-all; }
 
 /* T19/01 — sidebar agrupado */
 .sidebar-brand { padding: 4px 8px 14px; margin-bottom: 8px; border-bottom: 1px solid rgba(255, 255, 255, 0.08); }
 .nav-group { margin-bottom: 10px; }
-.nav-group-label { font-size: 10px; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.07em; padding: 6px 10px 4px; }
+.nav-group-label { font-size: 10px; font-weight: 600; color: rgba(248,247,245,0.4); text-transform: uppercase; letter-spacing: 0.07em; padding: 6px 10px 4px; }
 
+/* Semáforo real de estado de tienda — no es color de marca, se deja como está */
 .store-status { display: flex; align-items: center; gap: 6px; margin-top: 10px; padding: 6px 10px; background: rgba(21, 128, 61, 0.16); border: 1px solid rgba(21, 128, 61, 0.3); border-radius: 6px; }
 .store-status.inactive { background: rgba(185, 28, 28, 0.16); border-color: rgba(185, 28, 28, 0.3); }
 .status-dot { width: 6px; height: 6px; border-radius: 50%; background: #22c55e; flex-shrink: 0; }
 .store-status.inactive .status-dot { background: #ef4444; }
 .status-text { font-size: 11px; color: #bbf7d0; flex: 1; }
 .store-status.inactive .status-text { color: #fecaca; }
-.status-link { font-size: 11px; color: #9ca3af; text-decoration: none; }
-.status-link:hover { color: #fff; }
+.status-link { font-size: 11px; color: rgba(248,247,245,0.5); text-decoration: none; }
+.status-link:hover { color: #F8F7F5; }
 
 /* Mobile: hamburguesa + overlay, sidebar pasa a panel deslizable — T18 05-mobile.md 🔴 */
-.sidebar-toggle { display: none; position: fixed; top: 12px; left: 12px; z-index: 30; width: 36px; height: 36px; background: #111827; color: #fff; border: none; border-radius: 6px; font-size: 16px; cursor: pointer; }
+.sidebar-toggle { display: none; position: fixed; top: 12px; left: 12px; z-index: 30; width: 36px; height: 36px; background: #1E2A4A; color: #F8F7F5; border: none; border-radius: 6px; font-size: 16px; cursor: pointer; }
 .sidebar-overlay { display: none; }
 
 @media (max-width: 768px) {
@@ -53,123 +59,127 @@ body {
 }
 
 .content { padding: 24px 32px; max-width: 1100px; width: 100%; box-sizing: border-box; }
-.content h1 { font-size: 22px; margin: 0 0 16px; }
+.content h1 { font-size: 22px; margin: 0 0 16px; color: #1E2A4A; font-weight: 700; }
 
 /* T19/09: envolver cada table.grid en .table-scroll — en mobile, la tabla scrollea
    en vez de recortarse (table.grid ya no maneja el overflow por su cuenta). */
 .table-scroll { overflow-x: auto; border-radius: 8px; }
-table.grid { width: 100%; border-collapse: collapse; background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; }
-.grid th, .grid td { text-align: left; padding: 8px 12px; border-bottom: 1px solid #eef0f2; font-size: 14px; vertical-align: middle; }
-.grid th { background: #f9fafb; font-weight: 600; font-size: 13px; }
+table.grid { width: 100%; border-collapse: collapse; background: #fff; border: 1px solid #E8E4DF; border-radius: 8px; }
+.grid th, .grid td { text-align: left; padding: 8px 12px; border-bottom: 1px solid #F0EEEA; font-size: 14px; vertical-align: middle; }
+.grid th { background: #F8F7F5; font-weight: 600; font-size: 13px; color: #8A8278; }
 .grid tr:last-child td { border-bottom: none; }
 @media (max-width: 768px) {
   table.grid { min-width: 640px; }
 }
 
-.btn { border: 1px solid #d1d5db; background: #fff; padding: 6px 12px; border-radius: 6px; font-size: 13px; cursor: pointer; }
-.btn:hover { background: #f3f4f6; }
-.btn.primary { background: #2563eb; border-color: #2563eb; color: #fff; }
-.btn.primary:hover { background: #1d4ed8; }
+.btn { border: 1px solid #E8E4DF; background: #fff; padding: 6px 12px; border-radius: 6px; font-size: 13px; cursor: pointer; color: #2C2C2C; }
+.btn:hover { background: #F8F7F5; }
+.btn.primary { background: #F07058; border-color: #F07058; color: #fff; }
+.btn.primary:hover { background: #D85A30; border-color: #D85A30; }
 .btn.danger { color: #b91c1c; border-color: #fca5a5; }
 .btn.danger:hover { background: #fef2f2; }
 .btn:disabled { opacity: 0.5; cursor: default; }
 .btn.small { padding: 3px 8px; font-size: 12px; }
 
-input, select, textarea { padding: 6px 8px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px; font-family: inherit; background: #fff; box-sizing: border-box; }
-input:focus, select:focus, textarea:focus { outline: 2px solid #bfdbfe; border-color: #2563eb; }
-input[type="checkbox"] { width: 16px; height: 16px; }
+input, select, textarea { padding: 6px 8px; border: 1px solid #E8E4DF; border-radius: 6px; font-size: 14px; font-family: inherit; background: #fff; box-sizing: border-box; color: #2C2C2C; }
+input:focus, select:focus, textarea:focus { outline: 2px solid #FDF1EE; border-color: #F07058; }
+input[type="checkbox"] { width: 16px; height: 16px; accent-color: #F07058; }
 
 .field { display: grid; gap: 4px; font-size: 13px; font-weight: 500; }
 .row { display: flex; gap: 8px; align-items: flex-end; flex-wrap: wrap; }
 .error { color: #b91c1c; font-size: 13px; margin: 8px 0; }
 .success { color: #15803d; font-size: 13px; margin: 8px 0; }
-.muted { color: #6b7280; font-size: 13px; }
+.muted { color: #8A8278; font-size: 13px; }
 
-.card { background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px; margin-bottom: 16px; }
-.card h2 { font-size: 16px; margin: 0 0 12px; }
+.card { background: #fff; border: 1px solid #E8E4DF; border-radius: 8px; padding: 16px; margin-bottom: 16px; }
+.card h2 { font-size: 16px; margin: 0 0 12px; color: #1E2A4A; }
 
-/* T19/04-05: alerta ámbar reutilizable — producto sin variantes, tienda sin zona de envío */
+/* Alerta ámbar — semántica de "atención", se deja como está a propósito */
 .alert-warning { display: flex; align-items: center; gap: 8px; padding: 10px 14px; margin-bottom: 16px; background: #fffbeb; border: 1px solid #fde68a; border-radius: 6px; font-size: 13px; color: #92400e; }
 
-/* T19/03: checklist de arranque en el Dashboard */
-.onboarding-banner { background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; padding: 16px 20px; margin-bottom: 16px; }
-.onboarding-banner h2 { font-size: 14px; margin: 0 0 12px; color: #1e3a8a; }
+/* T19/03: checklist de arranque — momento de marca, pasa a tinte coral en vez de azul genérico */
+.onboarding-banner { background: #FDF1EE; border: 1px solid #F0C6BA; border-radius: 8px; padding: 16px 20px; margin-bottom: 16px; }
+.onboarding-banner h2 { font-size: 14px; margin: 0 0 12px; color: #99341D; }
 .onboarding-list { display: grid; gap: 8px; }
-.onboarding-item { display: flex; align-items: center; gap: 8px; font-size: 13px; color: #1e3a8a; }
-.onboarding-check { width: 18px; height: 18px; border-radius: 50%; border: 2px solid #93c5fd; display: flex; align-items: center; justify-content: center; font-size: 10px; color: #1e3a8a; flex-shrink: 0; }
-.onboarding-check.done { background: #2563eb; border-color: #2563eb; color: #fff; }
-.onboarding-label.done { text-decoration: line-through; color: #6b7280; }
-.onboarding-tag { font-size: 10px; color: #1e3a8a; background: #dbeafe; padding: 1px 8px; border-radius: 999px; }
-.onboarding-link { margin-left: auto; font-size: 12px; color: #2563eb; text-decoration: none; font-weight: 600; }
+.onboarding-item { display: flex; align-items: center; gap: 8px; font-size: 13px; color: #7A2E17; }
+.onboarding-check { width: 18px; height: 18px; border-radius: 50%; border: 2px solid #F0997B; display: flex; align-items: center; justify-content: center; font-size: 10px; color: #99341D; flex-shrink: 0; }
+.onboarding-check.done { background: #F07058; border-color: #F07058; color: #fff; }
+.onboarding-label.done { text-decoration: line-through; color: #8A8278; }
+.onboarding-tag { font-size: 10px; color: #99341D; background: #F5C4B3; padding: 1px 8px; border-radius: 999px; }
+.onboarding-link { margin-left: auto; font-size: 12px; color: #F07058; text-decoration: none; font-weight: 600; }
 .onboarding-link:hover { text-decoration: underline; }
 
-.badge { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 12px; background: #eef2ff; color: #3730a3; margin-right: 4px; }
+/* Badge genérico — pasa a neutro, ya no indigo, para no competir con el accent de marca */
+.badge { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 12px; background: #F0EEEA; color: #5F5E5A; margin-right: 4px; }
 
-.thumb { width: 48px; height: 48px; object-fit: cover; border-radius: 6px; border: 1px solid #e5e7eb; background: #f3f4f6; display: inline-block; }
+.thumb { width: 48px; height: 48px; object-fit: cover; border-radius: 6px; border: 1px solid #E8E4DF; background: #F8F7F5; display: inline-block; }
 
-.dropzone { border: 2px dashed #d1d5db; border-radius: 8px; padding: 24px; text-align: center; color: #6b7280; cursor: pointer; font-size: 14px; }
-.dropzone.drag { border-color: #2563eb; background: #eff6ff; }
+.dropzone { border: 2px dashed #E8E4DF; border-radius: 8px; padding: 24px; text-align: center; color: #8A8278; cursor: pointer; font-size: 14px; }
+.dropzone.drag { border-color: #F07058; background: #FDF1EE; }
 
-.imgrow { display: flex; gap: 12px; align-items: center; padding: 8px 0; border-bottom: 1px solid #eef0f2; }
+.imgrow { display: flex; gap: 12px; align-items: center; padding: 8px 0; border-bottom: 1px solid #F0EEEA; }
 .imgrow:last-child { border-bottom: none; }
-.imgrow img { width: 64px; height: 64px; object-fit: cover; border-radius: 6px; border: 1px solid #e5e7eb; }
+.imgrow img { width: 64px; height: 64px; object-fit: cover; border-radius: 6px; border: 1px solid #E8E4DF; }
 
+/* Fila crítica — semántica de peligro, se deja en rojo a propósito */
 .critical-row td { background: #fef2f2; }
 
 /* T19/08: indicador de pasos del alta de producto */
 .wizard-steps { display: flex; align-items: center; margin-bottom: 20px; }
 .wizard-step { display: flex; align-items: center; gap: 8px; border: none; background: none; padding: 4px 2px; cursor: pointer; }
 .wizard-step:disabled { cursor: default; opacity: 0.5; }
-.wizard-circle { width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; background: #f3f4f6; color: #9ca3af; border: 2px solid #e5e7eb; flex-shrink: 0; }
-.wizard-circle.active { background: #2563eb; border-color: #2563eb; color: #fff; }
+.wizard-circle { width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; background: #F8F7F5; color: #8A8278; border: 2px solid #E8E4DF; flex-shrink: 0; }
+.wizard-circle.active { background: #F07058; border-color: #F07058; color: #fff; }
 .wizard-circle.done { background: #15803d; border-color: #15803d; color: #fff; }
-.wizard-label { font-size: 13px; color: #9ca3af; }
-.wizard-label.active { color: #2563eb; font-weight: 600; }
-.wizard-line { flex: 1; height: 2px; background: #e5e7eb; margin: 0 10px; min-width: 24px; }
+.wizard-label { font-size: 13px; color: #8A8278; }
+.wizard-label.active { color: #F07058; font-weight: 600; }
+.wizard-line { flex: 1; height: 2px; background: #E8E4DF; margin: 0 10px; min-width: 24px; }
 .wizard-line.done { background: #15803d; }
 
-.hs-row { display: flex; align-items: center; gap: 10px; background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 10px 14px; margin-bottom: 8px; cursor: grab; }
-.hs-row.dragging { opacity: 0.6; border-color: #2563eb; }
-.hs-row.hidden-row { background: #f9fafb; }
-.hs-row.hidden-row strong { color: #9ca3af; }
+.hs-row { display: flex; align-items: center; gap: 10px; background: #fff; border: 1px solid #E8E4DF; border-radius: 8px; padding: 10px 14px; margin-bottom: 8px; cursor: grab; }
+.hs-row.dragging { opacity: 0.6; border-color: #F07058; }
+.hs-row.hidden-row { background: #F8F7F5; }
+.hs-row.hidden-row strong { color: #8A8278; }
 .hs-row .spacer { flex: 1; }
-.hs-grip { color: #9ca3af; cursor: grab; font-size: 15px; user-select: none; }
+.hs-grip { color: #8A8278; cursor: grab; font-size: 15px; user-select: none; }
 .hs-warn { font-size: 12px; color: #b45309; background: #fef3c7; padding: 2px 8px; border-radius: 999px; }
 
 .dash-toolbar { display: flex; justify-content: flex-end; margin-bottom: 12px; }
 .dash-zone { margin-bottom: 28px; }
-.dash-zone h2 { font-size: 15px; color: #6b7280; text-transform: uppercase; letter-spacing: 0.04em; margin: 0 0 10px; }
+.dash-zone h2 { font-size: 15px; color: #8A8278; text-transform: uppercase; letter-spacing: 0.04em; margin: 0 0 10px; }
 
-.dash-grid { display: grid; gap: 12px; }
-.dash-grid-stats { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); }
+.dash-grid, .stat-grid { display: grid; gap: 12px; }
+.dash-grid-stats, .stat-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); }
 .dash-grid-paneles { grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); }
 
-.dash-card { background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 14px 16px; position: relative; }
-.dash-card.dragging { opacity: 0.6; border-color: #2563eb; }
-.dash-card-label { font-size: 13px; color: #6b7280; margin-bottom: 6px; }
+/* T32/04-05: .stat-card es alias de .dash-card — mismo look, nombre reutilizable
+   fuera del Dashboard (Stock, Finanzas). */
+.dash-card, .stat-card { background: #fff; border: 1px solid #E8E4DF; border-radius: 8px; padding: 14px 16px; position: relative; }
+.dash-card.dragging { opacity: 0.6; border-color: #F07058; }
+.dash-card-label, .stat-card-label { font-size: 13px; color: #8A8278; margin-bottom: 6px; }
 .dash-card-tools { position: absolute; top: 8px; right: 8px; display: flex; gap: 6px; align-items: center; }
-.dash-grip { color: #9ca3af; cursor: grab; font-size: 14px; user-select: none; }
-.dash-hide { border: none; background: none; color: #9ca3af; cursor: pointer; font-size: 13px; line-height: 1; padding: 2px 4px; }
+.dash-grip { color: #8A8278; cursor: grab; font-size: 14px; user-select: none; }
+.dash-hide { border: none; background: none; color: #8A8278; cursor: pointer; font-size: 13px; line-height: 1; padding: 2px 4px; }
 .dash-hide:hover { color: #b91c1c; }
 
-.dash-stat-value { font-size: 22px; font-weight: 600; }
+.dash-stat-value, .stat-card-value { font-size: 22px; font-weight: 700; color: #1E2A4A; }
 
 .dash-hidden-list { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; margin-top: 10px; }
 
 .dash-breakdown { display: grid; gap: 10px; }
 .dash-bar { display: grid; gap: 4px; font-size: 13px; }
-.dash-bar-track { background: #f3f4f6; border-radius: 999px; height: 8px; overflow: hidden; }
-.dash-bar-fill { height: 100%; border-radius: 999px; }
+.dash-bar-track { background: #F8F7F5; border-radius: 999px; height: 8px; overflow: hidden; }
+.dash-bar-fill { height: 100%; border-radius: 999px; background: #F07058; }
 
 .dash-chart { display: flex; align-items: flex-end; gap: 10px; height: 120px; }
 .dash-chart-col { display: flex; flex-direction: column; align-items: center; flex: 1; height: 100%; }
 .dash-chart-bars { display: flex; gap: 3px; align-items: flex-end; height: 100%; width: 100%; justify-content: center; }
-.dash-chart-bar { width: 10px; border-radius: 2px 2px 0 0; min-height: 2px; }
-.dash-chart-label { font-size: 11px; margin-top: 4px; }
+.dash-chart-bar { width: 10px; border-radius: 2px 2px 0 0; min-height: 2px; background: #F07058; }
+.dash-chart-label { font-size: 11px; margin-top: 4px; color: #8A8278; }
 
 .editor-split { display: grid; grid-template-columns: minmax(0, 1fr) 400px; gap: 20px; align-items: start; }
-.preview-pane { position: sticky; top: 16px; background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px; }
-.preview-pane h2 { font-size: 16px; margin: 0 0 4px; }
+.preview-pane { position: sticky; top: 16px; background: #fff; border: 1px solid #E8E4DF; border-radius: 8px; padding: 16px; }
+.preview-pane h2 { font-size: 16px; margin: 0 0 4px; color: #1E2A4A; }
 .preview-pane .pdv { grid-template-columns: 1fr; }
 /* T20/06: .pdv-gallery es sticky (top:88) para la tienda real, donde queda
    pegada al lado de una columna de info larga (2 columnas). Acá el preview
