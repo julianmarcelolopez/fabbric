@@ -7,7 +7,6 @@ import { ImageDropzone } from "../components/ImageDropzone";
 import { VariantEditor } from "../components/VariantEditor";
 import {
   STATUS_LABELS,
-  SUGGESTED_BRANDS,
   type ProductDetail,
   type ProductStatus,
   type Taxonomy,
@@ -28,7 +27,10 @@ type Form = {
   price: string;
   costPrice: string;
   compareAtPrice: string;
-  brand: string;
+  // T29 — texto tipeado en el combo: puede ser el nombre de una marca
+  // existente (se resuelve por slug en el backend, resolveBrandId) o uno
+  // nuevo (alta inline). Vacío = sin marca.
+  brandName: string;
   categoryId: string;
   status: ProductStatus;
   collectionIds: string[];
@@ -79,6 +81,7 @@ export function ProductEditPage() {
   const [product, setProduct] = useState<ProductDetail | null>(null);
   const [categories, setCategories] = useState<Taxonomy[]>([]);
   const [collections, setCollections] = useState<Taxonomy[]>([]);
+  const [brands, setBrands] = useState<Taxonomy[]>([]);
   const [form, setForm] = useState<Form | null>(null);
   const [step, setStep] = useState<Step>(1);
   const [error, setError] = useState<string | null>(null);
@@ -88,14 +91,16 @@ export function ProductEditPage() {
 
   const load = useCallback(async () => {
     try {
-      const [detail, cats, cols] = await Promise.all([
+      const [detail, cats, cols, brandList] = await Promise.all([
         apiJson<ProductDetail>(`/admin/products/${id}`),
         apiJson<Taxonomy[]>("/admin/categories"),
         apiJson<Taxonomy[]>("/admin/collections"),
+        apiJson<Taxonomy[]>("/admin/brands"),
       ]);
       setProduct(detail);
       setCategories(cats);
       setCollections(cols);
+      setBrands(brandList);
       // El form solo se inicializa la primera vez — los reloads (variantes/imágenes)
       // no pisan lo que el usuario está tipeando
       setForm((prev) =>
@@ -105,7 +110,7 @@ export function ProductEditPage() {
           price: centsToPesosInput(detail.price),
           costPrice: centsToPesosInput(detail.costPrice),
           compareAtPrice: centsToPesosInput(detail.compareAtPrice),
-          brand: detail.brand ?? "",
+          brandName: detail.brandName ?? "",
           categoryId: detail.categoryId,
           status: detail.status,
           collectionIds: detail.collections.map((c) => c.id),
@@ -145,8 +150,11 @@ export function ProductEditPage() {
       setError("Precio anterior inválido");
       return;
     }
-    // El schema exige min(1): un campo vacío se manda como null, nunca ""
-    const brand = form.brand.trim() === "" ? null : form.brand.trim();
+    // T29 — sin catálogo previo, el nombre tipeado siempre viaja como
+    // newBrandName: resolveBrandId (backend) resuelve por slug si ya existe
+    // (reusa, no duplica) o la crea al vuelo (alta inline) si es nueva.
+    // Vacío = sin marca (brandId: null, sin newBrandName).
+    const brandName = form.brandName.trim();
     setSaving(true);
     try {
       await apiJson(`/admin/products/${id}`, {
@@ -157,7 +165,8 @@ export function ProductEditPage() {
           price,
           costPrice,
           compareAtPrice,
-          brand,
+          brandId: brandName === "" ? null : undefined,
+          newBrandName: brandName === "" ? undefined : brandName,
           categoryId: form.categoryId,
           status: form.status,
         }),
@@ -168,6 +177,9 @@ export function ProductEditPage() {
       });
       setSaved(true);
       await load();
+      // Si se creó una marca nueva por alta inline, que aparezca ya en el
+      // datalist sin esperar a un refresh manual de la página.
+      setBrands(await apiJson<Taxonomy[]>("/admin/brands"));
       setStep(2);
     } catch (err) {
       setError(err instanceof ApiError ? err.message : String(err));
@@ -247,15 +259,19 @@ export function ProductEditPage() {
                 <label className="field">
                   Marca
                   <input
-                    value={form.brand}
-                    onChange={(e) => setForm({ ...form, brand: e.target.value })}
-                    list="product-suggested-brands"
+                    value={form.brandName}
+                    onChange={(e) => setForm({ ...form, brandName: e.target.value })}
+                    list="product-brands"
                     maxLength={60}
-                    placeholder="opcional"
+                    placeholder="elegí una marca o escribí una nueva"
                   />
-                  <datalist id="product-suggested-brands">
-                    {SUGGESTED_BRANDS.map((b) => (
-                      <option key={b} value={b} />
+                  {/* T29 — antes sugerencias hardcodeadas (SUGGESTED_BRANDS); ahora
+                      el catálogo real de /admin/brands. Escribir un nombre que no
+                      matchea ninguna opción la crea al vuelo al guardar (alta
+                      inline, resolveBrandId por slug). */}
+                  <datalist id="product-brands">
+                    {brands.map((b) => (
+                      <option key={b.id} value={b.name} />
                     ))}
                   </datalist>
                 </label>
@@ -404,7 +420,7 @@ export function ProductEditPage() {
             description={form.description}
             price={previewPrice}
             compareAtPrice={previewCompareAtPrice}
-            brand={form.brand.trim() === "" ? null : form.brand}
+            brand={form.brandName.trim() === "" ? null : form.brandName}
             images={product.images}
             variants={product.variants}
           />

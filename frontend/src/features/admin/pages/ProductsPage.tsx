@@ -6,11 +6,12 @@ import { TaxonomyManager } from "../components/TaxonomyManager";
 import { STATUS_LABELS, type ProductListItem, type ProductStatus, type Taxonomy } from "../types";
 import { StockPage } from "./StockPage";
 
-type Tab = "lista" | "categorias" | "colecciones" | "stock";
+type Tab = "lista" | "categorias" | "colecciones" | "marcas" | "stock";
 const TABS: { key: Tab; label: string }[] = [
   { key: "lista", label: "Todos los productos" },
   { key: "categorias", label: "Categorías" },
   { key: "colecciones", label: "Colecciones" },
+  { key: "marcas", label: "Marcas" },
   { key: "stock", label: "Stock" },
 ];
 
@@ -157,6 +158,7 @@ function ProductsList() {
                 <tr>
                   <th></th>
                   <th>Nombre</th>
+                  <th>Marca</th>
                   <th>Categoría</th>
                   <th>Precio</th>
                   <th>Estado</th>
@@ -179,6 +181,7 @@ function ProductsList() {
                     <td>
                       <Link to={`/admin/products/${p.id}`}>{p.name}</Link>
                     </td>
+                    <td className="muted">{p.brandName ?? "—"}</td>
                     <td>{p.categoryName}</td>
                     <td>{formatPrice(p.price)}</td>
                     <td>{STATUS_LABELS[p.status]}</td>
@@ -244,6 +247,9 @@ export function ProductsPage() {
       )}
       {tab === "colecciones" && (
         <TaxonomyManager title="Colecciones" endpoint="/admin/collections" noun="colección" hideTitle />
+      )}
+      {tab === "marcas" && (
+        <TaxonomyManager title="Marcas" endpoint="/admin/brands" noun="marca" hideTitle />
       )}
       {tab === "stock" && <StockPage embedded />}
     </>

@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Buscador — Eliathi Modas — Propuesta de diseño</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy: #1E2A4A;
+    --coral: #F07058;
+    --coral-light: #FDF1EE;
+    --white: #FFFFFF;
+    --off: #F8F7F5;
+    --gray: #E8E4DF;
+    --text: #2C2C2C;
+    --muted: #8A8278;
+    --green: #16A34A;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--off);
+    color: var(--text);
+    font-family: 'DM Sans', system-ui, sans-serif;
+    padding: 48px 24px 96px;
+  }
+  .wrap { max-width: 860px; margin: 0 auto; }
+  .intro h1 {
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 600;
+    font-size: 40px;
+    margin: 0 0 8px;
+    color: var(--navy);
+  }
+  .intro p {
+    font-size: 15px;
+    color: var(--muted);
+    max-width: 560px;
+    line-height: 1.6;
+    margin: 0 0 40px;
+  }
+  .section-label {
+    font-size: 13px;
+    color: var(--coral);
+    font-weight: 500;
+    margin: 0 0 10px;
+  }
+  .frame {
+    background: var(--white);
+    border: 1px solid var(--gray);
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 48px;
+  }
+  .frame-label {
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--gray);
+    font-size: 13px;
+    color: var(--muted);
+  }
+  .frame-body { padding: 28px; }
+
+  /* HEADER MOCK */
+  .store-header {
+    background: var(--navy);
+    border-radius: 8px;
+    padding: 16px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: relative;
+  }
+  .store-logo {
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 600;
+    font-size: 22px;
+    color: var(--off);
+    white-space: nowrap;
+  }
+  .store-nav {
+    display: flex;
+    gap: 28px;
+    align-items: center;
+    transition: opacity 0.2s, width 0.2s;
+  }
+  .store-nav a {
+    color: var(--off);
+    opacity: 0.85;
+    font-size: 13px;
+    text-decoration: none;
+  }
+  .store-icons { display: flex; align-items: center; gap: 20px; }
+  .icon-btn {
+    background: none;
+    border: none;
+    color: var(--off);
+    cursor: pointer;
+    padding: 4px;
+    display: flex;
+    align-items: center;
+  }
+  .icon-btn svg { width: 19px; height: 19px; }
+
+  /* SEARCH FIELD (desktop expandido) */
+  .search-field {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--off);
+    border-radius: 20px;
+    padding: 8px 16px;
+    flex: 1;
+    max-width: 380px;
+    margin: 0 28px;
+  }
+  .search-field svg { width: 16px; height: 16px; color: var(--muted); flex-shrink: 0; }
+  .search-field input {
+    border: none;
+    background: transparent;
+    outline: none;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    color: var(--text);
+    flex: 1;
+  }
+  .search-field input::placeholder { color: var(--muted); }
+  .search-close {
+    background: none;
+    border: none;
+    color: var(--muted);
+    cursor: pointer;
+    display: flex;
+  }
+
+  /* DROPDOWN */
+  .dropdown {
+    position: absolute;
+    top: 62px;
+    left: 24px;
+    right: 24px;
+    background: var(--white);
+    border-radius: 8px;
+    box-shadow: 0 8px 24px rgba(30,42,74,0.14);
+    padding: 8px;
+    display: none;
+  }
+  .dropdown.open { display: block; }
+  .result-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px;
+    border-radius: 6px;
+    text-decoration: none;
+    color: inherit;
+  }
+  .result-thumb {
+    width: 40px;
+    height: 40px;
+    border-radius: 6px;
+    flex-shrink: 0;
+  }
+  .result-name { font-size: 13px; color: var(--text); flex: 1; }
+  .result-price { font-size: 12px; color: var(--muted); }
+  .dropdown-footer {
+    border-top: 1px solid var(--gray);
+    margin-top: 4px;
+    padding: 10px 8px 4px;
+    text-align: center;
+  }
+  .dropdown-footer span {
+    font-size: 12px;
+    color: var(--coral);
+    font-weight: 500;
+    cursor: pointer;
+  }
+  .empty-state {
+    padding: 20px 12px;
+    text-align: center;
+  }
+  .empty-state p {
+    font-size: 13px;
+    color: var(--text);
+    margin: 0 0 4px;
+  }
+  .empty-state small {
+    font-size: 12px;
+    color: var(--muted);
+  }
+  .empty-chips {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    margin-top: 12px;
+  }
+  .empty-chip {
+    font-size: 11px;
+    background: var(--coral-light);
+    color: var(--coral);
+    padding: 5px 12px;
+    border-radius: 14px;
+  }
+
+  .try-hint {
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 14px;
+  }
+  .try-hint button {
+    border: none;
+    background: none;
+    color: var(--coral);
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    padding: 0;
+    text-decoration: underline;
+  }
+
+  /* MOBILE FRAME */
+  .phone {
+    width: 300px;
+    margin: 0 auto;
+    border: 8px solid var(--navy);
+    border-radius: 32px;
+    overflow: hidden;
+    background: var(--white);
+  }
+  .phone-header {
+    background: var(--navy);
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .phone-body { min-height: 360px; position: relative; }
+  .mobile-overlay {
+    position: absolute;
+    inset: 0;
+    background: var(--white);
+    display: none;
+    flex-direction: column;
+  }
+  .mobile-overlay.open { display: flex; }
+  .mobile-overlay-top {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--gray);
+  }
+  .mobile-overlay-top .search-field { margin: 0; max-width: none; }
+  .mobile-results { padding: 8px 16px; flex: 1; overflow-y: auto; }
+  .mobile-home-content { padding: 20px 16px; }
+  .mobile-home-content .ph-line {
+    height: 10px;
+    background: var(--gray);
+    border-radius: 4px;
+    margin-bottom: 10px;
+  }
+  .mobile-home-content .ph-block {
+    height: 90px;
+    background: var(--off);
+    border-radius: 8px;
+    margin-bottom: 14px;
+  }
+
+  .caption {
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.6;
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid var(--gray);
+  }
+  .caption b { color: var(--text); font-weight: 500; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="intro">
+    <h1>Buscador — propuesta de diseño</h1>
+    <p>Estados del buscador de la tienda pública de Eliathi Modas, con los colores y tipografías reales del sistema de diseño ya en producción. Escribí en los campos para ver la interacción.</p>
+  </div>
+
+  <div class="section-label">01 — Desktop, reposo</div>
+  <div class="frame">
+    <div class="frame-label">El header se ve igual que hoy. El ícono de lupa está entre la navegación y el carrito.</div>
+    <div class="frame-body">
+      <div class="store-header">
+        <span class="store-logo">Eliathi Modas</span>
+        <div class="store-nav">
+          <a href="#">Remeras</a>
+          <a href="#">Jeans</a>
+          <a href="#">Buzos</a>
+          <a href="#">Ofertas</a>
+        </div>
+        <div class="store-icons">
+          <button class="icon-btn" aria-label="Buscar" onclick="openDesktop()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          </button>
+          <button class="icon-btn" aria-label="Carrito">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-label">02 — Desktop, activo (clic en la lupa)</div>
+  <div class="frame">
+    <div class="frame-label">El ícono se convierte en campo de texto. Escribí "rem", "jean" o "zapatilla" para ver los distintos resultados.</div>
+    <div class="frame-body">
+      <div class="store-header">
+        <span class="store-logo">Eliathi Modas</span>
+        <div class="search-field">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input id="desktopInput" type="text" placeholder="Buscar productos..." oninput="filterDesktop()" autocomplete="off">
+          <button class="search-close" aria-label="Cerrar" onclick="closeDesktop()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+        <div class="store-icons">
+          <button class="icon-btn" aria-label="Carrito">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+          </button>
+        </div>
+        <div id="desktopDropdown" class="dropdown"></div>
+      </div>
+      <p class="try-hint">Probá: <button onclick="tryQuery('rem')">rem</button> · <button onclick="tryQuery('jean')">jean</button> · <button onclick="tryQuery('zapatilla')">zapatilla (sin resultados)</button></p>
+    </div>
+  </div>
+
+  <div class="section-label">03 — Mobile, overlay de pantalla completa</div>
+  <div class="frame">
+    <div class="frame-label">En mobile el header no tiene espacio para expandir in-place. Tocar la lupa abre un buscador de pantalla completa.</div>
+    <div class="frame-body">
+      <div class="phone">
+        <div class="phone-header">
+          <span class="store-logo" style="font-size:17px;">Eliathi</span>
+          <div class="store-icons" style="gap:14px;">
+            <button class="icon-btn" aria-label="Buscar" onclick="openMobile()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="17" height="17"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            </button>
+            <button class="icon-btn" aria-label="Carrito">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="17" height="17"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+            </button>
+          </div>
+        </div>
+        <div class="phone-body">
+          <div class="mobile-home-content">
+            <div class="ph-block"></div>
+            <div class="ph-line" style="width:60%"></div>
+            <div class="ph-line" style="width:85%"></div>
+            <div class="ph-block" style="height:60px;width:48%;display:inline-block;margin-right:4%;"></div>
+            <div class="ph-block" style="height:60px;width:48%;display:inline-block;"></div>
+          </div>
+          <div id="mobileOverlay" class="mobile-overlay">
+            <div class="mobile-overlay-top">
+              <div class="search-field">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                <input id="mobileInput" type="text" placeholder="Buscar productos..." oninput="filterMobile()" autocomplete="off">
+              </div>
+              <button class="search-close" aria-label="Cerrar" onclick="closeMobile()" style="color:var(--muted);">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              </button>
+            </div>
+            <div id="mobileResults" class="mobile-results"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="caption">
+    <b>Estado vacío</b> (0 caracteres): sin dropdown, sin overlay de resultados — recién aparece contenido a partir del segundo carácter escrito.<br>
+    <b>Sin coincidencias</b>: mensaje directo + 2-3 categorías sugeridas, nunca un panel en blanco.<br>
+    <b>Con coincidencias</b>: hasta 5 resultados con miniatura, nombre y precio, cada uno linkeando directo al producto, más "Ver todos los resultados" cuando hay más.<br>
+    Detalle técnico y alcance completo de la feature en <code>propuesta-buscador.md</code>.
+  </div>
+
+</div>
+
+<script>
+  const PRODUCTS = [
+    { name: 'Remera oversize boxy', price: '$18.500', color: '#F07058' },
+    { name: 'Remera básica algodón', price: '$12.900', color: '#1E2A4A' },
+    { name: 'Jean mom fit', price: '$32.000', color: '#8A8278' },
+    { name: 'Jean recto tiro alto', price: '$29.500', color: '#E8E4DF' },
+    { name: 'Buzo canguro', price: '$24.900', color: '#F07058' }
+  ];
+
+  function matchProducts(query) {
+    const q = query.trim().toLowerCase();
+    if (!q) return [];
+    return PRODUCTS.filter(p => p.name.toLowerCase().includes(q));
+  }
+
+  function resultsHTML(results, query) {
+    if (results.length === 0) {
+      return '<div class="empty-state">' +
+        '<p>No encontramos productos para «' + query + '»</p>' +
+        '<small>Probá con otro término, o mirá estas categorías</small>' +
+        '<div class="empty-chips"><span class="empty-chip">Remeras</span><span class="empty-chip">Jeans</span><span class="empty-chip">Ofertas</span></div>' +
+      '</div>';
+    }
+    let html = results.map(p =>
+      '<a href="#" class="result-row">' +
+        '<div class="result-thumb" style="background:' + p.color + '"></div>' +
+        '<span class="result-name">' + p.name + '</span>' +
+        '<span class="result-price">' + p.price + '</span>' +
+      '</a>'
+    ).join('');
+    html += '<div class="dropdown-footer"><span>Ver todos los resultados para «' + query + '» →</span></div>';
+    return html;
+  }
+
+  function openDesktop() {
+    document.querySelector('#desktopInput').focus();
+  }
+  function closeDesktop() {
+    document.getElementById('desktopInput').value = '';
+    document.getElementById('desktopDropdown').classList.remove('open');
+  }
+  function filterDesktop() {
+    const q = document.getElementById('desktopInput').value;
+    const dropdown = document.getElementById('desktopDropdown');
+    if (q.length === 0) {
+      dropdown.classList.remove('open');
+      return;
+    }
+    dropdown.innerHTML = resultsHTML(matchProducts(q), q);
+    dropdown.classList.add('open');
+  }
+  function tryQuery(q) {
+    const input = document.getElementById('desktopInput');
+    input.value = q;
+    filterDesktop();
+    input.focus();
+  }
+
+  function openMobile() {
+    document.getElementById('mobileOverlay').classList.add('open');
+    document.getElementById('mobileInput').focus();
+  }
+  function closeMobile() {
+    document.getElementById('mobileOverlay').classList.remove('open');
+    document.getElementById('mobileInput').value = '';
+    document.getElementById('mobileResults').innerHTML = '';
+  }
+  function filterMobile() {
+    const q = document.getElementById('mobileInput').value;
+    const results = document.getElementById('mobileResults');
+    if (q.length === 0) {
+      results.innerHTML = '';
+      return;
+    }
+    results.innerHTML = resultsHTML(matchProducts(q), q);
+  }
+</script>
+</body>
+</html>

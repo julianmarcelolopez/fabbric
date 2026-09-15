@@ -357,7 +357,7 @@ export function MyStorePage() {
       name: p.name,
       price: p.price,
       compareAtPrice: p.compareAtPrice,
-      brand: p.brand,
+      brand: p.brandName,
       imageUrl: p.firstImageUrl,
     }));
   }

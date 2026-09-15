@@ -23,7 +23,7 @@ export type PdvVariant = {
   priceOverride: number | null;
 };
 
-type RelatedProduct = {
+export type RelatedProduct = {
   id: string;
   name: string;
   price: number;

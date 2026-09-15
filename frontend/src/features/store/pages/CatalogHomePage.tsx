@@ -2,7 +2,23 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate, useOutletContext } from "react-router-dom";
 import { ApiError, publicJson } from "../../../lib/api";
 import { HomeSectionsRenderer } from "../../catalog/HomeSectionsRenderer";
-import type { PublicHomeSection, StoreContext } from "../types";
+import type { PublicBrandRef, PublicHomeSection, StoreContext } from "../types";
+
+// T29/06 — el backend devuelve brand como {name, slug} | null (para poder
+// linkear a /store/:slug/m/:slug); HomeSectionsRenderer/ProductCard son
+// compartidos con el preview del admin y esperan un string plano. La
+// conversión pasa aquí, en el borde donde entra la respuesta de la API — ver
+// PublicBrandRef en ../types.
+export type PublicHomeSectionRaw = Omit<PublicHomeSection, "products"> & {
+  products: (Omit<PublicHomeSection["products"][number], "brand"> & { brand: PublicBrandRef | null })[];
+};
+
+export function normalizeHomeSections(raw: PublicHomeSectionRaw[]): PublicHomeSection[] {
+  return raw.map((s) => ({
+    ...s,
+    products: s.products.map((p) => ({ ...p, brand: p.brand?.name ?? null })),
+  }));
+}
 
 // T20/03 — home nuevo: hero + grilla de categorías + secciones de productos
 // (home_sections, sin cambios de datos) + mid-banner. Instagram strip y
@@ -148,8 +164,8 @@ export function CatalogHomePage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    publicJson<PublicHomeSection[]>(`/public/${slug}/home`)
-      .then(setSections)
+    publicJson<PublicHomeSectionRaw[]>(`/public/${slug}/home`)
+      .then((raw) => setSections(normalizeHomeSections(raw)))
       .catch((err) => setError(err instanceof ApiError ? err.message : String(err)));
   }, [slug]);
 

@@ -4,7 +4,7 @@ import { ApiError, publicJson } from "../../../lib/api";
 import { pesosToCents } from "../../../lib/money";
 import { colorSwatchStyle } from "../../catalog/colorSwatch";
 import { ProductCard } from "../../catalog/ProductCard";
-import type { PublicCategoryProducts, PublicCollectionProducts, StoreContext } from "../types";
+import type { PublicBrandProducts, PublicCategoryProducts, PublicCollectionProducts, StoreContext } from "../types";
 
 // T20/05 — rediseño visual de la página que ya existía desde T19/10. Mismo
 // fetch/paginación de siempre, layout nuevo (banner + toolbar + grilla +
@@ -43,12 +43,16 @@ function pageNumbers(current: number, total: number): (number | "…")[] {
   return out;
 }
 
-type Props = { mode?: "category" | "collection" };
+type Props = { mode?: "category" | "collection" | "brand" };
 
 export function CategoryPage({ mode = "category" }: Props) {
   const { slug } = useOutletContext<StoreContext>();
-  const { categorySlug, collectionSlug } = useParams<{ categorySlug?: string; collectionSlug?: string }>();
-  const itemSlug = mode === "collection" ? collectionSlug : categorySlug;
+  const { categorySlug, collectionSlug, brandSlug } = useParams<{
+    categorySlug?: string;
+    collectionSlug?: string;
+    brandSlug?: string;
+  }>();
+  const itemSlug = mode === "collection" ? collectionSlug : mode === "brand" ? brandSlug : categorySlug;
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const page = Math.max(1, Number(searchParams.get("page")) || 1);
@@ -70,7 +74,9 @@ export function CategoryPage({ mode = "category" }: Props) {
   const [precioMax, setPrecioMax] = useState(appliedPrecioMax);
   const [sort, setSort] = useState(appliedSort);
 
-  const [data, setData] = useState<PublicCategoryProducts | PublicCollectionProducts | null>(null);
+  const [data, setData] = useState<PublicCategoryProducts | PublicCollectionProducts | PublicBrandProducts | null>(
+    null
+  );
   const [error, setError] = useState<string | null>(null);
   // T21/08 — separado de `data`: antes cada refetch (ej. al tipear un precio)
   // vaciaba `data`, lo que desmontaba TODA la página (sidebar de filtros
@@ -138,8 +144,10 @@ export function CategoryPage({ mode = "category" }: Props) {
     const path =
       mode === "collection"
         ? `/public/${slug}/collections/${itemSlug}/products?${params}`
-        : `/public/${slug}/categories/${itemSlug}/products?${params}`;
-    publicJson<PublicCategoryProducts | PublicCollectionProducts>(path)
+        : mode === "brand"
+          ? `/public/${slug}/brands/${itemSlug}/products?${params}`
+          : `/public/${slug}/categories/${itemSlug}/products?${params}`;
+    publicJson<PublicCategoryProducts | PublicCollectionProducts | PublicBrandProducts>(path)
       .then((d) => {
         setData(d);
         setLoading(false);
@@ -153,7 +161,9 @@ export function CategoryPage({ mode = "category" }: Props) {
   if (error) {
     return (
       <div className="store-message">
-        <h1>No encontramos {mode === "collection" ? "esta colección" : "esta categoría"}</h1>
+        <h1>
+          No encontramos {mode === "collection" ? "esta colección" : mode === "brand" ? "esta marca" : "esta categoría"}
+        </h1>
         <p>
           <Link to={`/store/${slug}`}>← Volver a la tienda</Link>
         </p>
@@ -162,7 +172,7 @@ export function CategoryPage({ mode = "category" }: Props) {
   }
   if (data === null) return <p className="store-message">Cargando…</p>;
 
-  const item = "collection" in data ? data.collection : data.category;
+  const item = "collection" in data ? data.collection : "brand" in data ? data.brand : data.category;
   const hasActiveFilters = !!(talle || color || marca || precioMin || precioMax);
 
   function goToPage(p: number) {
@@ -187,7 +197,15 @@ export function CategoryPage({ mode = "category" }: Props) {
           <div className="breadcrumb">
             <Link to={`/store/${slug}`}>Inicio</Link>
             <span className="breadcrumb-sep">›</span>
-            <Link to={`/store/${slug}/categorias`}>{mode === "collection" ? "Colecciones" : "Categorías"}</Link>
+            <Link
+              to={
+                mode === "brand"
+                  ? `/store/${slug}/categorias?tab=marcas`
+                  : `/store/${slug}/categorias`
+              }
+            >
+              {mode === "collection" ? "Colecciones" : mode === "brand" ? "Marcas" : "Categorías"}
+            </Link>
             <span className="breadcrumb-sep">›</span>
             <span className="breadcrumb-current">{item.name}</span>
           </div>
@@ -279,21 +297,25 @@ export function CategoryPage({ mode = "category" }: Props) {
               </div>
             </div>
 
-            {data.availableFilters.marcas.length > 0 && (
+            {/* T29/06 — ausente (no [] vacío) en la página de una marca puntual:
+                no tiene sentido filtrar por marca dentro de esa misma marca. */}
+            {(data.availableFilters.marcas?.length ?? 0) > 0 && (
               <div className="filter-group">
                 <div className="filter-group-title">Marca</div>
                 {/* T21/05: selección única (el backend acepta una sola marca por
                     request) — chips en vez de checkboxes, para no sugerir que
-                    se puede elegir más de una. */}
+                    se puede elegir más de una.
+                    T29/06: el valor que viaja en ?marca= pasa a ser el slug
+                    (antes, el nombre) — el chip sigue mostrando el nombre. */}
                 <div className="checkbox-options">
-                  {data.availableFilters.marcas.map((m) => (
+                  {data.availableFilters.marcas!.map((m) => (
                     <button
-                      key={m}
+                      key={m.slug}
                       type="button"
-                      className={m === marca ? "marca-chip active" : "marca-chip"}
-                      onClick={() => setMarca(m === marca ? "" : m)}
+                      className={m.slug === marca ? "marca-chip active" : "marca-chip"}
+                      onClick={() => setMarca(m.slug === marca ? "" : m.slug)}
                     >
-                      {m}
+                      {m.name}
                     </button>
                   ))}
                 </div>
@@ -322,7 +344,7 @@ export function CategoryPage({ mode = "category" }: Props) {
                     name={p.name}
                     price={p.price}
                     compareAtPrice={p.compareAtPrice}
-                    brand={p.brand}
+                    brand={p.brand?.name ?? null}
                     imageUrl={p.imageUrl}
                     onClick={() => navigate(`/store/${slug}/p/${p.id}`)}
                   />

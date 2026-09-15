@@ -10,6 +10,7 @@ import type { ZodTypeProvider } from "fastify-type-provider-zod";
 import { z } from "zod";
 import { db } from "../../db/client.js";
 import {
+  brands,
   categories,
   collections,
   productCollections,
@@ -20,6 +21,7 @@ import {
 import { AppError, isUniqueViolation } from "../../lib/errors.js";
 import { supabaseAdmin } from "../../lib/supabaseAdmin.js";
 import { requireOrgId } from "../../lib/tenant.js";
+import { resolveBrandId } from "../brands/service.js";
 
 const idParam = z.object({ id: z.string().uuid() });
 const tag = { tags: ["productos"], security: [{ bearerAuth: [] }] };
@@ -49,9 +51,10 @@ export async function productsRoutes(fastify: FastifyInstance) {
       const orgId = requireOrgId(request);
 
       const rows = await db
-        .select({ product: products, categoryName: categories.name })
+        .select({ product: products, categoryName: categories.name, brandName: brands.name })
         .from(products)
         .innerJoin(categories, eq(products.categoryId, categories.id))
+        .leftJoin(brands, eq(products.brandId, brands.id))
         .where(eq(products.orgId, orgId))
         .orderBy(asc(products.sortOrder), asc(products.name));
 
@@ -84,9 +87,10 @@ export async function productsRoutes(fastify: FastifyInstance) {
         .where(inArray(productImages.productId, ids))
         .orderBy(asc(productImages.sortOrder));
 
-      return rows.map(({ product, categoryName }) => ({
+      return rows.map(({ product, categoryName, brandName }) => ({
         ...product,
         categoryName,
+        brandName,
         variantCount: variantCounts.find((v) => v.productId === product.id)?.n ?? 0,
         collections: collectionRows
           .filter((c) => c.productId === product.id)
@@ -111,9 +115,10 @@ export async function productsRoutes(fastify: FastifyInstance) {
       const { id } = request.params;
 
       const [row] = await db
-        .select({ product: products, categoryName: categories.name })
+        .select({ product: products, categoryName: categories.name, brandName: brands.name })
         .from(products)
         .innerJoin(categories, eq(products.categoryId, categories.id))
+        .leftJoin(brands, eq(products.brandId, brands.id))
         .where(and(eq(products.id, id), eq(products.orgId, orgId)));
       if (!row) throw new AppError(404, "not_found", "Producto no encontrado");
 
@@ -135,7 +140,14 @@ export async function productsRoutes(fastify: FastifyInstance) {
           .where(eq(productCollections.productId, id)),
       ]);
 
-      return { ...row.product, categoryName: row.categoryName, variants, images, collections: cols };
+      return {
+        ...row.product,
+        categoryName: row.categoryName,
+        brandName: row.brandName,
+        variants,
+        images,
+        collections: cols,
+      };
     }
   );
 
@@ -144,9 +156,10 @@ export async function productsRoutes(fastify: FastifyInstance) {
     { ...auth, schema: { ...tag, summary: "Crear producto", body: createProductSchema } },
     async (request, reply) => {
       const orgId = requireOrgId(request);
-      const input = request.body;
-      await assertCategoryInOrg(input.categoryId, orgId);
-      const [row] = await db.insert(products).values({ ...input, orgId }).returning();
+      const { newBrandName, brandId, ...rest } = request.body;
+      await assertCategoryInOrg(rest.categoryId, orgId);
+      const resolvedBrandId = await resolveBrandId(db, orgId, { brandId, newBrandName });
+      const [row] = await db.insert(products).values({ ...rest, orgId, brandId: resolvedBrandId }).returning();
       reply.status(201);
       return row;
     }
@@ -165,14 +178,15 @@ export async function productsRoutes(fastify: FastifyInstance) {
     },
     async (request, reply) => {
       const orgId = requireOrgId(request);
-      const { categoryId, name, brand, price, talle, color, barcode } = request.body;
+      const { categoryId, name, brandId, newBrandName, price, talle, color, barcode } = request.body;
       await assertCategoryInOrg(categoryId, orgId);
 
       try {
         const result = await db.transaction(async (tx) => {
+          const resolvedBrandId = await resolveBrandId(tx, orgId, { brandId, newBrandName });
           const [product] = await tx
             .insert(products)
-            .values({ orgId, categoryId, name, brand: brand ?? null, price, visibleInCatalog: false })
+            .values({ orgId, categoryId, name, brandId: resolvedBrandId, price, visibleInCatalog: false })
             .returning();
           const [variant] = await tx
             .insert(productVariants)
@@ -200,14 +214,18 @@ export async function productsRoutes(fastify: FastifyInstance) {
     async (request) => {
       const orgId = requireOrgId(request);
       const { id } = request.params;
-      const input = request.body;
-      if (Object.keys(input).length === 0) {
+      const { newBrandName, brandId, ...rest } = request.body;
+      if (Object.keys(request.body).length === 0) {
         throw new AppError(400, "validation", "Nada para actualizar");
       }
-      if (input.categoryId) await assertCategoryInOrg(input.categoryId, orgId);
+      if (rest.categoryId) await assertCategoryInOrg(rest.categoryId, orgId);
+      const patch: typeof rest & { brandId?: string | null } = { ...rest };
+      if (brandId !== undefined || newBrandName !== undefined) {
+        patch.brandId = await resolveBrandId(db, orgId, { brandId, newBrandName });
+      }
       const [row] = await db
         .update(products)
-        .set(input)
+        .set(patch)
         .where(and(eq(products.id, id), eq(products.orgId, orgId)))
         .returning();
       if (!row) throw new AppError(404, "not_found", "Producto no encontrado");

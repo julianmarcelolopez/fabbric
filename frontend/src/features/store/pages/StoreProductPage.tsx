@@ -3,7 +3,7 @@ import { Link, useNavigate, useOutletContext, useParams } from "react-router-dom
 import { ApiError, publicJson } from "../../../lib/api";
 import { formatPrice } from "../../../lib/money";
 import { useCart } from "../../cart/CartContext";
-import { ProductDetailView } from "../../catalog/ProductDetailView";
+import { ProductDetailView, type RelatedProduct } from "../../catalog/ProductDetailView";
 import type { PublicCategoryProducts, PublicProductDetail, StoreContext } from "../types";
 
 type ShippingZone = { id: string; name: string; cost: number; freeShippingFrom: number | null };
@@ -19,7 +19,7 @@ export function StoreProductPage() {
   const { productId } = useParams<{ productId: string }>();
   const navigate = useNavigate();
   const [state, setState] = useState<State>({ status: "loading" });
-  const [related, setRelated] = useState<PublicCategoryProducts["products"]>([]);
+  const [related, setRelated] = useState<RelatedProduct[]>([]);
   const [shippingZones, setShippingZones] = useState<ShippingZone[] | null>(null);
   const cart = useCart();
 
@@ -36,7 +36,14 @@ export function StoreProductPage() {
         // endpoint nuevo), excluyendo el producto actual, máximo 4.
         publicJson<PublicCategoryProducts>(`/public/${slug}/categories/${product.categorySlug}/products?page=1`)
           .then((data) => {
-            if (!cancelled) setRelated(data.products.filter((p) => p.id !== product.id).slice(0, 4));
+            if (!cancelled) {
+              setRelated(
+                data.products
+                  .filter((p) => p.id !== product.id)
+                  .slice(0, 4)
+                  .map((p) => ({ ...p, brand: p.brand?.name ?? null }))
+              );
+            }
           })
           .catch(() => {});
       })
@@ -85,7 +92,7 @@ export function StoreProductPage() {
         productId: product.id,
         variantId: variant.id,
         name: product.name,
-        brand: product.brand,
+        brand: product.brand?.name ?? null,
         talle: variant.talle,
         color: variant.color,
         unitPrice: variant.priceOverride ?? product.price,
@@ -113,7 +120,7 @@ export function StoreProductPage() {
         description={product.description}
         price={product.price}
         compareAtPrice={product.compareAtPrice}
-        brand={product.brand}
+        brand={product.brand?.name ?? null}
         images={product.images}
         variants={product.variants}
         onAddToCart={addToCart}

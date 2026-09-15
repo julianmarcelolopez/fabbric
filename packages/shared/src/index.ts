@@ -2,6 +2,7 @@ export * from "./schemas/organization.js";
 export * from "./schemas/adminUser.js";
 export * from "./schemas/category.js";
 export * from "./schemas/collection.js";
+export * from "./schemas/brand.js";
 export * from "./schemas/product.js";
 export * from "./schemas/variant.js";
 export * from "./schemas/productImage.js";

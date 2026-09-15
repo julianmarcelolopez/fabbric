@@ -1,9 +1,10 @@
-import { and, asc, count, desc, eq, exists, gt, gte, inArray, isNotNull, lte, ne } from "drizzle-orm";
+import { and, asc, count, desc, eq, exists, gt, gte, inArray, lte, ne } from "drizzle-orm";
 import type { FastifyInstance } from "fastify";
 import type { ZodTypeProvider } from "fastify-type-provider-zod";
 import { z } from "zod";
 import { db } from "../../db/client.js";
 import {
+  brands,
   categories,
   collections,
   homeSections,
@@ -24,6 +25,7 @@ const slugParam = z.object({ slug: z.string().min(1) });
 const slugIdParam = z.object({ slug: z.string().min(1), id: z.string().uuid() });
 const slugCategoryParam = z.object({ slug: z.string().min(1), categorySlug: z.string().min(1) });
 const slugCollectionParam = z.object({ slug: z.string().min(1), collectionSlug: z.string().min(1) });
+const slugBrandParam = z.object({ slug: z.string().min(1), brandSlug: z.string().min(1) });
 const pageQuery = z.object({ page: z.coerce.number().int().min(1).default(1) });
 // T21/05: filtros/orden reales de categoría y colección — todos opcionales,
 // sin querystring el comportamiento es idéntico al de antes (T19/10).
@@ -59,16 +61,39 @@ function variantMatchCondition(talle?: string, color?: string) {
   return exists(db.select({ id: productVariants.id }).from(productVariants).where(and(...conditions)));
 }
 
+// T29/06 — cierra el pase a slug que la Tarea 5 dejó pendiente a propósito
+// (para no romper el storefront antes de que este supiera consumirlo):
+// ahora sí matchea por brands.slug, no por nombre. Subquery correlacionada
+// (products.brandId → brands.id) en vez de un join en la query principal,
+// para no tocar el resto de columnas/joins de cada endpoint que la usa.
+function brandSlugCondition(marca?: string) {
+  if (!marca) return null;
+  return exists(
+    db
+      .select({ id: brands.id })
+      .from(brands)
+      .where(and(eq(brands.id, products.brandId), eq(brands.orgId, products.orgId), eq(brands.slug, marca)))
+  );
+}
+
 function extraFilterConditions(query: ProductListQuery) {
   const conditions = [];
   const variantMatch = variantMatchCondition(query.talle, query.color);
   if (variantMatch) conditions.push(variantMatch);
-  if (query.marca) conditions.push(eq(products.brand, query.marca));
+  const brandMatch = brandSlugCondition(query.marca);
+  if (brandMatch) conditions.push(brandMatch);
   // T21/05: filtra sobre products.price únicamente, no sobre el precio
   // efectivo de la variante (priceOverride) — limitación conocida, documentada.
   if (query.precioMin !== undefined) conditions.push(gte(products.price, query.precioMin));
   if (query.precioMax !== undefined) conditions.push(lte(products.price, query.precioMax));
   return conditions;
+}
+
+// T29/06 — reshape del join brands (brandName/brandSlug seleccionados aparte)
+// al contrato público real: {name, slug} | null. Mismo criterio que
+// category/collection ya devuelven {name, slug, imageUrl} anidado.
+function brandObj(name: string | null, slug: string | null) {
+  return name ? { name, slug: slug as string } : null;
 }
 
 function resolveSort(sort?: ProductListQuery["sort"]) {
@@ -164,10 +189,12 @@ export async function publicRoutes(fastify: FastifyInstance) {
                 name: products.name,
                 price: products.price,
                 compareAtPrice: products.compareAtPrice,
-                brand: products.brand,
+                brandName: brands.name,
+                brandSlug: brands.slug,
                 groupId: products.categoryId,
               })
               .from(products)
+              .leftJoin(brands, eq(products.brandId, brands.id))
               .where(and(productFilter, inArray(products.categoryId, catIds)))
               .orderBy(asc(products.sortOrder), asc(products.name))
           : [],
@@ -178,11 +205,13 @@ export async function publicRoutes(fastify: FastifyInstance) {
                 name: products.name,
                 price: products.price,
                 compareAtPrice: products.compareAtPrice,
-                brand: products.brand,
+                brandName: brands.name,
+                brandSlug: brands.slug,
                 groupId: productCollections.collectionId,
               })
               .from(productCollections)
               .innerJoin(products, eq(productCollections.productId, products.id))
+              .leftJoin(brands, eq(products.brandId, brands.id))
               .where(and(productFilter, inArray(productCollections.collectionId, colIds)))
               .orderBy(asc(products.sortOrder), asc(products.name))
           : [],
@@ -211,7 +240,7 @@ export async function publicRoutes(fastify: FastifyInstance) {
           name: p.name,
           price: p.price,
           compareAtPrice: p.compareAtPrice,
-          brand: p.brand,
+          brand: brandObj(p.brandName, p.brandSlug),
           imageUrl: imageOf(p.id),
         }));
         return [
@@ -277,9 +306,11 @@ export async function publicRoutes(fastify: FastifyInstance) {
             name: products.name,
             price: products.price,
             compareAtPrice: products.compareAtPrice,
-            brand: products.brand,
+            brandName: brands.name,
+            brandSlug: brands.slug,
           })
           .from(products)
+          .leftJoin(brands, eq(products.brandId, brands.id))
           .where(productFilter)
           .orderBy(...resolveSort(query.sort))
           .limit(CATEGORY_PAGE_SIZE)
@@ -298,9 +329,10 @@ export async function publicRoutes(fastify: FastifyInstance) {
           .innerJoin(products, eq(productVariants.productId, products.id))
           .where(and(scopeFilter, gt(productVariants.stockOnline, 0))),
         db
-          .selectDistinct({ brand: products.brand })
+          .selectDistinct({ name: brands.name, slug: brands.slug })
           .from(products)
-          .where(and(scopeFilter, isNotNull(products.brand))),
+          .innerJoin(brands, eq(products.brandId, brands.id))
+          .where(scopeFilter),
       ]);
 
       const productIds = rows.map((p) => p.id);
@@ -315,7 +347,14 @@ export async function publicRoutes(fastify: FastifyInstance) {
 
       return {
         category: { name: category.name, slug: category.slug, imageUrl: category.imageUrl },
-        products: rows.map((p) => ({ ...p, imageUrl: imageOf(p.id) })),
+        products: rows.map((p) => ({
+          id: p.id,
+          name: p.name,
+          price: p.price,
+          compareAtPrice: p.compareAtPrice,
+          brand: brandObj(p.brandName, p.brandSlug),
+          imageUrl: imageOf(p.id),
+        })),
         page,
         pageSize: CATEGORY_PAGE_SIZE,
         totalCount,
@@ -323,7 +362,7 @@ export async function publicRoutes(fastify: FastifyInstance) {
         availableFilters: {
           talles: talles.map((t) => t.talle).sort(),
           colores: colores.map((c) => c.color).sort(),
-          marcas: marcas.map((m) => m.brand as string).sort(),
+          marcas: marcas.map((m) => ({ name: m.name, slug: m.slug })).sort((a, b) => a.name.localeCompare(b.name)),
         },
       };
     }
@@ -373,10 +412,12 @@ export async function publicRoutes(fastify: FastifyInstance) {
             name: products.name,
             price: products.price,
             compareAtPrice: products.compareAtPrice,
-            brand: products.brand,
+            brandName: brands.name,
+            brandSlug: brands.slug,
           })
           .from(productCollections)
           .innerJoin(products, eq(productCollections.productId, products.id))
+          .leftJoin(brands, eq(products.brandId, brands.id))
           .where(productFilter)
           .orderBy(...resolveSort(query.sort))
           .limit(CATEGORY_PAGE_SIZE)
@@ -394,10 +435,11 @@ export async function publicRoutes(fastify: FastifyInstance) {
           .innerJoin(productCollections, eq(productCollections.productId, products.id))
           .where(and(scopeFilter, gt(productVariants.stockOnline, 0))),
         db
-          .selectDistinct({ brand: products.brand })
+          .selectDistinct({ name: brands.name, slug: brands.slug })
           .from(products)
           .innerJoin(productCollections, eq(productCollections.productId, products.id))
-          .where(and(scopeFilter, isNotNull(products.brand))),
+          .innerJoin(brands, eq(products.brandId, brands.id))
+          .where(scopeFilter),
       ]);
 
       const productIds = rows.map((p) => p.id);
@@ -412,7 +454,14 @@ export async function publicRoutes(fastify: FastifyInstance) {
 
       return {
         collection: { name: collection.name, slug: collection.slug, imageUrl: collection.imageUrl },
-        products: rows.map((p) => ({ ...p, imageUrl: imageOf(p.id) })),
+        products: rows.map((p) => ({
+          id: p.id,
+          name: p.name,
+          price: p.price,
+          compareAtPrice: p.compareAtPrice,
+          brand: brandObj(p.brandName, p.brandSlug),
+          imageUrl: imageOf(p.id),
+        })),
         page,
         pageSize: CATEGORY_PAGE_SIZE,
         totalCount,
@@ -420,7 +469,107 @@ export async function publicRoutes(fastify: FastifyInstance) {
         availableFilters: {
           talles: talles.map((t) => t.talle).sort(),
           colores: colores.map((c) => c.color).sort(),
-          marcas: marcas.map((m) => m.brand as string).sort(),
+          marcas: marcas.map((m) => ({ name: m.name, slug: m.slug })).sort((a, b) => a.name.localeCompare(b.name)),
+        },
+      };
+    }
+  );
+
+  // T29/05 — espejo de /collections/:collectionSlug/products: scope por
+  // brandId en vez de la m2m de colecciones. La marca se resuelve por slug
+  // (a diferencia del filtro ?marca= de arriba, que todavía matchea por
+  // nombre — ver brandNameCondition) porque esta ruta nace ya pensada para
+  // que la Tarea 6 la linkee por slug desde el arranque.
+  app.get(
+    "/public/:slug/brands/:brandSlug/products",
+    {
+      schema: {
+        ...tag,
+        summary: "Productos de una marca, paginados y filtrables/ordenables (mismo contrato que categoría/colección)",
+        params: slugBrandParam,
+        querystring: productListQuery,
+      },
+    },
+    async (request) => {
+      const config = await resolveStore(request.params.slug);
+      const orgId = config.orgId;
+      const { brandSlug } = request.params;
+      const query = request.query;
+      const { page } = query;
+
+      const [brand] = await db
+        .select({ id: brands.id, name: brands.name, slug: brands.slug, imageUrl: brands.imageUrl })
+        .from(brands)
+        .where(and(eq(brands.orgId, orgId), eq(brands.slug, brandSlug), eq(brands.active, true)));
+      if (!brand) throw new AppError(404, "not_found", "Marca no encontrada");
+
+      const scopeFilter = and(
+        eq(products.orgId, orgId),
+        eq(products.brandId, brand.id),
+        eq(products.visibleInCatalog, true),
+        ne(products.status, "paused")
+      );
+      const productFilter = and(scopeFilter, ...extraFilterConditions(query));
+
+      const [[{ totalCount }], rows, talles, colores] = await Promise.all([
+        db.select({ totalCount: count() }).from(products).where(productFilter),
+        db
+          .select({
+            id: products.id,
+            name: products.name,
+            price: products.price,
+            compareAtPrice: products.compareAtPrice,
+            brandName: brands.name,
+            brandSlug: brands.slug,
+          })
+          .from(products)
+          .leftJoin(brands, eq(products.brandId, brands.id))
+          .where(productFilter)
+          .orderBy(...resolveSort(query.sort))
+          .limit(CATEGORY_PAGE_SIZE)
+          .offset((page - 1) * CATEGORY_PAGE_SIZE),
+        db
+          .selectDistinct({ talle: productVariants.talle })
+          .from(productVariants)
+          .innerJoin(products, eq(productVariants.productId, products.id))
+          .where(and(scopeFilter, gt(productVariants.stockOnline, 0))),
+        db
+          .selectDistinct({ color: productVariants.color })
+          .from(productVariants)
+          .innerJoin(products, eq(productVariants.productId, products.id))
+          .where(and(scopeFilter, gt(productVariants.stockOnline, 0))),
+      ]);
+
+      const productIds = rows.map((p) => p.id);
+      const firstImages = productIds.length
+        ? await db
+            .select({ productId: productImages.productId, url: productImages.url })
+            .from(productImages)
+            .where(inArray(productImages.productId, productIds))
+            .orderBy(asc(productImages.sortOrder))
+        : [];
+      const imageOf = (id: string) => firstImages.find((i) => i.productId === id)?.url ?? null;
+
+      return {
+        brand: { name: brand.name, slug: brand.slug, imageUrl: brand.imageUrl },
+        products: rows.map((p) => ({
+          id: p.id,
+          name: p.name,
+          price: p.price,
+          compareAtPrice: p.compareAtPrice,
+          brand: brandObj(p.brandName, p.brandSlug),
+          imageUrl: imageOf(p.id),
+        })),
+        page,
+        pageSize: CATEGORY_PAGE_SIZE,
+        totalCount,
+        totalPages: Math.max(1, Math.ceil(totalCount / CATEGORY_PAGE_SIZE)),
+        // Sin filtro de marca acá adentro (ya estamos scopeados a una sola) —
+        // mismo criterio que categoría/colección no ofrecen filtrar por
+        // categoría/colección dentro de sí mismas.
+        availableFilters: {
+          talles: talles.map((t) => t.talle).sort(),
+          colores: colores.map((c) => c.color).sort(),
         },
       };
     }
@@ -470,7 +619,8 @@ export async function publicRoutes(fastify: FastifyInstance) {
           description: products.description,
           price: products.price,
           compareAtPrice: products.compareAtPrice,
-          brand: products.brand,
+          brandName: brands.name,
+          brandSlug: brands.slug,
           status: products.status,
           // T20/06: para armar "también te puede gustar" (misma categoría) sin
           // agregar un endpoint nuevo — reusa /categories/:categorySlug/products.
@@ -479,6 +629,7 @@ export async function publicRoutes(fastify: FastifyInstance) {
         })
         .from(products)
         .innerJoin(categories, eq(products.categoryId, categories.id))
+        .leftJoin(brands, eq(products.brandId, brands.id))
         .where(
           and(
             eq(products.id, id),
@@ -509,7 +660,55 @@ export async function publicRoutes(fastify: FastifyInstance) {
           .orderBy(asc(productVariants.talle), asc(productVariants.color)),
       ]);
 
-      return { ...product, images, variants };
+      return {
+        id: product.id,
+        name: product.name,
+        description: product.description,
+        price: product.price,
+        compareAtPrice: product.compareAtPrice,
+        brand: brandObj(product.brandName, product.brandSlug),
+        status: product.status,
+        categorySlug: product.categorySlug,
+        categoryName: product.categoryName,
+        images,
+        variants,
+      };
+    }
+  );
+
+  // T29/06 — todas las marcas activas de la org con al menos un producto
+  // visible (no pausado) — a diferencia de Categorías/Colecciones, sin pasar
+  // por home_sections: no hay curación manual para marcas (ver analisis.md
+  // sección 5). Usado por la pestaña "Marcas" de "Explorá la tienda".
+  app.get(
+    "/public/:slug/brands",
+    { schema: { ...tag, summary: "Marcas activas con al menos un producto visible, con conteo", params: slugParam } },
+    async (request) => {
+      const config = await resolveStore(request.params.slug);
+      const orgId = config.orgId;
+
+      const rows = await db
+        .select({
+          id: brands.id,
+          name: brands.name,
+          slug: brands.slug,
+          imageUrl: brands.imageUrl,
+          productCount: count(products.id),
+        })
+        .from(brands)
+        .innerJoin(
+          products,
+          and(
+            eq(products.brandId, brands.id),
+            eq(products.visibleInCatalog, true),
+            ne(products.status, "paused")
+          )
+        )
+        .where(and(eq(brands.orgId, orgId), eq(brands.active, true)))
+        .groupBy(brands.id, brands.name, brands.slug, brands.imageUrl)
+        .orderBy(asc(brands.name));
+
+      return rows;
     }
   );
 }

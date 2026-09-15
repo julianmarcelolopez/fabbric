@@ -9,6 +9,7 @@ type Props = {
 };
 
 type Category = { id: string; name: string };
+type Brand = { id: string; name: string };
 
 // Alta atómica (producto + variante en una transacción, POST
 // /admin/products/alta-rapida — Tarea 1 de esta fase). La foto va DESPUÉS,
@@ -22,6 +23,7 @@ type AltaRapidaResult = {
 
 export function AltaScreen({ barcode, onDone }: Props) {
   const [categories, setCategories] = useState<Category[]>([]);
+  const [brands, setBrands] = useState<Brand[]>([]);
   const [categoryId, setCategoryId] = useState("");
   const [marca, setMarca] = useState("");
   const [modelo, setModelo] = useState("");
@@ -41,6 +43,10 @@ export function AltaScreen({ barcode, onDone }: Props) {
     apiJson<Category[]>("/admin/categories")
       .then(setCategories)
       .catch(() => setFormError("No se pudieron cargar las categorías."));
+    // T29 — catálogo real de marcas en vez de texto libre. No es obligatorio
+    // que cargue para poder tipear (el datalist es solo sugerencia, ver el
+    // input de más abajo) — sin catch propio, un fallo acá no bloquea el alta.
+    apiJson<Brand[]>("/admin/brands").then(setBrands).catch(() => {});
   }, []);
 
   async function handleSubmit(e: FormEvent) {
@@ -61,7 +67,10 @@ export function AltaScreen({ barcode, onDone }: Props) {
         body: JSON.stringify({
           categoryId,
           name: modelo.trim(),
-          brand: marca.trim(),
+          // T29 — siempre newBrandName (nunca brandId resuelto en el
+          // cliente): resolveBrandId en el backend decide por slug si reusa
+          // una marca existente o la crea al vuelo, igual que en el admin.
+          newBrandName: marca.trim(),
           price: priceCents,
           talle: talle.trim(),
           color: color.trim(),
@@ -180,8 +189,17 @@ export function AltaScreen({ barcode, onDone }: Props) {
           placeholder="Marca"
           value={marca}
           onChange={(e) => setMarca(e.target.value)}
+          list="alta-marcas"
           style={inputStyle}
         />
+        {/* T29 — elegir una marca existente o escribir una nueva (alta
+            inline al guardar) — mismo patrón simple que el combo del admin,
+            sin agregar ninguna librería de combobox a la PWA. */}
+        <datalist id="alta-marcas">
+          {brands.map((b) => (
+            <option key={b.id} value={b.name} />
+          ))}
+        </datalist>
         <input
           type="text"
           placeholder="Modelo"

@@ -4,7 +4,7 @@ import type { FastifyInstance } from "fastify";
 import type { ZodTypeProvider } from "fastify-type-provider-zod";
 import { z } from "zod";
 import { db } from "../../db/client.js";
-import { categories, productImages, products, productVariants } from "../../db/schema.js";
+import { brands, categories, productImages, products, productVariants } from "../../db/schema.js";
 import { AppError, isUniqueViolation } from "../../lib/errors.js";
 import { requireOrgId } from "../../lib/tenant.js";
 
@@ -44,7 +44,7 @@ export async function variantsRoutes(fastify: FastifyInstance) {
           product: {
             id: products.id,
             name: products.name,
-            brand: products.brand,
+            brand: brands.name,
             price: products.price,
           },
           category: { id: categories.id, name: categories.name },
@@ -52,6 +52,7 @@ export async function variantsRoutes(fastify: FastifyInstance) {
         .from(productVariants)
         .innerJoin(products, eq(productVariants.productId, products.id))
         .innerJoin(categories, eq(products.categoryId, categories.id))
+        .leftJoin(brands, eq(products.brandId, brands.id))
         .where(and(eq(productVariants.barcode, code), eq(productVariants.orgId, orgId)));
       if (!row) throw new AppError(404, "not_found", "Código de barras no encontrado");
 

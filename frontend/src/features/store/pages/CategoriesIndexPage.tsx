@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
-import { Link, useOutletContext } from "react-router-dom";
+import { Link, useOutletContext, useSearchParams } from "react-router-dom";
 import { ApiError, publicJson } from "../../../lib/api";
-import type { PublicHomeSection, StoreContext } from "../types";
+import type { PublicBrandSummary, StoreContext } from "../types";
+import { normalizeHomeSections, type PublicHomeSectionRaw } from "./CatalogHomePage";
 
 // T20/04 — página índice "Categorías" (no existía antes). Reusa
 // GET /public/:slug/home (sin endpoint nuevo, ver docs/T20_UX-Store/
@@ -11,23 +12,34 @@ import type { PublicHomeSection, StoreContext } from "../types";
 // "todas" sin un endpoint nuevo).
 //
 // Tab "Ofertas" del mockup: omitido en V1 (decisión del usuario).
+//
+// T29/06 — tab "Marcas": a diferencia de Categorías/Colecciones, NO viene de
+// home_sections (sin curación manual, ver analisis.md sección 5) — usa un
+// endpoint propio (GET /public/:slug/brands) que ya devuelve todas las
+// marcas activas con stock, con conteo.
 
-type Tab = "categories" | "collections";
+type Tab = "categories" | "collections" | "brands";
 
 export function CategoriesIndexPage() {
   const { slug, config } = useOutletContext<StoreContext>();
-  const [sections, setSections] = useState<PublicHomeSection[] | null>(null);
+  const [searchParams] = useSearchParams();
+  const [sections, setSections] = useState<ReturnType<typeof normalizeHomeSections> | null>(null);
+  const [brands, setBrands] = useState<PublicBrandSummary[] | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [tab, setTab] = useState<Tab>("categories");
+  const initialTab = searchParams.get("tab");
+  const [tab, setTab] = useState<Tab>(initialTab === "marcas" ? "brands" : "categories");
 
   useEffect(() => {
-    publicJson<PublicHomeSection[]>(`/public/${slug}/home`)
-      .then(setSections)
+    publicJson<PublicHomeSectionRaw[]>(`/public/${slug}/home`)
+      .then((raw) => setSections(normalizeHomeSections(raw)))
+      .catch((err) => setError(err instanceof ApiError ? err.message : String(err)));
+    publicJson<PublicBrandSummary[]>(`/public/${slug}/brands`)
+      .then(setBrands)
       .catch((err) => setError(err instanceof ApiError ? err.message : String(err)));
   }, [slug]);
 
   if (error) return <p className="store-message">{error}</p>;
-  if (sections === null) return <p className="store-message">Cargando…</p>;
+  if (sections === null || brands === null) return <p className="store-message">Cargando…</p>;
 
   const categories = sections.filter((s) => s.refType === "category" && s.refActive && s.refName && s.refSlug);
   const collections = sections.filter((s) => s.refType === "collection" && s.refActive && s.refName);
@@ -43,10 +55,12 @@ export function CategoriesIndexPage() {
           <div className="breadcrumb">
             <Link to={`/store/${slug}`}>Inicio</Link>
             <span className="breadcrumb-sep">›</span>
-            <span className="breadcrumb-current">{tab === "categories" ? "Categorías" : "Colecciones"}</span>
+            <span className="breadcrumb-current">
+              {tab === "categories" ? "Categorías" : tab === "collections" ? "Colecciones" : "Marcas"}
+            </span>
           </div>
           <h1 className="cat-banner-title">Explorá la tienda</h1>
-          <p className="cat-banner-sub">Encontrá lo que buscás entre todas nuestras categorías y colecciones</p>
+          <p className="cat-banner-sub">Encontrá lo que buscás entre todas nuestras categorías, colecciones y marcas</p>
         </div>
       </div>
 
@@ -65,6 +79,13 @@ export function CategoriesIndexPage() {
             onClick={() => setTab("collections")}
           >
             Colecciones
+          </button>
+          <button
+            type="button"
+            className={tab === "brands" ? "tab active" : "tab"}
+            onClick={() => setTab("brands")}
+          >
+            Marcas
           </button>
         </div>
       </div>
@@ -112,12 +133,13 @@ export function CategoriesIndexPage() {
               </div>
             </>
           )
-        ) : collections.length === 0 ? (
-          // T20/04: decisión del usuario — estado vacío en vez de una lista
-          // parcial (las colecciones sin curar en home_sections no aparecen
-          // acá y podrían confundir si mostráramos "algunas sí, otras no").
-          <p className="category-page-empty">Próximamente nuevas colecciones.</p>
-        ) : (
+        ) : tab === "collections" ? (
+          collections.length === 0 ? (
+            // T20/04: decisión del usuario — estado vacío en vez de una lista
+            // parcial (las colecciones sin curar en home_sections no aparecen
+            // acá y podrían confundir si mostráramos "algunas sí, otras no").
+            <p className="category-page-empty">Próximamente nuevas colecciones.</p>
+          ) : (
           <>
             <div className="section-label">
               Colecciones — {collections.length} activa{collections.length === 1 ? "" : "s"}
@@ -147,6 +169,37 @@ export function CategoriesIndexPage() {
                   </Link>
                 );
               })}
+            </div>
+          </>
+          )
+        ) : brands.length === 0 ? (
+          <p className="category-page-empty">Todavía no hay marcas disponibles.</p>
+        ) : (
+          <>
+            <div className="section-label">
+              Marcas — {brands.length} disponible{brands.length === 1 ? "" : "s"}
+            </div>
+            <div className="collections-grid">
+              {brands.map((b) => (
+                <Link
+                  key={b.id}
+                  to={`/store/${slug}/m/${b.slug}`}
+                  className={b.imageUrl ? "col-card has-photo" : "col-card"}
+                >
+                  {b.imageUrl && (
+                    <>
+                      <img className="cat-hero-img" src={b.imageUrl} alt="" />
+                      <div className="cat-hero-scrim" />
+                    </>
+                  )}
+                  <div className="col-tag">Marca</div>
+                  <div className="col-name">{b.name}</div>
+                  <div className="col-count">
+                    {b.productCount} producto{b.productCount === 1 ? "" : "s"}
+                  </div>
+                  <span className="col-link">Ver marca →</span>
+                </Link>
+              ))}
             </div>
           </>
         )}

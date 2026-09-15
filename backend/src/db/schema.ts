@@ -104,6 +104,28 @@ export const collections = pgTable(
   (t) => [unique("collections_org_slug_unique").on(t.orgId, t.slug)]
 );
 
+// T29 — catálogo propio de marcas (antes: products.brand era texto libre).
+// Mismo shape que categories/collections.
+export const brands = pgTable(
+  "brands",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    orgId: uuid("org_id")
+      .notNull()
+      .references(() => organizations.id),
+    name: text("name").notNull(),
+    slug: text("slug").notNull(),
+    imageUrl: text("image_url"),
+    active: boolean("active").notNull().default(true),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow()
+      .$onUpdate(() => new Date()),
+  },
+  (t) => [unique("brands_org_slug_unique").on(t.orgId, t.slug)]
+);
+
 export const products = pgTable("products", {
   id: uuid("id").primaryKey().defaultRandom(),
   orgId: uuid("org_id")
@@ -120,8 +142,12 @@ export const products = pgTable("products", {
   costPrice: integer("cost_price"),
   // Precio anterior, para mostrar tachado (T11) — solo si es mayor que price; público
   compareAtPrice: integer("compare_at_price"),
-  // Marca de reventa o propia, texto libre sugerido (T12) — público
-  brand: text("brand"),
+  // T29 — catálogo propio de marcas (antes: brand era texto libre, T12).
+  // Nullable: no todo producto tiene marca. onDelete: "set null" — a
+  // diferencia de categoryId (obligatorio, borrado bloqueado si hay
+  // productos), una marca es opcional: se puede borrar y sus productos
+  // simplemente quedan sin marca, sin bloquear ni cascadear el borrado.
+  brandId: uuid("brand_id").references(() => brands.id, { onDelete: "set null" }),
   status: productStatus("status").notNull().default("active"),
   visibleInCatalog: boolean("visible_in_catalog").notNull().default(true),
   sortOrder: integer("sort_order").notNull().default(0),

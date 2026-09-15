@@ -9,6 +9,7 @@ import type { ZodTypeProvider } from "fastify-type-provider-zod";
 import { z } from "zod";
 import { db } from "../../db/client.js";
 import {
+  brands,
   categories,
   collections,
   homeSections,
@@ -75,10 +76,11 @@ export async function homeSectionsRoutes(fastify: FastifyInstance) {
                 name: products.name,
                 price: products.price,
                 compareAtPrice: products.compareAtPrice,
-                brand: products.brand,
+                brand: brands.name,
                 groupId: products.categoryId,
               })
               .from(products)
+              .leftJoin(brands, eq(products.brandId, brands.id))
               .where(
                 and(
                   eq(products.orgId, orgId),
@@ -95,11 +97,12 @@ export async function homeSectionsRoutes(fastify: FastifyInstance) {
                 name: products.name,
                 price: products.price,
                 compareAtPrice: products.compareAtPrice,
-                brand: products.brand,
+                brand: brands.name,
                 groupId: productCollections.collectionId,
               })
               .from(productCollections)
               .innerJoin(products, eq(productCollections.productId, products.id))
+              .leftJoin(brands, eq(products.brandId, brands.id))
               .where(
                 and(
                   eq(products.orgId, orgId),

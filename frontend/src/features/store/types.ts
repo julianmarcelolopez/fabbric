@@ -26,13 +26,21 @@ export type PublicStoreConfig = {
 
 export type PublicHomeSection = HsrSection;
 
+// T29/06 — marca deja de ser un string suelto en el contrato público: ahora
+// viaja como {name, slug} (o null) para poder linkear a /store/:slug/m/:slug
+// sin adivinar el slug a partir del nombre. HsrSection/ProductCard/
+// ProductDetailView siguen esperando un string plano — la conversión pasa en
+// las páginas que consumen estos tipos (CatalogHomePage/CategoryPage/
+// StoreProductPage), no en esos componentes compartidos con el preview del admin.
+export type PublicBrandRef = { name: string; slug: string };
+
 export type PublicProductDetail = {
   id: string;
   name: string;
   description: string;
   price: number;
   compareAtPrice: number | null;
-  brand: string | null;
+  brand: PublicBrandRef | null;
   status: "active" | "out_of_stock";
   // T20/06: para "también te puede gustar" (misma categoría, sin endpoint nuevo)
   categorySlug: string;
@@ -58,7 +66,11 @@ export type StoreContext = {
 export type PublicAvailableFilters = {
   talles: string[];
   colores: string[];
-  marcas: string[];
+  // T29/06 — {name, slug} en vez de string suelto: el valor que viaja en
+  // ?marca= pasa a ser el slug, el nombre es solo para el label del chip.
+  // Ausente (no [] vacío) en la página de una marca puntual — no tiene
+  // sentido filtrar por marca dentro de la página de esa misma marca.
+  marcas?: PublicBrandRef[];
 };
 
 // T19/10 (paginación) + T21/05 (filtros/orden)
@@ -69,7 +81,7 @@ export type PublicCategoryProducts = {
     name: string;
     price: number;
     compareAtPrice: number | null;
-    brand: string | null;
+    brand: PublicBrandRef | null;
     imageUrl: string | null;
   }[];
   page: number;
@@ -89,4 +101,24 @@ export type PublicCollectionProducts = {
   totalCount: number;
   totalPages: number;
   availableFilters: PublicAvailableFilters;
+};
+
+// T29/06 — mismo contrato, tercer modo de CategoryPage.tsx. Sin "colección"/
+// "categoría": la clave del grupo es `brand`.
+export type PublicBrandProducts = {
+  brand: { name: string; slug: string; imageUrl: string | null };
+  products: PublicCategoryProducts["products"];
+  page: number;
+  pageSize: number;
+  totalCount: number;
+  totalPages: number;
+  availableFilters: PublicAvailableFilters;
+};
+
+// T29/06 — todas las marcas activas con stock visible, para la pestaña
+// "Marcas" de "Explorá la tienda" (listado automático, sin home_sections).
+export type PublicBrandSummary = PublicBrandRef & {
+  id: string;
+  imageUrl: string | null;
+  productCount: number;
 };

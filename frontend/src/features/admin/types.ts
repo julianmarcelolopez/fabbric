@@ -59,7 +59,8 @@ export type ProductBase = {
   price: number;
   costPrice: number | null;
   compareAtPrice: number | null;
-  brand: string | null;
+  // T29 — antes texto libre (brand: string | null); ahora catálogo propio.
+  brandId: string | null;
   status: ProductStatus;
   visibleInCatalog: boolean;
   sortOrder: number;
@@ -67,6 +68,8 @@ export type ProductBase = {
 
 export type ProductListItem = ProductBase & {
   categoryName: string;
+  // T29 — nombre resuelto server-side (join con brands), evita un segundo fetch.
+  brandName: string | null;
   variantCount: number;
   collections: { id: string; name: string }[];
   firstImageUrl: string | null;
@@ -74,6 +77,7 @@ export type ProductListItem = ProductBase & {
 
 export type ProductDetail = ProductBase & {
   categoryName: string;
+  brandName: string | null;
   variants: Variant[];
   images: ProductImage[];
   collections: { id: string; name: string }[];
@@ -84,9 +88,6 @@ export const STATUS_LABELS: Record<ProductStatus, string> = {
   paused: "Pausado",
   out_of_stock: "Sin stock",
 };
-
-// Marcas sugeridas para el datalist — texto libre en la DB, esto no restringe
-export const SUGGESTED_BRANDS = ["Taverniti", "Bross", "Adidas", "Puma", "Eliathi Modas"];
 
 export type ShippingZoneRow = {
   id: string;
