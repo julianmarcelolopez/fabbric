@@ -182,6 +182,26 @@ No apareció en ningún grep de colores hardcodeados — es 100% dependiente de
 `14-login.html`. No necesita ninguna tarea propia más allá de heredar el
 cambio de paleta base.
 
+## 9bis. Hallazgo tardío: `ADMIN_ORDER_STATUS` en `types.ts` — no es un `*Page.tsx`, no lo agarró el grep de la Tarea 2
+
+Al verificar la Tarea 3 apareció `types.ts:171-172` (`ADMIN_ORDER_STATUS`,
+usado por `DashboardPage.tsx` y `OrdersPage.tsx` para pintar el badge de
+estado de pedido): `preparing: "#1d4ed8"`, `shipped: "#7c3aed"`. Ninguno de
+los dos grep anteriores (ni el de la spec, ni el ampliado de la sección 4,
+ambos acotados a `admin/pages/` y `admin/components/`) los iba a
+encontrar — el archivo es `admin/types.ts`, fuera de esos dos directorios.
+
+`#1d4ed8` coincide numéricamente con el viejo hover de `.btn.primary`, pero
+acá cumple otra función: es uno de los 6 colores de un semáforo categórico
+de estado de pedido (`pending` ámbar, `paid` verde, `preparing` azul,
+`shipped` violeta, `delivered` gris, `cancelled` rojo) — no está ligado al
+accent interactivo, y ni la spec ni los mockups lo mencionan en ningún
+momento (ningún mockup muestra los 6 estados a la vez). **Decisión: se deja
+sin cambios**, mismo criterio que `.alert-warning`/`.critical-row`
+(sección 4b) — es semántico (distinguir 6 estados entre sí), no de marca,
+y la coincidencia con el hex viejo es casualidad, no reuso deliberado del
+accent.
+
 ## 9. Alcance heredado de la spec, sin cambios
 
 - La tabla de mapeo de colores (sección "Paleta — mapeo exacto") se adopta

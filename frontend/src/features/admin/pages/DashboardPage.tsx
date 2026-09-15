@@ -213,7 +213,7 @@ export function DashboardPage() {
             <div className="dash-bar-track">
               <div
                 className="dash-bar-fill"
-                style={{ width: `${totalPersonalizado ? (paneles.catalogoVsPersonalizado.catalogo.qty / totalPersonalizado) * 100 : 0}%`, background: "#2563eb" }}
+                style={{ width: `${totalPersonalizado ? (paneles.catalogoVsPersonalizado.catalogo.qty / totalPersonalizado) * 100 : 0}%`, background: "#F07058" }}
               />
             </div>
           </div>
@@ -222,7 +222,7 @@ export function DashboardPage() {
             <div className="dash-bar-track">
               <div
                 className="dash-bar-fill"
-                style={{ width: `${totalPersonalizado ? (paneles.catalogoVsPersonalizado.personalizado.qty / totalPersonalizado) * 100 : 0}%`, background: "#7c3aed" }}
+                style={{ width: `${totalPersonalizado ? (paneles.catalogoVsPersonalizado.personalizado.qty / totalPersonalizado) * 100 : 0}%`, background: "#1E2A4A" }}
               />
             </div>
           </div>
@@ -243,7 +243,7 @@ export function DashboardPage() {
                 <div className="dash-bar-track">
                   <div
                     className="dash-bar-fill"
-                    style={{ width: `${totalCanal ? (row.qty / totalCanal) * 100 : 0}%`, background: "#0891b2" }}
+                    style={{ width: `${totalCanal ? (row.qty / totalCanal) * 100 : 0}%` }}
                   />
                 </div>
               </div>
