@@ -163,9 +163,6 @@ export function StockPage({ embedded }: Props = {}) {
 
   const items = data?.items.filter((i) => !onlyCritical || i.critical) ?? [];
   const criticalCount = data?.items.filter((i) => i.critical).length ?? 0;
-  // T32/04: item en movimiento vive fuera de la fila de tabla — la card de
-  // "Registrar movimiento" se renderiza una sola vez, debajo de la tabla.
-  const movingItem = expanded?.mode === "move" ? data?.items.find((i) => i.variantId === expanded.variantId) : undefined;
 
   return (
     <>
@@ -246,10 +243,21 @@ export function StockPage({ embedded }: Props = {}) {
                     </button>
                   </td>
                 </tr>
-                {expanded?.variantId === item.variantId && expanded.mode === "history" && (
+                {expanded?.variantId === item.variantId && (
                   <tr key={`${item.variantId}-panel`}>
                     <td colSpan={7} style={{ background: "#F8F7F5" }}>
-                      <History variantId={item.variantId} onError={setError} />
+                      {expanded.mode === "move" ? (
+                        <MoveForm
+                          item={item}
+                          onDone={() => {
+                            setExpanded(null);
+                            void load();
+                          }}
+                          onError={setError}
+                        />
+                      ) : (
+                        <History variantId={item.variantId} onError={setError} />
+                      )}
                     </td>
                   </tr>
                 )}
@@ -257,20 +265,6 @@ export function StockPage({ embedded }: Props = {}) {
             ))}
           </tbody>
         </table>
-        </div>
-      )}
-
-      {movingItem && (
-        <div className="card" style={{ marginTop: 16 }}>
-          <h2>Registrar movimiento — {movingItem.productName}, {movingItem.talle} / {movingItem.color}</h2>
-          <MoveForm
-            item={movingItem}
-            onDone={() => {
-              setExpanded(null);
-              void load();
-            }}
-            onError={setError}
-          />
         </div>
       )}
     </>

@@ -1,7 +1,9 @@
 # Tarea 4 — `StockPage`: stat-cards + mover el formulario de movimiento
 
 **Estado:** ✅ Hecha — verificada en vivo por el usuario en
-`/admin/products?tab=stock`.
+`/admin/products?tab=stock`. Las 3 stat-cards quedaron confirmadas; el
+movimiento del formulario "Mover" a una card aparte se probó, se mostró al
+usuario y **se revirtió a pedido suyo** — ver "Decisión final" abajo.
 
 **Depende de:** Tarea 1.
 
@@ -39,19 +41,27 @@ Finanzas). Ver `analisis.md` sección 6a.
 `/admin/products?tab=stock`: las 3 tarjetas se ven correctamente
 ("Variantes críticas: 7", umbral con input+Guardar, "Solo críticos (7)");
 "Historial" (sin tocar) sigue expandiendo la fila con la tabla de
-movimientos; "Mover" en la fila "Remera taverniti, M / Rojo" mostró la
-tarjeta "Registrar movimiento — Remera taverniti, M / Rojo" al final de la
-página (debajo de la tabla, como diseña el mockup), con el formulario
-completo (Tipo, Canal, Signo, Cantidad, Nota, botón "Registrar")
-funcionando.
+movimientos. "Mover" se probó primero como tarjeta aparte al final de la
+página (funcionaba bien: título con producto/variante, formulario
+completo, guardaba correctamente) — pero el usuario prefirió el
+comportamiento anterior.
+
+## Decisión final: "Mover" vuelve a ser una fila expandible
+
+El usuario vio las dos versiones en vivo y pidió volver al comportamiento
+original: el formulario aparece pegado a la fila del producto, sin tener
+que bajar hasta el final de la página. Se revirtió únicamente esa parte —
+las 3 stat-cards de arriba quedan tal como se diseñaron (confirmadas,
+sin objeciones). `StockPage.tsx` vuelve a tener una sola fila expandible
+por variante que muestra `<MoveForm>` o `<History>` según el modo, igual
+que antes de esta tarea.
 
 ## Definition of Done
 
 - [x] "Variantes críticas / Umbral / Solo críticos" se ven como 3
       tarjetas, no como una fila de formulario.
-- [x] Clic en "Mover" en cualquier fila de la tabla muestra el formulario
-      en una tarjeta separada debajo de la tabla (no expande una fila),
-      con el producto/variante correcto en el título.
+- [x] "Mover" — revertido a pedido del usuario: vuelve a expandir el
+      formulario en la fila del producto (no una tarjeta aparte).
 - [x] El formulario de movimiento funciona igual que antes (mismo POST a
       `/admin/variants/:id/stock-movements`).
 - [x] `npx tsc --noEmit` limpio en `frontend/`.
