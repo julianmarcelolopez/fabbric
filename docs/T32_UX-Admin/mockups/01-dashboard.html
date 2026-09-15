@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard — Admin Eliathi Modas (rediseño)</title>
+<link rel="stylesheet" href="admin-redesign.css">
+</head>
+<body>
+  <div class="admin">
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <h2>Eliathi Modas</h2>
+        <div class="store-status">
+          <span class="status-dot"></span>
+          <span class="status-text">Tienda activa</span>
+          <a class="status-link" href="#">Ver →</a>
+        </div>
+      </div>
+      <nav>
+      <div class="nav-group">
+        <div class="nav-group-label">Panel</div>
+        <a href="01-dashboard.html" class="active">Dashboard</a>
+      </div>
+      <div class="nav-group">
+        <div class="nav-group-label">Catálogo</div>
+        <a href="02-productos.html">Productos</a>
+      </div>
+      <div class="nav-group">
+        <div class="nav-group-label">Mi tienda</div>
+        <a href="11-mi-tienda.html">Configurar tienda</a>
+      </div>
+      <div class="nav-group">
+        <div class="nav-group-label">Ventas</div>
+        <a href="05-pedidos.html">Pedidos</a>
+        <a href="08-clientes.html">Clientes</a>
+        <a href="10-finanzas.html">Finanzas</a>
+      </div>
+      <div class="nav-group">
+        <div class="nav-group-label">Configuración</div>
+        <a href="12-envios.html">Envíos</a>
+        <a href="13-ajustes.html">Ajustes</a>
+      </div>
+      </nav>
+      <div class="spacer"></div>
+      <div class="who">admin@eliathi.com<br>(owner)</div>
+      <button class="btn">Cerrar sesión</button>
+    </aside>
+    <main class="content">
+
+      <h1>Eliathi Modas</h1>
+
+      <div class="onboarding-banner">
+        <h2>🚀 Completá estos pasos para empezar a vender</h2>
+        <div class="onboarding-list">
+          <div class="onboarding-item">
+            <span class="onboarding-check done">✓</span>
+            <span class="onboarding-label done">Crear una categoría</span>
+          </div>
+          <div class="onboarding-item">
+            <span class="onboarding-check done">✓</span>
+            <span class="onboarding-label done">Cargar tu primer producto (con variante)</span>
+          </div>
+          <div class="onboarding-item">
+            <span class="onboarding-check">2</span>
+            <span class="onboarding-label">Configurar una zona de envío</span>
+            <a class="onboarding-link" href="#">Configurar →</a>
+          </div>
+          <div class="onboarding-item">
+            <span class="onboarding-check">3</span>
+            <span class="onboarding-label">Conectar Mercado Pago</span>
+            <span class="onboarding-tag">opcional</span>
+            <a class="onboarding-link" href="#">Conectar →</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="dash-zone">
+        <h2>Este mes</h2>
+        <div class="dash-grid dash-grid-stats">
+          <div class="dash-card">
+            <div class="dash-card-label">Pedidos del mes</div>
+            <div class="dash-stat-value">34</div>
+          </div>
+          <div class="dash-card">
+            <div class="dash-card-label">Ingresos</div>
+            <div class="dash-stat-value">$612.000</div>
+          </div>
+          <div class="dash-card">
+            <div class="dash-card-label">Egresos</div>
+            <div class="dash-stat-value">$198.400</div>
+          </div>
+          <div class="dash-card">
+            <div class="dash-card-label">Balance</div>
+            <div class="dash-stat-value">$413.600</div>
+          </div>
+          <div class="dash-card">
+            <div class="dash-card-label">Clientes nuevos</div>
+            <div class="dash-stat-value">11</div>
+          </div>
+          <div class="dash-card">
+            <div class="dash-card-label">Por cobrar</div>
+            <div class="dash-stat-value">$54.000</div>
+          </div>
+          <div class="dash-card">
+            <div class="dash-card-label">Ticket promedio</div>
+            <div class="dash-stat-value">$18.000</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="dash-zone">
+        <h2>Paneles</h2>
+        <div class="dash-grid dash-grid-paneles">
+          <div class="dash-card">
+            <div class="dash-card-label">Últimos pedidos</div>
+            <table class="grid">
+              <tr><th>#</th><th>Cliente</th><th>Total</th><th>Estado</th></tr>
+              <tr><td>#48</td><td>Patricia López</td><td>$25.000</td><td><span class="badge">Enviado</span></td></tr>
+              <tr><td>#47</td><td>Martín Silva</td><td>$32.000</td><td><span class="badge">Pendiente</span></td></tr>
+            </table>
+          </div>
+          <div class="dash-card">
+            <div class="dash-card-label">Más vendidos del mes</div>
+            <div class="dash-breakdown">
+              <div class="dash-bar">
+                <span>Remera Boxy Fit — 18 u.</span>
+                <div class="dash-bar-track"><div class="dash-bar-fill" style="width:82%"></div></div>
+              </div>
+              <div class="dash-bar">
+                <span>Jean Mom Fit — 12 u.</span>
+                <div class="dash-bar-track"><div class="dash-bar-fill" style="width:55%"></div></div>
+              </div>
+            </div>
+          </div>
+          <div class="dash-card">
+            <div class="dash-card-label">Ventas por canal</div>
+            <div class="dash-chart">
+              <div class="dash-chart-col">
+                <div class="dash-chart-bars"><div class="dash-chart-bar" style="height:70%"></div></div>
+                <div class="dash-chart-label">Online</div>
+              </div>
+              <div class="dash-chart-col">
+                <div class="dash-chart-bars"><div class="dash-chart-bar" style="height:40%"></div></div>
+                <div class="dash-chart-label">Local</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+</body>
+</html>

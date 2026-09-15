@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Zonas de envío — Admin Eliathi Modas (rediseño)</title>
+<link rel="stylesheet" href="admin-redesign.css">
+</head>
+<body>
+  <div class="admin">
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <h2>Eliathi Modas</h2>
+        <div class="store-status">
+          <span class="status-dot"></span>
+          <span class="status-text">Tienda activa</span>
+          <a class="status-link" href="#">Ver →</a>
+        </div>
+      </div>
+      <nav>
+      <div class="nav-group">
+        <div class="nav-group-label">Panel</div>
+        <a href="01-dashboard.html">Dashboard</a>
+      </div>
+      <div class="nav-group">
+        <div class="nav-group-label">Catálogo</div>
+        <a href="02-productos.html">Productos</a>
+      </div>
+      <div class="nav-group">
+        <div class="nav-group-label">Mi tienda</div>
+        <a href="11-mi-tienda.html">Configurar tienda</a>
+      </div>
+      <div class="nav-group">
+        <div class="nav-group-label">Ventas</div>
+        <a href="05-pedidos.html">Pedidos</a>
+        <a href="08-clientes.html">Clientes</a>
+        <a href="10-finanzas.html">Finanzas</a>
+      </div>
+      <div class="nav-group">
+        <div class="nav-group-label">Configuración</div>
+        <a href="12-envios.html" class="active">Envíos</a>
+        <a href="13-ajustes.html">Ajustes</a>
+      </div>
+      </nav>
+      <div class="spacer"></div>
+      <div class="who">admin@eliathi.com<br>(owner)</div>
+      <button class="btn">Cerrar sesión</button>
+    </aside>
+    <main class="content">
+
+      <h1>Zonas de envío</h1>
+      <div class="table-scroll">
+        <table class="grid">
+          <tr><th>Nombre</th><th>Costo</th><th>Gratis desde</th><th>Activa</th></tr>
+          <tr><td>CABA</td><td>$2.500</td><td>$40.000</td><td>✓</td></tr>
+          <tr><td>GBA</td><td>$3.800</td><td>$50.000</td><td>✓</td></tr>
+        </table>
+      </div>
+      <div class="card" style="margin-top:16px;">
+        <h2>Nueva zona</h2>
+        <div class="row">
+          <label class="field" style="flex:1;min-width:180px;">Nombre<input></label>
+          <label class="field">Costo<input></label>
+          <label class="field">Gratis desde<input></label>
+          <button class="btn primary">Crear</button>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+</body>
+</html>

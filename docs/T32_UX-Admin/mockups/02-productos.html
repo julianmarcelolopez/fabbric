@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Productos — Admin Eliathi Modas (rediseño)</title>
+<link rel="stylesheet" href="admin-redesign.css">
+</head>
+<body>
+  <div class="admin">
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <h2>Eliathi Modas</h2>
+        <div class="store-status">
+          <span class="status-dot"></span>
+          <span class="status-text">Tienda activa</span>
+          <a class="status-link" href="#">Ver →</a>
+        </div>
+      </div>
+      <nav>
+      <div class="nav-group">
+        <div class="nav-group-label">Panel</div>
+        <a href="01-dashboard.html">Dashboard</a>
+      </div>
+      <div class="nav-group">
+        <div class="nav-group-label">Catálogo</div>
+        <a href="02-productos.html" class="active">Productos</a>
+      </div>
+      <div class="nav-group">
+        <div class="nav-group-label">Mi tienda</div>
+        <a href="11-mi-tienda.html">Configurar tienda</a>
+      </div>
+      <div class="nav-group">
+        <div class="nav-group-label">Ventas</div>
+        <a href="05-pedidos.html">Pedidos</a>
+        <a href="08-clientes.html">Clientes</a>
+        <a href="10-finanzas.html">Finanzas</a>
+      </div>
+      <div class="nav-group">
+        <div class="nav-group-label">Configuración</div>
+        <a href="12-envios.html">Envíos</a>
+        <a href="13-ajustes.html">Ajustes</a>
+      </div>
+      </nav>
+      <div class="spacer"></div>
+      <div class="who">admin@eliathi.com<br>(owner)</div>
+      <button class="btn">Cerrar sesión</button>
+    </aside>
+    <main class="content">
+
+      <h1>Productos</h1>
+      <div class="row" style="margin-bottom:16px;">
+        <button class="btn primary" style="border-radius:6px;">Todos los productos</button>
+        <button class="btn">Categorías</button>
+        <button class="btn">Colecciones</button>
+        <button class="btn">Marcas</button>
+        <a class="btn" href="03-stock.html">Stock</a>
+        <div class="spacer"></div>
+        <button class="btn primary">+ Nuevo producto</button>
+      </div>
+      <div class="table-scroll">
+        <table class="grid">
+          <tr><th></th><th>Nombre</th><th>Marca</th><th>Categoría</th><th>Precio</th><th>Estado</th><th>Visible</th><th>Variantes</th><th>Colecciones</th><th></th></tr>
+          <tr>
+            <td><div class="thumb"></div></td>
+            <td>Campera de cuero</td><td>Eliathi</td><td>Camperas</td><td>$45.000</td>
+            <td><span class="badge">Activo</span></td><td>✓</td><td>3</td><td>Invierno</td>
+            <td><a class="btn small" href="04-producto-editor.html">Editar</a></td>
+          </tr>
+          <tr>
+            <td><div class="thumb"></div></td>
+            <td>Remera Boxy Fit Roja</td><td>Eliathi</td><td>Remeras</td><td>$18.500</td>
+            <td><span class="badge">Activo</span></td><td>✓</td><td>5</td><td>Verano</td>
+            <td><a class="btn small" href="04-producto-editor.html">Editar</a></td>
+          </tr>
+          <tr>
+            <td><div class="thumb"></div></td>
+            <td>Jean Mom Fit</td><td>Eliathi</td><td>Jeans</td><td>$32.000</td>
+            <td><span class="badge">Activo</span></td><td>✓</td><td>4</td><td>—</td>
+            <td><a class="btn small" href="04-producto-editor.html">Editar</a></td>
+          </tr>
+        </table>
+      </div>
+
+    </main>
+  </div>
+
+</body>
+</html>

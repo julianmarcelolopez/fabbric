@@ -9,6 +9,7 @@ import type {
   PublicCategoryProducts,
   PublicCollectionProducts,
   PublicProductListing,
+  PublicSearchResults,
   StoreContext,
 } from "../types";
 
@@ -49,18 +50,23 @@ function pageNumbers(current: number, total: number): (number | "…")[] {
   return out;
 }
 
-type Mode = "category" | "collection" | "brand" | "novedades" | "ofertas";
+type Mode = "category" | "collection" | "brand" | "novedades" | "ofertas" | "search";
 type Props = { mode?: Mode };
 
 // T30/02 — textos que varían por modo, centralizados en un solo lugar en vez
-// de repetir la misma ternera de 5 ramas en cada punto del render que los
+// de repetir la misma ternera de ramas en cada punto del render que los
 // necesita (breadcrumb, error, estado vacío).
+// T31/02 — "search" solo completa las partes estáticas (indexLabel/notFound):
+// su título y su mensaje de vacío incluyen el término buscado, así que esos
+// dos casos se resuelven aparte (ver `item` y el render de `products-area`
+// más abajo), no entran en esta tabla.
 const MODE_TEXT: Record<Mode, { indexLabel: string | null; notFound: string; empty: string }> = {
   category: { indexLabel: "Categorías", notFound: "esta categoría", empty: "Todavía no hay productos en esta categoría." },
   collection: { indexLabel: "Colecciones", notFound: "esta colección", empty: "Todavía no hay productos en esta colección." },
   brand: { indexLabel: "Marcas", notFound: "esta marca", empty: "Todavía no hay productos de esta marca." },
   novedades: { indexLabel: null, notFound: "esta página", empty: "Todavía no hay productos nuevos." },
   ofertas: { indexLabel: null, notFound: "esta página", empty: "Por ahora no hay productos en oferta." },
+  search: { indexLabel: null, notFound: "resultados para tu búsqueda", empty: "" },
 };
 
 export function CategoryPage({ mode = "category" }: Props) {
@@ -73,6 +79,9 @@ export function CategoryPage({ mode = "category" }: Props) {
   const itemSlug = mode === "collection" ? collectionSlug : mode === "brand" ? brandSlug : categorySlug;
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
+  // T31/02 — a diferencia de itemSlug (route param), el término de búsqueda
+  // viaja como querystring (?q=), igual que page/talle/etc.
+  const q = mode === "search" ? searchParams.get("q") ?? "" : "";
   const page = Math.max(1, Number(searchParams.get("page")) || 1);
 
   // Filtros aplicados de verdad (los que ya están en la URL → los que se
@@ -93,7 +102,12 @@ export function CategoryPage({ mode = "category" }: Props) {
   const [sort, setSort] = useState(appliedSort);
 
   const [data, setData] = useState<
-    PublicCategoryProducts | PublicCollectionProducts | PublicBrandProducts | PublicProductListing | null
+    | PublicCategoryProducts
+    | PublicCollectionProducts
+    | PublicBrandProducts
+    | PublicProductListing
+    | PublicSearchResults
+    | null
   >(null);
   const [error, setError] = useState<string | null>(null);
   // T21/08 — separado de `data`: antes cada refetch (ej. al tipear un precio)
@@ -117,7 +131,7 @@ export function CategoryPage({ mode = "category" }: Props) {
     setPrecioMax("");
     setSort("");
     setData(null);
-  }, [mode, itemSlug]);
+  }, [mode, itemSlug, q]);
 
   // Debounce: 300ms después del último cambio de filtro, recién ahí se
   // actualiza la URL (y con eso, el fetch de abajo) — evita un request por
@@ -130,6 +144,15 @@ export function CategoryPage({ mode = "category" }: Props) {
     const t = setTimeout(() => {
       const next = new URLSearchParams();
       next.set("page", "1");
+      // T31/02 — bug real encontrado al implementar: este bloque reconstruye
+      // la URL desde cero sin preservar `q`. En StrictMode (dev) este efecto
+      // puede disparar una vez de más incluso sin que el usuario haya
+      // tocado ningún filtro (el guard `didMountFilters` es el mismo ref en
+      // las dos invocaciones del doble-mount de un efecto en desarrollo), y
+      // esa pasada extra borraba `?q=` de la URL a los 300ms de entrar a
+      // /buscar. Si no se preserva acá, se pierde sin que el usuario haya
+      // hecho nada.
+      if (mode === "search" && q) next.set("q", q);
       if (talle) next.set("talle", talle);
       if (color) next.set("color", color);
       if (marca) next.set("marca", marca);
@@ -159,6 +182,7 @@ export function CategoryPage({ mode = "category" }: Props) {
     const precioMaxCents = pesosToCents(appliedPrecioMax);
     if (precioMaxCents !== null) params.set("precioMax", String(precioMaxCents));
     if (appliedSort) params.set("sort", appliedSort);
+    if (mode === "search") params.set("q", q);
     const path =
       mode === "collection"
         ? `/public/${slug}/collections/${itemSlug}/products?${params}`
@@ -168,8 +192,20 @@ export function CategoryPage({ mode = "category" }: Props) {
             ? `/public/${slug}/novedades/products?${params}`
             : mode === "ofertas"
               ? `/public/${slug}/ofertas/products?${params}`
-              : `/public/${slug}/categories/${itemSlug}/products?${params}`;
-    publicJson<PublicCategoryProducts | PublicCollectionProducts | PublicBrandProducts | PublicProductListing>(path)
+              : mode === "search"
+                ? `/public/${slug}/search?${params}`
+                : `/public/${slug}/categories/${itemSlug}/products?${params}`;
+    // Buscar sin haber tipeado nada todavía (q vacío) no pega al backend —
+    // el endpoint devuelve 400 para q vacío/ausente, esto evita ese request
+    // inútil al entrar directo a /buscar sin ?q=.
+    if (mode === "search" && q.trim() === "") {
+      setData({ query: "", products: [], page: 1, pageSize: 24, totalCount: 0, totalPages: 1, availableFilters: { talles: [], colores: [] } });
+      setLoading(false);
+      return;
+    }
+    publicJson<
+      PublicCategoryProducts | PublicCollectionProducts | PublicBrandProducts | PublicProductListing | PublicSearchResults
+    >(path)
       .then((d) => {
         setData(d);
         setLoading(false);
@@ -178,7 +214,7 @@ export function CategoryPage({ mode = "category" }: Props) {
         setError(err instanceof ApiError ? err.message : String(err));
         setLoading(false);
       });
-  }, [slug, mode, itemSlug, page, appliedTalle, appliedColor, appliedMarca, appliedPrecioMin, appliedPrecioMax, appliedSort]);
+  }, [slug, mode, itemSlug, q, page, appliedTalle, appliedColor, appliedMarca, appliedPrecioMin, appliedPrecioMax, appliedSort]);
 
   if (error) {
     return (
@@ -204,7 +240,9 @@ export function CategoryPage({ mode = "category" }: Props) {
           ? { name: "Novedades" }
           : mode === "ofertas"
             ? { name: "Ofertas" }
-            : (data as PublicCategoryProducts).category;
+            : mode === "search"
+              ? { name: `Resultados para "${q}"` }
+              : (data as PublicCategoryProducts).category;
   const hasActiveFilters = !!(talle || color || marca || precioMin || precioMax);
 
   function goToPage(p: number) {
@@ -371,7 +409,13 @@ export function CategoryPage({ mode = "category" }: Props) {
           <div className="products-area" style={{ opacity: loading ? 0.5 : 1, transition: "opacity 0.15s" }}>
             {data.products.length === 0 ? (
               <p className="category-page-empty">
-                {hasActiveFilters ? "Ningún producto coincide con estos filtros." : MODE_TEXT[mode].empty}
+                {mode === "search"
+                  ? q.trim() === ""
+                    ? "Escribí algo para buscar."
+                    : `No encontramos productos que coincidan con "${q}".`
+                  : hasActiveFilters
+                    ? "Ningún producto coincide con estos filtros."
+                    : MODE_TEXT[mode].empty}
               </p>
             ) : (
               <div className="hsr-grid">

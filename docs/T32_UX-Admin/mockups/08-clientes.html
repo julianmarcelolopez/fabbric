@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Clientes — Admin Eliathi Modas (rediseño)</title>
+<link rel="stylesheet" href="admin-redesign.css">
+</head>
+<body>
+  <div class="admin">
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <h2>Eliathi Modas</h2>
+        <div class="store-status">
+          <span class="status-dot"></span>
+          <span class="status-text">Tienda activa</span>
+          <a class="status-link" href="#">Ver →</a>
+        </div>
+      </div>
+      <nav>
+      <div class="nav-group">
+        <div class="nav-group-label">Panel</div>
+        <a href="01-dashboard.html">Dashboard</a>
+      </div>
+      <div class="nav-group">
+        <div class="nav-group-label">Catálogo</div>
+        <a href="02-productos.html">Productos</a>
+      </div>
+      <div class="nav-group">
+        <div class="nav-group-label">Mi tienda</div>
+        <a href="11-mi-tienda.html">Configurar tienda</a>
+      </div>
+      <div class="nav-group">
+        <div class="nav-group-label">Ventas</div>
+        <a href="05-pedidos.html">Pedidos</a>
+        <a href="08-clientes.html" class="active">Clientes</a>
+        <a href="10-finanzas.html">Finanzas</a>
+      </div>
+      <div class="nav-group">
+        <div class="nav-group-label">Configuración</div>
+        <a href="12-envios.html">Envíos</a>
+        <a href="13-ajustes.html">Ajustes</a>
+      </div>
+      </nav>
+      <div class="spacer"></div>
+      <div class="who">admin@eliathi.com<br>(owner)</div>
+      <button class="btn">Cerrar sesión</button>
+    </aside>
+    <main class="content">
+
+      <h1>Clientes</h1>
+      <div class="row" style="margin-bottom:16px;">
+        <input placeholder="Nombre o email…" style="flex:1;max-width:280px;">
+      </div>
+      <div class="table-scroll">
+        <table class="grid">
+          <tr><th>Nombre</th><th>Email</th><th>Teléfono</th><th>Pedidos</th><th>Total gastado</th><th>Última compra</th></tr>
+          <tr>
+            <td><a href="09-cliente-detalle.html">Patricia López</a></td><td>patricia@mail.com</td>
+            <td>+54 9 11 5555-0000</td><td>3</td><td>$73.000</td><td>12/08</td>
+          </tr>
+          <tr>
+            <td><a href="09-cliente-detalle.html">Martín Silva</a></td><td>martin@mail.com</td>
+            <td>+54 9 11 5555-1111</td><td>1</td><td>$32.000</td><td>11/08</td>
+          </tr>
+        </table>
+      </div>
+
+    </main>
+  </div>
+
+</body>
+</html>

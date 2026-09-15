@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pedido #48 — Admin Eliathi Modas (rediseño)</title>
+<link rel="stylesheet" href="admin-redesign.css">
+</head>
+<body>
+  <div class="admin">
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <h2>Eliathi Modas</h2>
+        <div class="store-status">
+          <span class="status-dot"></span>
+          <span class="status-text">Tienda activa</span>
+          <a class="status-link" href="#">Ver →</a>
+        </div>
+      </div>
+      <nav>
+      <div class="nav-group">
+        <div class="nav-group-label">Panel</div>
+        <a href="01-dashboard.html">Dashboard</a>
+      </div>
+      <div class="nav-group">
+        <div class="nav-group-label">Catálogo</div>
+        <a href="02-productos.html">Productos</a>
+      </div>
+      <div class="nav-group">
+        <div class="nav-group-label">Mi tienda</div>
+        <a href="11-mi-tienda.html">Configurar tienda</a>
+      </div>
+      <div class="nav-group">
+        <div class="nav-group-label">Ventas</div>
+        <a href="05-pedidos.html" class="active">Pedidos</a>
+        <a href="08-clientes.html">Clientes</a>
+        <a href="10-finanzas.html">Finanzas</a>
+      </div>
+      <div class="nav-group">
+        <div class="nav-group-label">Configuración</div>
+        <a href="12-envios.html">Envíos</a>
+        <a href="13-ajustes.html">Ajustes</a>
+      </div>
+      </nav>
+      <div class="spacer"></div>
+      <div class="who">admin@eliathi.com<br>(owner)</div>
+      <button class="btn">Cerrar sesión</button>
+    </aside>
+    <main class="content">
+
+      <h1>Pedido #48</h1>
+      <div class="editor-split">
+        <div>
+          <div class="card">
+            <h2>Cliente</h2>
+            <p style="margin:0;">Patricia López<br><span class="muted">patricia@mail.com · +54 9 11 5555-0000</span></p>
+          </div>
+          <div class="card">
+            <h2>Ítems</h2>
+            <table class="grid">
+              <tr><th>Producto</th><th>Variante</th><th>Cant.</th><th>Precio</th></tr>
+              <tr><td>Remera Boxy Fit Roja</td><td>M / Rojo</td><td>1</td><td>$18.500</td></tr>
+              <tr><td>Jean Mom Fit</td><td>38</td><td>1</td><td>$6.500</td></tr>
+            </table>
+          </div>
+          <div class="card">
+            <h2>Factura AFIP</h2>
+            <p class="muted">Factura B #0001-00000123 — emitida</p>
+            <button class="btn small">Reintentar</button>
+          </div>
+        </div>
+        <div class="preview-pane">
+          <h2>Acciones</h2>
+          <div style="display:grid;gap:8px;margin-top:10px;">
+            <button class="btn primary">Marcar como enviado</button>
+            <button class="btn">Reenviar email</button>
+            <button class="btn danger">Cancelar pedido</button>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+</body>
+</html>

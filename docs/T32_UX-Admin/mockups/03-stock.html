@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stock — Admin Eliathi Modas (rediseño)</title>
+<link rel="stylesheet" href="admin-redesign.css">
+</head>
+<body>
+  <div class="admin">
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <h2>Eliathi Modas</h2>
+        <div class="store-status">
+          <span class="status-dot"></span>
+          <span class="status-text">Tienda activa</span>
+          <a class="status-link" href="#">Ver →</a>
+        </div>
+      </div>
+      <nav>
+      <div class="nav-group">
+        <div class="nav-group-label">Panel</div>
+        <a href="01-dashboard.html">Dashboard</a>
+      </div>
+      <div class="nav-group">
+        <div class="nav-group-label">Catálogo</div>
+        <a href="02-productos.html" class="active">Productos</a>
+      </div>
+      <div class="nav-group">
+        <div class="nav-group-label">Mi tienda</div>
+        <a href="11-mi-tienda.html">Configurar tienda</a>
+      </div>
+      <div class="nav-group">
+        <div class="nav-group-label">Ventas</div>
+        <a href="05-pedidos.html">Pedidos</a>
+        <a href="08-clientes.html">Clientes</a>
+        <a href="10-finanzas.html">Finanzas</a>
+      </div>
+      <div class="nav-group">
+        <div class="nav-group-label">Configuración</div>
+        <a href="12-envios.html">Envíos</a>
+        <a href="13-ajustes.html">Ajustes</a>
+      </div>
+      </nav>
+      <div class="spacer"></div>
+      <div class="who">admin@eliathi.com<br>(owner)</div>
+      <button class="btn">Cerrar sesión</button>
+    </aside>
+    <main class="content">
+
+      <h1>Productos</h1>
+      <div class="row" style="margin-bottom:16px;">
+        <button class="btn">Todos los productos</button>
+        <button class="btn">Categorías</button>
+        <button class="btn">Colecciones</button>
+        <button class="btn">Marcas</button>
+        <button class="btn primary" style="border-radius:6px;">Stock</button>
+      </div>
+
+      <div class="dash-grid dash-grid-stats" style="margin-bottom:20px;">
+        <div class="stat-card">
+          <div class="stat-card-label">Variantes críticas</div>
+          <div class="stat-card-value">7</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-label">Umbral crítico (online + local ≤)</div>
+          <div class="row" style="margin-top:4px;">
+            <input value="20" style="width:60px;">
+            <button class="btn small">Guardar</button>
+          </div>
+        </div>
+        <label class="stat-card" style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+          <input type="checkbox">
+          <span>Solo críticos (7)</span>
+        </label>
+      </div>
+
+      <div class="table-scroll">
+        <table class="grid">
+          <tr><th>Producto</th><th>Variante</th><th>Online</th><th>Local</th><th>Total</th><th></th><th></th></tr>
+          <tr>
+            <td>Campera de cuero</td><td>L / Negro</td><td>25</td><td>0</td><td>25</td><td></td>
+            <td><button class="btn small">Mover</button> <button class="btn small">Historial</button></td>
+          </tr>
+          <tr class="critical-row">
+            <td>Jeans holgados</td><td>S / Azul</td><td>10</td><td>0</td><td>10</td>
+            <td><span class="hs-warn">crítico</span></td>
+            <td><button class="btn small">Mover</button> <button class="btn small">Historial</button></td>
+          </tr>
+          <tr>
+            <td>Remera Boxy Fit Roja</td><td>L / Verde</td><td>14</td><td>19</td><td>33</td><td></td>
+            <td><button class="btn small">Mover</button> <button class="btn small">Historial</button></td>
+          </tr>
+        </table>
+      </div>
+
+      <div class="card" style="margin-top:16px;">
+        <h2>Registrar movimiento — Jeans holgados, S / Azul</h2>
+        <div class="row">
+          <label class="field">Tipo
+            <select><option>Entrada (+)</option><option>Venta (−)</option><option>Ajuste (±)</option></select>
+          </label>
+          <label class="field">Canal
+            <select><option>Online</option><option>Local</option></select>
+          </label>
+          <label class="field">Cantidad
+            <input>
+          </label>
+          <label class="field" style="flex:1;min-width:220px;">Nota (opcional)
+            <input>
+          </label>
+          <button class="btn primary">Registrar</button>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+</body>
+</html>

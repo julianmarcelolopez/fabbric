@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mi tienda — Admin Eliathi Modas (rediseño)</title>
+<link rel="stylesheet" href="admin-redesign.css">
+</head>
+<body>
+  <div class="admin">
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <h2>Eliathi Modas</h2>
+        <div class="store-status">
+          <span class="status-dot"></span>
+          <span class="status-text">Tienda activa</span>
+          <a class="status-link" href="#">Ver →</a>
+        </div>
+      </div>
+      <nav>
+      <div class="nav-group">
+        <div class="nav-group-label">Panel</div>
+        <a href="01-dashboard.html">Dashboard</a>
+      </div>
+      <div class="nav-group">
+        <div class="nav-group-label">Catálogo</div>
+        <a href="02-productos.html">Productos</a>
+      </div>
+      <div class="nav-group">
+        <div class="nav-group-label">Mi tienda</div>
+        <a href="11-mi-tienda.html" class="active">Configurar tienda</a>
+      </div>
+      <div class="nav-group">
+        <div class="nav-group-label">Ventas</div>
+        <a href="05-pedidos.html">Pedidos</a>
+        <a href="08-clientes.html">Clientes</a>
+        <a href="10-finanzas.html">Finanzas</a>
+      </div>
+      <div class="nav-group">
+        <div class="nav-group-label">Configuración</div>
+        <a href="12-envios.html">Envíos</a>
+        <a href="13-ajustes.html">Ajustes</a>
+      </div>
+      </nav>
+      <div class="spacer"></div>
+      <div class="who">admin@eliathi.com<br>(owner)</div>
+      <button class="btn">Cerrar sesión</button>
+    </aside>
+    <main class="content">
+
+      <h1>Mi tienda</h1>
+      <div class="card">
+        <h2>Logo</h2>
+        <div class="dropzone">Arrastrá tu logo acá, o hacé clic para elegir</div>
+      </div>
+      <div class="card">
+        <h2>Identidad</h2>
+        <div class="row">
+          <label class="field">Color principal
+            <input value="#F07058">
+          </label>
+          <label class="field" style="flex:1;min-width:200px;">Tipografía
+            <select><option>Cormorant Garamond</option></select>
+          </label>
+        </div>
+      </div>
+      <div class="card">
+        <h2>Portada (hero)</h2>
+        <label class="field">Título del hero<input value="Encontrá tu manera"></label>
+      </div>
+      <div class="card">
+        <h2>Secciones visibles</h2>
+        <div class="hs-row">
+          <span class="hs-grip">⠿</span>
+          <strong>Remeras</strong>
+          <span class="spacer"></span>
+          <label style="display:flex;align-items:center;gap:4px;font-size:13px;"><input type="checkbox" checked> Visible</label>
+        </div>
+        <div class="hs-row hidden-row">
+          <span class="hs-grip">⠿</span>
+          <strong>Ofertas</strong>
+          <span class="hs-warn">sin productos</span>
+          <span class="spacer"></span>
+          <label style="display:flex;align-items:center;gap:4px;font-size:13px;"><input type="checkbox"> Visible</label>
+        </div>
+      </div>
+      <div class="card">
+        <h2>Pie de página</h2>
+        <div class="row">
+          <label class="field" style="flex:1;min-width:220px;">Instagram<input></label>
+          <label class="field" style="flex:1;min-width:220px;">WhatsApp<input></label>
+        </div>
+      </div>
+      <button class="btn primary">Guardar cambios</button>
+
+    </main>
+  </div>
+
+</body>
+</html>

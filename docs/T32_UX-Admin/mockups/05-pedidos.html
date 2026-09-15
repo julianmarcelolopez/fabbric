@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pedidos — Admin Eliathi Modas (rediseño)</title>
+<link rel="stylesheet" href="admin-redesign.css">
+</head>
+<body>
+  <div class="admin">
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <h2>Eliathi Modas</h2>
+        <div class="store-status">
+          <span class="status-dot"></span>
+          <span class="status-text">Tienda activa</span>
+          <a class="status-link" href="#">Ver →</a>
+        </div>
+      </div>
+      <nav>
+      <div class="nav-group">
+        <div class="nav-group-label">Panel</div>
+        <a href="01-dashboard.html">Dashboard</a>
+      </div>
+      <div class="nav-group">
+        <div class="nav-group-label">Catálogo</div>
+        <a href="02-productos.html">Productos</a>
+      </div>
+      <div class="nav-group">
+        <div class="nav-group-label">Mi tienda</div>
+        <a href="11-mi-tienda.html">Configurar tienda</a>
+      </div>
+      <div class="nav-group">
+        <div class="nav-group-label">Ventas</div>
+        <a href="05-pedidos.html" class="active">Pedidos</a>
+        <a href="08-clientes.html">Clientes</a>
+        <a href="10-finanzas.html">Finanzas</a>
+      </div>
+      <div class="nav-group">
+        <div class="nav-group-label">Configuración</div>
+        <a href="12-envios.html">Envíos</a>
+        <a href="13-ajustes.html">Ajustes</a>
+      </div>
+      </nav>
+      <div class="spacer"></div>
+      <div class="who">admin@eliathi.com<br>(owner)</div>
+      <button class="btn">Cerrar sesión</button>
+    </aside>
+    <main class="content">
+
+      <h1>Pedidos</h1>
+      <div class="row" style="margin-bottom:16px;justify-content:flex-end;">
+        <a class="btn primary" href="07-pedido-nuevo.html">+ Pedido manual</a>
+      </div>
+      <div class="table-scroll">
+        <table class="grid">
+          <tr><th>#</th><th>Fecha</th><th>Cliente</th><th>Tipo</th><th>Ítems</th><th>Total</th><th>Estado</th></tr>
+          <tr>
+            <td><a href="06-pedido-detalle.html">#48</a></td><td>12/08</td><td>Patricia López</td>
+            <td>Catálogo</td><td>2</td><td>$25.000</td><td><span class="badge">Enviado</span></td>
+          </tr>
+          <tr>
+            <td><a href="06-pedido-detalle.html">#47</a></td><td>11/08</td><td>Martín Silva</td>
+            <td>Mixto</td><td>1</td><td>$32.000</td><td><span class="badge">Pendiente</span></td>
+          </tr>
+          <tr>
+            <td><a href="06-pedido-detalle.html">#46</a></td><td>09/08</td><td>Rocío Fernández</td>
+            <td>Catálogo</td><td>3</td><td>$61.000</td><td><span class="badge">Entregado</span></td>
+          </tr>
+        </table>
+      </div>
+
+    </main>
+  </div>
+
+</body>
+</html>

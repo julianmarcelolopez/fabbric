@@ -6,7 +6,8 @@ import { CartDrawer } from "../cart/CartDrawer";
 import { CartProvider, useCart } from "../cart/CartContext";
 import "../catalog/catalog.css";
 import { CustomerAuthProvider, useCustomerAuth } from "./CustomerAuthContext";
-import { BagIcon, CheckIcon, FacebookIcon, InstagramIcon, SearchIcon, ShareIcon, UserIcon, WhatsAppIcon } from "./icons";
+import { SearchBar } from "./components/SearchBar";
+import { BagIcon, CheckIcon, FacebookIcon, InstagramIcon, ShareIcon, UserIcon, WhatsAppIcon } from "./icons";
 import type { PublicHomeSection, PublicStoreConfig, StoreContext } from "./types";
 
 // T20/02 — header/footer nuevos (docs/T20_UX-Store/mockups/*). Estructura y
@@ -182,6 +183,9 @@ export function StoreLayout() {
   const [state, setState] = useState<State>({ status: "loading" });
   const [shippingZones, setShippingZones] = useState<ShippingZone[] | null>(null);
   const [navCategories, setNavCategories] = useState<{ refName: string; refSlug: string }[] | null>(null);
+  // T31/03 — el buscador reemplaza el nav mientras está expandido (StoreLayout
+  // decide qué se ve, SearchBar decide su propio contenido interno).
+  const [searchOpen, setSearchOpen] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -300,22 +304,35 @@ export function StoreLayout() {
                     /novedades y /ofertas también (todas empiezan con /store/:slug). El
                     footer (más abajo) sigue mostrando las categorías reales — decisión
                     a propósito, no un olvido (ver analisis.md sección 5, decisión 4). */}
-                <nav className="store-nav">
-                  <NavLink to={`/store/${slug}`} end>
-                    Inicio
-                  </NavLink>
-                  <NavLink to={`/store/${slug}/categorias`}>Explorar</NavLink>
-                  <NavLink to={`/store/${slug}/novedades`}>Novedades</NavLink>
-                  <NavLink to={`/store/${slug}/ofertas`}>Ofertas</NavLink>
-                </nav>
+                {/* T31/03 — el buscador expandido ocupa el lugar del nav (se
+                    ocultan mutuamente); StoreLayout decide cuál de los dos se ve,
+                    SearchBar decide su propio contenido interno (icono vs. campo). */}
+                {!searchOpen && (
+                  <nav className="store-nav">
+                    <NavLink to={`/store/${slug}`} end>
+                      Inicio
+                    </NavLink>
+                    <NavLink to={`/store/${slug}/categorias`}>Explorar</NavLink>
+                    <NavLink to={`/store/${slug}/novedades`}>Novedades</NavLink>
+                    <NavLink to={`/store/${slug}/ofertas`}>Ofertas</NavLink>
+                  </nav>
+                )}
+                <SearchBar
+                  slug={slug!}
+                  open={searchOpen}
+                  onOpenChange={setSearchOpen}
+                  suggestedCategories={navCategories ?? []}
+                />
 
                 <div className="store-header-actions">
-                  {/* T20/02: decorativo por ahora — no hay buscador real en la tienda pública todavía (ver analisis.md sección 6) */}
-                  <button className="header-action-btn" title="Buscar (próximamente)" disabled>
-                    <SearchIcon />
-                  </button>
-                  <ShareButton storeName={config.storeName} />
-                  <AccountButton slug={slug!} />
+                  {/* T31/03 — mismo criterio que el mockup (buscador.html estado 02):
+                      con el buscador expandido, solo queda visible el carrito. */}
+                  {!searchOpen && (
+                    <>
+                      <ShareButton storeName={config.storeName} />
+                      <AccountButton slug={slug!} />
+                    </>
+                  )}
                   <CartButton />
                 </div>
               </div>

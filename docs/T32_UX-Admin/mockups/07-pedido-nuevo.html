@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nuevo pedido manual — Admin Eliathi Modas (rediseño)</title>
+<link rel="stylesheet" href="admin-redesign.css">
+</head>
+<body>
+  <div class="admin">
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <h2>Eliathi Modas</h2>
+        <div class="store-status">
+          <span class="status-dot"></span>
+          <span class="status-text">Tienda activa</span>
+          <a class="status-link" href="#">Ver →</a>
+        </div>
+      </div>
+      <nav>
+      <div class="nav-group">
+        <div class="nav-group-label">Panel</div>
+        <a href="01-dashboard.html">Dashboard</a>
+      </div>
+      <div class="nav-group">
+        <div class="nav-group-label">Catálogo</div>
+        <a href="02-productos.html">Productos</a>
+      </div>
+      <div class="nav-group">
+        <div class="nav-group-label">Mi tienda</div>
+        <a href="11-mi-tienda.html">Configurar tienda</a>
+      </div>
+      <div class="nav-group">
+        <div class="nav-group-label">Ventas</div>
+        <a href="05-pedidos.html" class="active">Pedidos</a>
+        <a href="08-clientes.html">Clientes</a>
+        <a href="10-finanzas.html">Finanzas</a>
+      </div>
+      <div class="nav-group">
+        <div class="nav-group-label">Configuración</div>
+        <a href="12-envios.html">Envíos</a>
+        <a href="13-ajustes.html">Ajustes</a>
+      </div>
+      </nav>
+      <div class="spacer"></div>
+      <div class="who">admin@eliathi.com<br>(owner)</div>
+      <button class="btn">Cerrar sesión</button>
+    </aside>
+    <main class="content">
+
+      <h1>Nuevo pedido manual</h1>
+      <div class="card">
+        <h2>Agregar ítem de catálogo</h2>
+        <div class="row">
+          <label class="field" style="flex:1;min-width:220px;">Producto
+            <select><option>Remera Boxy Fit Roja — M / Rojo</option></select>
+          </label>
+          <label class="field">Cantidad
+            <input value="1">
+          </label>
+          <button class="btn">+ Agregar</button>
+        </div>
+      </div>
+      <div class="card">
+        <h2>Agregar ítem personalizado (bespoke)</h2>
+        <div class="row">
+          <label class="field" style="flex:1;min-width:220px;">Descripción
+            <input placeholder="Ej: Arreglo a medida">
+          </label>
+          <label class="field">Precio
+            <input>
+          </label>
+          <button class="btn">+ Agregar</button>
+        </div>
+      </div>
+      <div class="card">
+        <h2>Ítems del pedido</h2>
+        <table class="grid">
+          <tr><th>Ítem</th><th>Cant.</th><th>Precio</th></tr>
+          <tr><td>Remera Boxy Fit Roja — M / Rojo</td><td>1</td><td>$18.500</td></tr>
+        </table>
+      </div>
+      <button class="btn primary">Crear pedido</button>
+
+    </main>
+  </div>
+
+</body>
+</html>

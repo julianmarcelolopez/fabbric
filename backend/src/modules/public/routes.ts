@@ -1,4 +1,4 @@
-import { and, asc, count, desc, eq, exists, gt, gte, inArray, isNotNull, lte, ne } from "drizzle-orm";
+import { and, asc, count, desc, eq, exists, gt, gte, ilike, inArray, isNotNull, lte, ne } from "drizzle-orm";
 import type { FastifyInstance } from "fastify";
 import type { ZodTypeProvider } from "fastify-type-provider-zod";
 import { z } from "zod";
@@ -41,6 +41,16 @@ const productListQuery = pageQuery.extend({
   sort: z.enum(["precio_asc", "precio_desc", "nuevos"]).optional(),
 });
 type ProductListQuery = z.infer<typeof productListQuery>;
+
+// T31/01 — querystring propio del buscador: sin talle/color/marca/precio
+// (fuera de alcance de esta v1, ver docs/T31_Buscador/analisis.md sección
+// 6) — un querystring reducido en vez de reusar productListQuery tal cual,
+// para que el schema no prometa filtros que este endpoint no acepta.
+const searchQuery = pageQuery.extend({
+  q: z.string().min(1),
+  sort: z.enum(["precio_asc", "precio_desc", "nuevos"]).optional(),
+});
+
 const tag = { tags: ["público"] };
 
 // T19/10: techo de home_sections (8 por sección) — el link "Ver todos" de una
@@ -902,6 +912,82 @@ export async function publicRoutes(fastify: FastifyInstance) {
         .orderBy(asc(brands.name));
 
       return rows;
+    }
+  );
+
+  // T31/01 — búsqueda por nombre, parcial y case-insensitive. Sin filtros
+  // combinados (talle/color/marca/precio) a propósito — fuera de alcance de
+  // esta v1 (ver docs/T31_Buscador/analisis.md sección 6) — por eso no reusa
+  // extraFilterConditions() ni completa availableFilters.marcas.
+  app.get(
+    "/public/:slug/search",
+    {
+      schema: {
+        ...tag,
+        summary: "Buscar productos por nombre (coincidencia parcial, case-insensitive)",
+        params: slugParam,
+        querystring: searchQuery,
+      },
+    },
+    async (request) => {
+      const config = await resolveStore(request.params.slug);
+      const orgId = config.orgId;
+      const { q, page, sort } = request.query;
+
+      const scopeFilter = and(
+        eq(products.orgId, orgId),
+        eq(products.visibleInCatalog, true),
+        ne(products.status, "paused"),
+        ilike(products.name, `%${q}%`)
+      );
+
+      const [[{ totalCount }], rows] = await Promise.all([
+        db.select({ totalCount: count() }).from(products).where(scopeFilter),
+        db
+          .select({
+            id: products.id,
+            name: products.name,
+            price: products.price,
+            compareAtPrice: products.compareAtPrice,
+            brandName: brands.name,
+            brandSlug: brands.slug,
+          })
+          .from(products)
+          .leftJoin(brands, eq(products.brandId, brands.id))
+          .where(scopeFilter)
+          .orderBy(...resolveSort(sort))
+          .limit(CATEGORY_PAGE_SIZE)
+          .offset((page - 1) * CATEGORY_PAGE_SIZE),
+      ]);
+
+      const productIds = rows.map((p) => p.id);
+      const firstImages = productIds.length
+        ? await db
+            .select({ productId: productImages.productId, url: productImages.url })
+            .from(productImages)
+            .where(inArray(productImages.productId, productIds))
+            .orderBy(asc(productImages.sortOrder))
+        : [];
+      const imageOf = (id: string) => firstImages.find((i) => i.productId === id)?.url ?? null;
+
+      return {
+        query: q,
+        products: rows.map((p) => ({
+          id: p.id,
+          name: p.name,
+          price: p.price,
+          compareAtPrice: p.compareAtPrice,
+          brand: brandObj(p.brandName, p.brandSlug),
+          imageUrl: imageOf(p.id),
+        })),
+        page,
+        pageSize: CATEGORY_PAGE_SIZE,
+        totalCount,
+        totalPages: Math.max(1, Math.ceil(totalCount / CATEGORY_PAGE_SIZE)),
+        // Sin marcas: este endpoint no acepta filtro de marca (fuera de
+        // alcance) — mismo criterio que la página de una marca puntual.
+        availableFilters: { talles: [] as string[], colores: [] as string[] },
+      };
     }
   );
 }

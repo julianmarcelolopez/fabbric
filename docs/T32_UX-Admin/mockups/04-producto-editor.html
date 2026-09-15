@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Producto — Admin Eliathi Modas (rediseño)</title>
+<link rel="stylesheet" href="admin-redesign.css">
+</head>
+<body>
+  <div class="admin">
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <h2>Eliathi Modas</h2>
+        <div class="store-status">
+          <span class="status-dot"></span>
+          <span class="status-text">Tienda activa</span>
+          <a class="status-link" href="#">Ver →</a>
+        </div>
+      </div>
+      <nav>
+      <div class="nav-group">
+        <div class="nav-group-label">Panel</div>
+        <a href="01-dashboard.html">Dashboard</a>
+      </div>
+      <div class="nav-group">
+        <div class="nav-group-label">Catálogo</div>
+        <a href="02-productos.html" class="active">Productos</a>
+      </div>
+      <div class="nav-group">
+        <div class="nav-group-label">Mi tienda</div>
+        <a href="11-mi-tienda.html">Configurar tienda</a>
+      </div>
+      <div class="nav-group">
+        <div class="nav-group-label">Ventas</div>
+        <a href="05-pedidos.html">Pedidos</a>
+        <a href="08-clientes.html">Clientes</a>
+        <a href="10-finanzas.html">Finanzas</a>
+      </div>
+      <div class="nav-group">
+        <div class="nav-group-label">Configuración</div>
+        <a href="12-envios.html">Envíos</a>
+        <a href="13-ajustes.html">Ajustes</a>
+      </div>
+      </nav>
+      <div class="spacer"></div>
+      <div class="who">admin@eliathi.com<br>(owner)</div>
+      <button class="btn">Cerrar sesión</button>
+    </aside>
+    <main class="content">
+
+      <h1>Producto</h1>
+      <div class="editor-split">
+        <div>
+          <div class="card">
+            <h2>Datos del producto</h2>
+            <div class="row">
+              <label class="field" style="flex:1;min-width:220px;">Nombre
+                <input value="Remera Boxy Fit Roja">
+              </label>
+              <label class="field">Precio
+                <input value="18500">
+              </label>
+            </div>
+            <label class="field" style="margin-top:10px;">Descripción
+              <textarea rows="3">Remera oversize boxy fit, algodón peinado 24/1.</textarea>
+            </label>
+          </div>
+
+          <div class="card">
+            <h2>Variantes (talle / color)</h2>
+            <table class="grid">
+              <tr><th>Talle</th><th>Color</th><th>SKU</th><th></th></tr>
+              <tr><td>M</td><td>Rojo</td><td>RBF-M-ROJ</td><td><button class="btn small danger">Quitar</button></td></tr>
+              <tr><td>L</td><td>Rojo</td><td>RBF-L-ROJ</td><td><button class="btn small danger">Quitar</button></td></tr>
+            </table>
+            <button class="btn small" style="margin-top:10px;">+ Agregar variante</button>
+          </div>
+
+          <div class="card">
+            <h2>Fotos</h2>
+            <div class="dropzone">Arrastrá imágenes acá, o hacé clic para elegir</div>
+          </div>
+
+          <button class="btn primary">Guardar producto</button>
+        </div>
+
+        <div class="preview-pane">
+          <h2>Vista previa</h2>
+          <p class="muted">Así se ve en la tienda pública</p>
+          <div class="thumb" style="width:100%;height:220px;border-radius:8px;"></div>
+          <p style="margin:12px 0 4px;font-weight:600;">Remera Boxy Fit Roja</p>
+          <p style="margin:0;color:#F07058;font-weight:600;">$18.500</p>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+</body>
+</html>

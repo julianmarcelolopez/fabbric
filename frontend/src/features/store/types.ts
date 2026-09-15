@@ -135,3 +135,10 @@ export type PublicProductListing = {
   totalPages: number;
   availableFilters: PublicAvailableFilters;
 };
+
+// T31/02 — mismo contrato que PublicProductListing, con `query` agregado
+// (el término buscado, tal cual lo devuelve el backend) para no depender de
+// que el frontend repita a mano lo que ya mandó en `?q=`.
+export type PublicSearchResults = PublicProductListing & {
+  query: string;
+};
