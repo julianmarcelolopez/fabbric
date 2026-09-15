@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { ApiError, apiJson } from "../../../lib/api";
 import { formatPrice } from "../../../lib/money";
+import { Loading } from "../components/Loading";
 import {
   ADMIN_ORDER_STATUS,
   ADMIN_ORDER_TYPE_LABELS,
@@ -36,7 +37,7 @@ export function CustomerDetailPage() {
       </>
     );
   }
-  if (!customer) return <p className="muted">Cargando…</p>;
+  if (!customer) return <Loading />;
 
   return (
     <>

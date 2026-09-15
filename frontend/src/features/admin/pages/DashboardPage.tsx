@@ -3,6 +3,7 @@ import { Link, useOutletContext } from "react-router-dom";
 import { ApiError, apiJson } from "../../../lib/api";
 import { formatPrice } from "../../../lib/money";
 import { DashboardCustomizable, type DashboardCardDef } from "../components/DashboardCustomizable";
+import { Loading } from "../components/Loading";
 import {
   ADMIN_ORDER_STATUS,
   MOVEMENT_TYPE_UI,
@@ -112,7 +113,7 @@ export function DashboardPage() {
   }
 
   if (error) return <p className="error">{error}</p>;
-  if (!overview) return <p className="muted">Cargando…</p>;
+  if (!overview) return <Loading />;
 
   const { stats, paneles } = overview;
 

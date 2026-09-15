@@ -4,6 +4,7 @@ import { ApiError, apiJson } from "../../../lib/api";
 import { centsToPesosInput, pesosToCents } from "../../../lib/money";
 import { ProductDetailView } from "../../catalog/ProductDetailView";
 import { ImageDropzone } from "../components/ImageDropzone";
+import { Loading } from "../components/Loading";
 import { VariantEditor } from "../components/VariantEditor";
 import {
   STATUS_LABELS,
@@ -224,7 +225,7 @@ export function ProductEditPage() {
       </>
     );
   }
-  if (!product || !form) return <p className="muted">Cargando…</p>;
+  if (!product || !form) return <Loading />;
 
   // Preview en vivo: alimentado por el ESTADO DEL FORMULARIO, no por la API —
   // cada tecla se refleja al instante, sin guardar primero (patrón Bordart).

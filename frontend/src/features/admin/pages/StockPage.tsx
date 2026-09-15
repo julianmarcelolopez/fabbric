@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { ApiError, apiJson } from "../../../lib/api";
+import { Loading } from "../components/Loading";
 import {
   MOVEMENT_TYPE_LABELS,
   type StockItem,
@@ -90,7 +91,7 @@ function History({ variantId, onError }: { variantId: string; onError: (m: strin
       .catch((err) => onError(err instanceof ApiError ? err.message : String(err)));
   }, [variantId, onError]);
 
-  if (movements === null) return <p className="muted">Cargando historial…</p>;
+  if (movements === null) return <Loading label="Cargando historial…" />;
   if (movements.length === 0) return <p className="muted">Sin movimientos todavía (el stock inicial del alta no genera movimiento).</p>;
   return (
     <div className="table-scroll" style={{ margin: "8px 0" }}>
@@ -189,7 +190,7 @@ export function StockPage({ embedded }: Props = {}) {
       {error && <p className="error">{error}</p>}
 
       {data === null ? (
-        <p className="muted">Cargando…</p>
+        <Loading />
       ) : items.length === 0 ? (
         <p className="muted">{onlyCritical ? "Sin variantes críticas 🎉" : "No hay variantes — creá productos con variantes primero."}</p>
       ) : (

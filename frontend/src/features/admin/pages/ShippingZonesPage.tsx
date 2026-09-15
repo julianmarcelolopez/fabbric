@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { ApiError, apiJson } from "../../../lib/api";
 import { centsToPesosInput, formatPrice, pesosToCents } from "../../../lib/money";
+import { Loading } from "../components/Loading";
 import type { ShippingZoneRow } from "../types";
 
 type Editing = { id: string; name: string; cost: string; freeFrom: string };
@@ -94,7 +95,7 @@ export function ShippingZonesPage() {
       {error && <p className="error">{error}</p>}
 
       {zones === null ? (
-        <p className="muted">Cargando…</p>
+        <Loading />
       ) : zones.length === 0 ? (
         <p className="muted">Sin zonas todavía — el checkout necesita al menos una activa.</p>
       ) : (

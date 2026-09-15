@@ -2,6 +2,7 @@ import { useEffect, useState, type FormEvent } from "react";
 import { useOutletContext } from "react-router-dom";
 import { ApiError, apiJson } from "../../../lib/api";
 import { supabase } from "../../../lib/supabaseClient";
+import { Loading } from "../components/Loading";
 import type { CatalogConfig, Me } from "../types";
 
 type Tab = "usuario" | "integraciones";
@@ -134,7 +135,7 @@ function IntegracionesTab() {
     return (
       <div className="card">
         <h2>Integraciones</h2>
-        {loadError ? <p className="error">{loadError}</p> : <p className="muted">Cargando…</p>}
+        {loadError ? <p className="error">{loadError}</p> : <Loading />}
       </div>
     );
   }
@@ -209,15 +210,15 @@ export function SettingsPage() {
     <>
       <h1>Configuración</h1>
 
-      <div className="row" style={{ marginBottom: 16 }}>
+      <div className="admin-tabs">
         <button
-          className={`btn${tab === "usuario" ? " primary" : ""}`}
+          className={`admin-tab${tab === "usuario" ? " active" : ""}`}
           onClick={() => setTab("usuario")}
         >
           Usuario
         </button>
         <button
-          className={`btn${tab === "integraciones" ? " primary" : ""}`}
+          className={`admin-tab${tab === "integraciones" ? " active" : ""}`}
           onClick={() => setTab("integraciones")}
         >
           Integraciones

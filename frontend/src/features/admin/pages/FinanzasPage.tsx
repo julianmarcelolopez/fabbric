@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { ApiError, apiJson } from "../../../lib/api";
 import { centsToPesosInput, formatPrice, pesosToCents } from "../../../lib/money";
+import { Loading } from "../components/Loading";
 import {
   MOVEMENT_TYPE_UI,
   SUGGESTED_CATEGORIES,
@@ -155,7 +156,7 @@ export function FinanzasPage() {
       <div className="card">
         <h2>Carteras</h2>
         {wallets === null ? (
-          <p className="muted">Cargando…</p>
+          <Loading />
         ) : (
           <>
             {wallets.length === 0 && (
@@ -274,35 +275,41 @@ export function FinanzasPage() {
       </div>
 
       <div className="card">
-        <div className="row" style={{ alignItems: "flex-end", justifyContent: "space-between" }}>
-          <label className="field">
-            Mes
-            <input type="month" value={month} onChange={(e) => e.target.value && setMonth(e.target.value)} />
-          </label>
-          {summary && (
-            <div className="row" style={{ gap: 18, flexWrap: "wrap" }}>
-              <span>
-                Ingresos <strong style={{ color: MOVEMENT_TYPE_UI.income.color }}>{formatPrice(summary.ingresos)}</strong>
-              </span>
-              <span>
-                Egresos <strong style={{ color: MOVEMENT_TYPE_UI.expense.color }}>{formatPrice(summary.egresos)}</strong>
-              </span>
-              <span>
-                Balance <strong>{formatPrice(summary.balance)}</strong>
-              </span>
-              <span title="Σ (precio − costo) × cantidad de los pedidos cobrados en el mes">
-                Ganancia bruta <strong>{formatPrice(summary.gananciaBruta)}</strong>
-              </span>
-              <span title="Ganancia bruta − egresos del mes">
-                Ganancia neta{" "}
-                <strong style={{ color: summary.gananciaNeta >= 0 ? MOVEMENT_TYPE_UI.income.color : MOVEMENT_TYPE_UI.expense.color }}>
-                  {formatPrice(summary.gananciaNeta)}
-                </strong>
-              </span>
-            </div>
-          )}
-        </div>
+        <label className="field">
+          Mes
+          <input type="month" value={month} onChange={(e) => e.target.value && setMonth(e.target.value)} />
+        </label>
       </div>
+
+      {summary && (
+        <div className="dash-grid dash-grid-stats" style={{ marginBottom: 16 }}>
+          <div className="stat-card">
+            <div className="stat-card-label">Ingresos</div>
+            <div className="stat-card-value" style={{ color: MOVEMENT_TYPE_UI.income.color }}>{formatPrice(summary.ingresos)}</div>
+          </div>
+          <div className="stat-card">
+            <div className="stat-card-label">Egresos</div>
+            <div className="stat-card-value" style={{ color: MOVEMENT_TYPE_UI.expense.color }}>{formatPrice(summary.egresos)}</div>
+          </div>
+          <div className="stat-card">
+            <div className="stat-card-label">Balance</div>
+            <div className="stat-card-value">{formatPrice(summary.balance)}</div>
+          </div>
+          <div className="stat-card" title="Σ (precio − costo) × cantidad de los pedidos cobrados en el mes">
+            <div className="stat-card-label">Ganancia bruta</div>
+            <div className="stat-card-value">{formatPrice(summary.gananciaBruta)}</div>
+          </div>
+          <div className="stat-card" title="Ganancia bruta − egresos del mes">
+            <div className="stat-card-label">Ganancia neta</div>
+            <div
+              className="stat-card-value"
+              style={{ color: summary.gananciaNeta >= 0 ? MOVEMENT_TYPE_UI.income.color : MOVEMENT_TYPE_UI.expense.color }}
+            >
+              {formatPrice(summary.gananciaNeta)}
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="card">
         <h2>Nuevo movimiento</h2>
@@ -380,7 +387,7 @@ export function FinanzasPage() {
       </div>
 
       {movements === null ? (
-        <p className="muted">Cargando…</p>
+        <Loading />
       ) : movements.length === 0 ? (
         <p className="muted">Sin movimientos en este mes.</p>
       ) : (

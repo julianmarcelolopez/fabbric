@@ -3,6 +3,7 @@ import { ApiError, apiJson, apiUpload } from "../../../lib/api";
 import { HomeSectionsRenderer, type HsrSection } from "../../catalog/HomeSectionsRenderer";
 import { AnnouncementBar } from "../../store/StoreLayout";
 import { BagIcon, FacebookIcon, InstagramIcon, SearchIcon, UserIcon, WhatsAppIcon } from "../../store/icons";
+import { Loading } from "../components/Loading";
 import type { CatalogConfig, HomeSectionItem, ProductListItem, Taxonomy } from "../types";
 
 type ConfigForm = {
@@ -338,7 +339,7 @@ export function MyStorePage() {
     return (
       <>
         <h1>Mi tienda</h1>
-        {error ? <p className="error">{error}</p> : <p className="muted">Cargando…</p>}
+        {error ? <p className="error">{error}</p> : <Loading />}
       </>
     );
   }

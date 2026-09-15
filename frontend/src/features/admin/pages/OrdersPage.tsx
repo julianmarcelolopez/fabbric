@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { ApiError, apiJson } from "../../../lib/api";
 import { formatPrice } from "../../../lib/money";
+import { Loading } from "../components/Loading";
 import {
   ADMIN_ORDER_STATUS,
   ADMIN_ORDER_TYPE_LABELS,
@@ -79,7 +80,7 @@ export function OrdersPage() {
       {error && <p className="error">{error}</p>}
 
       {rows === null ? (
-        <p className="muted">Cargando…</p>
+        <Loading />
       ) : rows.length === 0 ? (
         <p className="muted">Sin pedidos con estos filtros.</p>
       ) : (

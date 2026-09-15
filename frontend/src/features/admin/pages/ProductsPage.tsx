@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { ApiError, apiJson } from "../../../lib/api";
 import { formatPrice, pesosToCents } from "../../../lib/money";
+import { Loading } from "../components/Loading";
 import { TaxonomyManager } from "../components/TaxonomyManager";
 import { STATUS_LABELS, type ProductListItem, type ProductStatus, type Taxonomy } from "../types";
 import { StockPage } from "./StockPage";
@@ -123,7 +124,7 @@ function ProductsList() {
       {error && <p className="error">{error}</p>}
 
       {products === null ? (
-        <p className="muted">Cargando…</p>
+        <Loading />
       ) : products.length === 0 ? (
         <p className="muted">Todavía no hay productos.</p>
       ) : (
@@ -229,11 +230,11 @@ export function ProductsPage() {
     <>
       <h1>Productos</h1>
 
-      <div className="row" style={{ marginBottom: 16 }}>
+      <div className="admin-tabs">
         {TABS.map((t) => (
           <button
             key={t.key}
-            className={`btn${tab === t.key ? " primary" : ""}`}
+            className={`admin-tab${tab === t.key ? " active" : ""}`}
             onClick={() => setTab(t.key)}
           >
             {t.label}

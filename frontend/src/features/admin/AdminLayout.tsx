@@ -3,6 +3,7 @@ import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { ApiError, apiJson } from "../../lib/api";
 import { supabase } from "../../lib/supabaseClient";
 import "./admin.css";
+import { Loading } from "./components/Loading";
 import type { CatalogConfig, Me } from "./types";
 
 type State =
@@ -89,11 +90,11 @@ export function AdminLayout() {
     navigate("/admin/login", { replace: true });
   }
 
-  if (state.status === "loading") return <div className="content">Cargando…</div>;
+  if (state.status === "loading") return <div className="admin-content"><Loading /></div>;
 
   if (state.status === "no-access") {
     return (
-      <main className="content">
+      <main className="admin-content">
         <h1>Sin acceso</h1>
         <p>Tu cuenta no tiene permisos de administrador en ninguna tienda.</p>
         <button className="btn" onClick={logout}>Cerrar sesión</button>
@@ -103,7 +104,7 @@ export function AdminLayout() {
 
   if (state.status === "error") {
     return (
-      <main className="content">
+      <main className="admin-content">
         <h1>Error</h1>
         <p>{state.message}</p>
         <button className="btn" onClick={logout}>Cerrar sesión</button>
@@ -163,7 +164,7 @@ export function AdminLayout() {
         </div>
         <button className="btn" onClick={logout}>Cerrar sesión</button>
       </aside>
-      <main className="content">
+      <main className="admin-content">
         <Outlet context={me} />
       </main>
     </div>

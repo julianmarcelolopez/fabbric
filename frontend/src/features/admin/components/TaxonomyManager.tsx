@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 import { ApiError, apiJson, apiUpload } from "../../../lib/api";
 import { slugify } from "../../../lib/slug";
+import { Loading } from "./Loading";
 import type { Taxonomy } from "../types";
 
 type Props = {
@@ -109,7 +110,7 @@ export function TaxonomyManager({ title, endpoint, noun, hideTitle }: Props) {
       {error && <p className="error">{error}</p>}
 
       {items === null ? (
-        <p className="muted">Cargando…</p>
+        <Loading />
       ) : items.length === 0 ? (
         <p className="muted">Todavía no hay {noun}s.</p>
       ) : (

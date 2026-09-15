@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { ApiError, apiJson } from "../../../lib/api";
 import { formatPrice } from "../../../lib/money";
+import { Loading } from "../components/Loading";
 import type { AdminCustomerRow } from "../types";
 
 export function CustomersPage() {
@@ -50,7 +51,7 @@ export function CustomersPage() {
       {error && <p className="error">{error}</p>}
 
       {rows === null ? (
-        <p className="muted">Cargando…</p>
+        <Loading />
       ) : rows.length === 0 ? (
         <p className="muted">
           {search.trim() ? "Sin resultados para la búsqueda." : "Todavía no hay clientes (se crean al comprar en la tienda o desde un pedido manual)."}

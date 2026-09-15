@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { ApiError, apiDownload, apiJson } from "../../../lib/api";
 import { formatPrice } from "../../../lib/money";
+import { Loading } from "../components/Loading";
 import {
   ADMIN_ORDER_STATUS,
   ADMIN_ORDER_TYPE_LABELS,
@@ -147,7 +148,7 @@ export function OrderAdminDetailPage() {
       </>
     );
   }
-  if (!order) return <p className="muted">Cargando…</p>;
+  if (!order) return <Loading />;
 
   const st = ADMIN_ORDER_STATUS[order.status];
   return (
