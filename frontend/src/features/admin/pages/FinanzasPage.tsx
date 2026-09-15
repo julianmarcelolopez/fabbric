@@ -202,7 +202,7 @@ export function FinanzasPage() {
                           width: 10,
                           height: 10,
                           borderRadius: "50%",
-                          background: wallet.color ?? "#9ca3af",
+                          background: wallet.color ?? "#8A8278",
                           marginRight: 8,
                         }}
                       />
@@ -219,7 +219,7 @@ export function FinanzasPage() {
                         className="btn"
                         disabled={busy}
                         onClick={() =>
-                          setEditing({ id: wallet.id, name: wallet.name, color: wallet.color ?? "#9ca3af" })
+                          setEditing({ id: wallet.id, name: wallet.name, color: wallet.color ?? "#8A8278" })
                         }
                       >
                         Editar
@@ -410,7 +410,7 @@ export function FinanzasPage() {
                         width: 8,
                         height: 8,
                         borderRadius: "50%",
-                        background: mov.walletColor ?? "#9ca3af",
+                        background: mov.walletColor ?? "#8A8278",
                         marginRight: 6,
                       }}
                     />

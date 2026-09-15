@@ -14,7 +14,7 @@ detalle tipográfico opcional, por último la verificación de punta a punta.
 | # | Tarea | Depende de | Estado |
 |---|---|---|---|
 | 1 | [01-paleta-base](tareas/01-paleta-base/01-paleta-base.md) — pisar `admin.css` con la paleta nueva | nada | ✅ Hecha |
-| 2 | [02-limpieza-inline](tareas/02-limpieza-inline/02-limpieza-inline.md) — sacar colores viejos hardcodeados en 6 archivos | 1 | ⬜ Pendiente |
+| 2 | [02-limpieza-inline](tareas/02-limpieza-inline/02-limpieza-inline.md) — sacar colores viejos hardcodeados en 6 archivos | 1 | ✅ Hecha |
 | 3 | [03-dashboard-charts](tareas/03-dashboard-charts/03-dashboard-charts.md) — resolver el panel de 2 series del Dashboard | 1 | ⬜ Pendiente |
 | 4 | [04-stock-structural](tareas/04-stock-structural/04-stock-structural.md) — `StockPage`: stat-cards + mover "Registrar movimiento" a un `.card` | 1 | ⬜ Pendiente |
 | 5 | [05-finanzas-structural](tareas/05-finanzas-structural/05-finanzas-structural.md) — `FinanzasPage`: resumen del mes como 5 stat-cards | 1 | ⬜ Pendiente |
@@ -61,9 +61,11 @@ el que es un dato de usuario (sección 4c).
   (el blanco no cambia, es el mismo `#fff` de siempre; solo el borde).
 - `TaxonomyManager.tsx:259` — `#e5e7eb` → `#E8E4DF`.
 - `StockPage.tsx:246` — `#f9fafb` → `#F8F7F5`.
-- `FinanzasPage.tsx:205,222,413` — `#9ca3af` → `#8A8278` (o, mejor, usar la
-  clase `.muted` si el elemento lo permite, en vez de repetir el hex una
-  cuarta vez).
+- `FinanzasPage.tsx:205,222,413` — `#9ca3af` → `#8A8278`. Corrección: no es
+  texto muted, es el color por defecto del punto de una "cartera" sin
+  color asignado (`wallet.color ?? "#9ca3af"` / `mov.walletColor ??
+  "#9ca3af"`) — se actualiza igual, mismo criterio de "no dejar grises
+  viejos", pero no toca `.muted` ni ningún texto.
 
 **Criterio de aceptación**: `grep -rnoE "#[0-9a-fA-F]{3,6}"` sobre
 `admin/pages/` y `admin/components/` ya no devuelve ningún valor de la

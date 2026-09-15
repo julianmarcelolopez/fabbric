@@ -256,7 +256,7 @@ function ImageCell({
         <img
           src={item.imageUrl}
           alt=""
-          style={{ width: 40, height: 40, objectFit: "cover", borderRadius: 6, border: "1px solid #e5e7eb" }}
+          style={{ width: 40, height: 40, objectFit: "cover", borderRadius: 6, border: "1px solid #E8E4DF" }}
         />
       ) : (
         <span className="muted" style={{ fontSize: 12 }}>

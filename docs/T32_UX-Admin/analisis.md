@@ -69,7 +69,7 @@ clase. Corrí un grep más amplio (`#[0-9a-fA-F]{3,6}` sobre
 | `MyStorePage.tsx:765` | `#e5e7eb` | Idem. |
 | `TaxonomyManager.tsx:259` | `#e5e7eb` | Idem, en un componente compartido (no una page). |
 | `StockPage.tsx:246` | `#f9fafb` | Fondo de la fila expandida (`<td colSpan={7} style={{background:"#f9fafb"}}>`) — es el gris viejo de `.grid th`, no el fondo de página. |
-| `FinanzasPage.tsx:205,222,413` | `#9ca3af` | Texto muted viejo, 3 veces, en vez de usar `.muted` o el token nuevo. |
+| `FinanzasPage.tsx:205,222,413` | `#9ca3af` | **Corrección tras implementar la Tarea 2**: no es texto muted (esa era mi lectura inicial, incorrecta) — es el color por defecto del punto de color de una "cartera" (`wallet.color ?? "#9ca3af"`, `mov.walletColor ?? "#9ca3af"`) cuando no tiene uno asignado. Mismo patrón que `#fcc424` (sección 4c), pero acá el valor es un gris neutro genérico, no una sugerencia de marca — se actualiza a `#8A8278` para que el "sin color" de una cartera nueva no se vea como un resabio de la paleta vieja, sin que eso implique tocar ningún dato. |
 
 Estos 8 hits no aparecen en el grep de la spec porque son grises/violetas
 viejos, no el azul `#2563eb`/`#111827` — pero son el mismo tipo de

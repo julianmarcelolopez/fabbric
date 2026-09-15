@@ -243,7 +243,7 @@ export function StockPage({ embedded }: Props = {}) {
                 </tr>
                 {expanded?.variantId === item.variantId && (
                   <tr key={`${item.variantId}-panel`}>
-                    <td colSpan={7} style={{ background: "#f9fafb" }}>
+                    <td colSpan={7} style={{ background: "#F8F7F5" }}>
                       {expanded.mode === "move" ? (
                         <MoveForm
                           item={item}

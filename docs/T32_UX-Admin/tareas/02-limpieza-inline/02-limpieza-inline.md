@@ -1,6 +1,7 @@
 # Tarea 2 — Limpieza: colores viejos hardcodeados inline
 
-**Estado:** ⬜ Pendiente
+**Estado:** ✅ Hecha — verificada en vivo por el usuario en `/admin/store` y
+`/admin/finance`.
 
 **Depende de:** Tarea 1 (necesita el fondo/paleta nueva para poder ver las
 fugas por contraste).
@@ -16,35 +17,44 @@ archivos sueltos.
 
 ## Pasos
 
-- [ ] `MyStorePage.tsx:404,483,577,765` — `#e5e7eb` → `#E8E4DF` (el `#fff`
+- [x] `MyStorePage.tsx:404,483,577,765` — `#e5e7eb` → `#E8E4DF` (el `#fff`
       que acompaña a algunos de estos no cambia).
-- [ ] `TaxonomyManager.tsx:259` — `#e5e7eb` → `#E8E4DF`.
-- [ ] `StockPage.tsx:246` — `#f9fafb` → `#F8F7F5` (si la Tarea 4 ya movió
-      este bloque fuera de la fila expandible, este paso puede no aplicar
-      — verificar orden de ejecución).
-- [ ] `FinanzasPage.tsx:205,222,413` — `#9ca3af` → `#8A8278`, o reemplazar
-      por la clase `.muted` donde el elemento lo permita en vez de repetir
-      el hex una cuarta vez.
-- [ ] `DashboardPage.tsx:216` — se resuelve en la Tarea 3 (es parte del
-      panel de 2 series, requiere una decisión de color, no un reemplazo
-      mecánico) — no tocar acá para evitar pisarse con esa tarea.
-- [ ] **No tocar** (semánticos, confirmados en `analisis.md` sección 4b):
+- [x] `TaxonomyManager.tsx:259` — `#e5e7eb` → `#E8E4DF`.
+- [x] `StockPage.tsx:246` — `#f9fafb` → `#F8F7F5`.
+- [x] `FinanzasPage.tsx:205,222,413` — `#9ca3af` → `#8A8278`. **Corrección
+      sobre el plan original**: no es texto muted, son los 3 lugares donde
+      `wallet.color ?? "#9ca3af"` / `mov.walletColor ?? "#9ca3af"` definen
+      el color del punto de una "cartera" sin color propio asignado —
+      mismo criterio de limpieza igual, solo se corrige la descripción.
+- [x] `DashboardPage.tsx:216` — se deja intacto, se resuelve en la Tarea 3.
+- [x] **No se tocó** (semánticos, confirmados en `analisis.md` sección 4b):
       `StockPage.tsx:107`, `FinanzasPage.tsx` vía `MOVEMENT_TYPE_UI`
       (`types.ts:325-326`), `ProductsPage.tsx:192`,
       `ProductEditPage.tsx:244`.
-- [ ] **No tocar** (fuera de alcance, dato de usuario):
+- [x] **No se tocó** (fuera de alcance, dato de usuario):
       `FinanzasPage.tsx:40` (`#fcc424`, default del color picker de una
       cartera nueva).
 
+## Cómo se verificó
+
+`grep -rnoE "#[0-9a-fA-F]{3,6}"` sobre `admin/pages/` y `admin/components/`
+tras el cambio: el único hit de la paleta vieja que queda es
+`DashboardPage.tsx:216` (`#2563eb`), diferido a la Tarea 3 a propósito.
+`npx tsc --noEmit` limpio. Verificación visual en vivo por el usuario:
+`/admin/store` (bordes de logo/hero/banner, sin diferencia visible ya que
+el cambio es sutil, sin nada roto) y `/admin/finance` (carteras "Tarjeta" y
+"Transferencia", sin color propio asignado, muestran el punto gris nuevo
+`#8A8278` en vez del gris viejo — consistente con la paleta).
+
 ## Definition of Done
 
-- [ ] `grep -rnoE "#[0-9a-fA-F]{3,6}" frontend/src/features/admin/pages/
+- [x] `grep -rnoE "#[0-9a-fA-F]{3,6}" frontend/src/features/admin/pages/
       frontend/src/features/admin/components/` no devuelve ningún valor de
       la paleta vieja (`#e5e7eb`, `#9ca3af`, `#f9fafb`, `#2563eb`,
-      `#1d4ed8`, `#111827`, `#1f2937`).
-- [ ] Los hits que queden son solo los semánticos listados arriba y el
+      `#1d4ed8`, `#111827`, `#1f2937`) salvo el diferido de la Tarea 3.
+- [x] Los hits que quedan son solo los semánticos listados arriba y el
       `#fcc424` de usuario.
-- [ ] `npx tsc --noEmit` limpio en `frontend/`.
+- [x] `npx tsc --noEmit` limpio en `frontend/`.
 
 ## Dependencias
 

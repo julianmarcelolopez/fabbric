@@ -401,7 +401,7 @@ export function MyStorePage() {
               <h2>Logo</h2>
               <div className="row" style={{ alignItems: "center" }}>
                 {config.logoUrl ? (
-                  <img src={config.logoUrl} alt="logo" style={{ width: 72, height: 72, objectFit: "contain", border: "1px solid #e5e7eb", borderRadius: 8, background: "#fff" }} />
+                  <img src={config.logoUrl} alt="logo" style={{ width: 72, height: 72, objectFit: "contain", border: "1px solid #E8E4DF", borderRadius: 8, background: "#fff" }} />
                 ) : (
                   <span className="muted">Sin logo todavía</span>
                 )}
@@ -480,7 +480,7 @@ export function MyStorePage() {
               </p>
               <div className="row" style={{ alignItems: "center" }}>
                 {config.heroImageUrl ? (
-                  <img src={config.heroImageUrl} alt="hero" style={{ width: 160, height: 60, objectFit: "cover", border: "1px solid #e5e7eb", borderRadius: 8, background: "#fff" }} />
+                  <img src={config.heroImageUrl} alt="hero" style={{ width: 160, height: 60, objectFit: "cover", border: "1px solid #E8E4DF", borderRadius: 8, background: "#fff" }} />
                 ) : (
                   <span className="muted">Sin imagen todavía — fondo de color sólido</span>
                 )}
@@ -574,7 +574,7 @@ export function MyStorePage() {
               <h2>Banner intermedio</h2>
               <div className="row" style={{ alignItems: "center" }}>
                 {config.bannerUrl ? (
-                  <img src={config.bannerUrl} alt="banner" style={{ width: 160, height: 60, objectFit: "cover", border: "1px solid #e5e7eb", borderRadius: 8, background: "#fff" }} />
+                  <img src={config.bannerUrl} alt="banner" style={{ width: 160, height: 60, objectFit: "cover", border: "1px solid #E8E4DF", borderRadius: 8, background: "#fff" }} />
                 ) : (
                   <span className="muted">Sin banner todavía</span>
                 )}
@@ -762,7 +762,7 @@ export function MyStorePage() {
             color, secciones y textos: en vivo. El resto de las páginas solo se ve entrando a la
             tienda real.)
           </p>
-          <div style={{ maxWidth: 480, margin: "0 auto", border: "1px solid #e5e7eb", borderRadius: 8, overflow: "hidden" }}>
+          <div style={{ maxWidth: 480, margin: "0 auto", border: "1px solid #E8E4DF", borderRadius: 8, overflow: "hidden" }}>
             <div className="store" style={{ minHeight: "auto", "--accent": form.accentColor } as CSSProperties}>
               {previewAnnouncementTexts.length > 0 && <AnnouncementBar messages={previewAnnouncementTexts} />}
               {/* T21: header simplificado del home real (T20/02) — sin las clases
