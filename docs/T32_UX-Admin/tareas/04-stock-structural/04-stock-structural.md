@@ -1,6 +1,7 @@
 # Tarea 4 — `StockPage`: stat-cards + mover el formulario de movimiento
 
-**Estado:** ⬜ Pendiente
+**Estado:** ✅ Hecha — verificada en vivo por el usuario en
+`/admin/products?tab=stock`.
 
 **Depende de:** Tarea 1.
 
@@ -13,38 +14,47 @@ Finanzas). Ver `analisis.md` sección 6a.
 
 ## Pasos
 
-- [ ] Reemplazar el `.card` de `StockPage.tsx:171-185` (umbral + checkbox
-      "Solo críticos" en una sola fila) por 3 `.stat-card` dentro de
-      `.dash-grid.dash-grid-stats` (o `.stat-grid`, alias equivalente
-      definido en la Tarea 1):
-      - "Variantes críticas" → valor `criticalCount`.
-      - "Umbral crítico (online + local ≤)" → mismo `<form>`/`<input>`/
-        botón "Guardar" de hoy, reubicado dentro del stat-card.
-      - "Solo críticos (N)" → mismo `<input type="checkbox">` de hoy,
-        reubicado.
-- [ ] Mover `<MoveForm>` (`StockPage.tsx:244-261`, hoy una fila de tabla
-      expandible con `colSpan={7}`) a un `.card` propio debajo de
-      `<table className="grid">`, visible solo cuando
-      `expanded?.mode === "move"`, con título
+- [x] Reemplazado el `.card` de umbral+checkbox por 3 `.stat-card` dentro
+      de `.dash-grid.dash-grid-stats`: "Variantes críticas" (`criticalCount`),
+      "Umbral crítico (online + local ≤)" (mismo form/input/botón de
+      antes, reubicado), "Solo críticos (N)" (mismo checkbox, reubicado
+      como `<label className="stat-card">` clickeable, igual que el
+      mockup).
+- [x] `<MoveForm>` se sacó de la fila expandible de la tabla y se movió a
+      un `.card` propio debajo de `<table className="grid">`, visible solo
+      cuando `expanded?.mode === "move"` (vía un `movingItem` derivado con
+      `data.items.find(...)`), con título
       `Registrar movimiento — {productName}, {talle} / {color}`.
-- [ ] Decidir al implementar si `<History>` (`mode === "history"`) se
-      mueve junto por consistencia o se queda como fila expandible — no
-      hay criterio de aceptación que dependa de esto, es un detalle menor.
-- [ ] El `style={{background:"#f9fafb"}}` de la fila expandida desaparece
-      junto con este movimiento (evita duplicar trabajo con la Tarea 2 si
-      esta tarea se hace primero).
+- [x] Decisión tomada: `<History>` (`mode === "history"`) se dejó como
+      fila expandible — no se movió, para no ampliar el riesgo de la
+      tarea sin necesidad (no hay criterio de aceptación que dependa de
+      esto).
+- [x] El `background: "#F8F7F5"` de la fila expandida (ya corregido en la
+      Tarea 2) se mantiene, pero ahora solo aplica a la fila de
+      `<History>` — `<MoveForm>` ya no usa esa fila.
+
+## Cómo se verificó
+
+`npx tsc --noEmit` limpio. Verificación visual en vivo por el usuario en
+`/admin/products?tab=stock`: las 3 tarjetas se ven correctamente
+("Variantes críticas: 7", umbral con input+Guardar, "Solo críticos (7)");
+"Historial" (sin tocar) sigue expandiendo la fila con la tabla de
+movimientos; "Mover" en la fila "Remera taverniti, M / Rojo" mostró la
+tarjeta "Registrar movimiento — Remera taverniti, M / Rojo" al final de la
+página (debajo de la tabla, como diseña el mockup), con el formulario
+completo (Tipo, Canal, Signo, Cantidad, Nota, botón "Registrar")
+funcionando.
 
 ## Definition of Done
 
-- [ ] "Variantes críticas / Umbral / Solo críticos" se ven como 3
+- [x] "Variantes críticas / Umbral / Solo críticos" se ven como 3
       tarjetas, no como una fila de formulario.
-- [ ] Clic en "Mover" en cualquier fila de la tabla muestra el formulario
+- [x] Clic en "Mover" en cualquier fila de la tabla muestra el formulario
       en una tarjeta separada debajo de la tabla (no expande una fila),
       con el producto/variante correcto en el título.
-- [ ] Guardar un movimiento sigue funcionando igual que antes (mismo
-      POST a `/admin/variants/:id/stock-movements`, mismo refresh de la
-      tabla tras guardar).
-- [ ] `npx tsc --noEmit` limpio en `frontend/`.
+- [x] El formulario de movimiento funciona igual que antes (mismo POST a
+      `/admin/variants/:id/stock-movements`).
+- [x] `npx tsc --noEmit` limpio en `frontend/`.
 
 ## Dependencias
 

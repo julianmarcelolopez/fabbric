@@ -41,7 +41,7 @@ function MoveForm({ item, onDone, onError }: { item: StockItem; onDone: () => vo
   }
 
   return (
-    <form onSubmit={submit} className="row" style={{ padding: "10px 0" }}>
+    <form onSubmit={submit} className="row">
       <label className="field">
         Tipo
         <select value={type} onChange={(e) => setType(e.target.value as typeof type)}>
@@ -163,25 +163,30 @@ export function StockPage({ embedded }: Props = {}) {
 
   const items = data?.items.filter((i) => !onlyCritical || i.critical) ?? [];
   const criticalCount = data?.items.filter((i) => i.critical).length ?? 0;
+  // T32/04: item en movimiento vive fuera de la fila de tabla — la card de
+  // "Registrar movimiento" se renderiza una sola vez, debajo de la tabla.
+  const movingItem = expanded?.mode === "move" ? data?.items.find((i) => i.variantId === expanded.variantId) : undefined;
 
   return (
     <>
       {!embedded && <h1>Stock</h1>}
 
-      <div className="card">
-        <div className="row" style={{ alignItems: "center", justifyContent: "space-between" }}>
-          <form onSubmit={saveThreshold} className="row" style={{ alignItems: "flex-end" }}>
-            <label className="field">
-              Umbral de stock crítico (online + local ≤)
-              <input style={{ width: 80 }} value={threshold} onChange={(e) => setThreshold(e.target.value)} inputMode="numeric" />
-            </label>
-            <button className="btn" type="submit">Guardar</button>
-          </form>
-          <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 14 }}>
-            <input type="checkbox" checked={onlyCritical} onChange={(e) => setOnlyCritical(e.target.checked)} />
-            Solo críticos ({criticalCount})
-          </label>
+      <div className="dash-grid dash-grid-stats" style={{ marginBottom: 20 }}>
+        <div className="stat-card">
+          <div className="stat-card-label">Variantes críticas</div>
+          <div className="stat-card-value">{criticalCount}</div>
         </div>
+        <div className="stat-card">
+          <div className="stat-card-label">Umbral crítico (online + local ≤)</div>
+          <form onSubmit={saveThreshold} className="row" style={{ marginTop: 4 }}>
+            <input style={{ width: 60 }} value={threshold} onChange={(e) => setThreshold(e.target.value)} inputMode="numeric" />
+            <button className="btn small" type="submit">Guardar</button>
+          </form>
+        </div>
+        <label className="stat-card" style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer" }}>
+          <input type="checkbox" checked={onlyCritical} onChange={(e) => setOnlyCritical(e.target.checked)} />
+          <span>Solo críticos ({criticalCount})</span>
+        </label>
       </div>
 
       {error && <p className="error">{error}</p>}
@@ -241,21 +246,10 @@ export function StockPage({ embedded }: Props = {}) {
                     </button>
                   </td>
                 </tr>
-                {expanded?.variantId === item.variantId && (
+                {expanded?.variantId === item.variantId && expanded.mode === "history" && (
                   <tr key={`${item.variantId}-panel`}>
                     <td colSpan={7} style={{ background: "#F8F7F5" }}>
-                      {expanded.mode === "move" ? (
-                        <MoveForm
-                          item={item}
-                          onDone={() => {
-                            setExpanded(null);
-                            void load();
-                          }}
-                          onError={setError}
-                        />
-                      ) : (
-                        <History variantId={item.variantId} onError={setError} />
-                      )}
+                      <History variantId={item.variantId} onError={setError} />
                     </td>
                   </tr>
                 )}
@@ -263,6 +257,20 @@ export function StockPage({ embedded }: Props = {}) {
             ))}
           </tbody>
         </table>
+        </div>
+      )}
+
+      {movingItem && (
+        <div className="card" style={{ marginTop: 16 }}>
+          <h2>Registrar movimiento — {movingItem.productName}, {movingItem.talle} / {movingItem.color}</h2>
+          <MoveForm
+            item={movingItem}
+            onDone={() => {
+              setExpanded(null);
+              void load();
+            }}
+            onError={setError}
+          />
         </div>
       )}
     </>

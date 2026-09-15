@@ -16,7 +16,7 @@ detalle tipográfico opcional, por último la verificación de punta a punta.
 | 1 | [01-paleta-base](tareas/01-paleta-base/01-paleta-base.md) — pisar `admin.css` con la paleta nueva | nada | ✅ Hecha |
 | 2 | [02-limpieza-inline](tareas/02-limpieza-inline/02-limpieza-inline.md) — sacar colores viejos hardcodeados en 6 archivos | 1 | ✅ Hecha |
 | 3 | [03-dashboard-charts](tareas/03-dashboard-charts/03-dashboard-charts.md) — resolver el panel de 2 series del Dashboard | 1 | ✅ Hecha |
-| 4 | [04-stock-structural](tareas/04-stock-structural/04-stock-structural.md) — `StockPage`: stat-cards + mover "Registrar movimiento" a un `.card` | 1 | ⬜ Pendiente |
+| 4 | [04-stock-structural](tareas/04-stock-structural/04-stock-structural.md) — `StockPage`: stat-cards + mover "Registrar movimiento" a un `.card` | 1 | ✅ Hecha |
 | 5 | [05-finanzas-structural](tareas/05-finanzas-structural/05-finanzas-structural.md) — `FinanzasPage`: resumen del mes como 5 stat-cards | 1 | ⬜ Pendiente |
 | 6 | [06-sidebar-tipografia](tareas/06-sidebar-tipografia/06-sidebar-tipografia.md) — `.sidebar-brand h2` a Cormorant Garamond | 1 | ⬜ Pendiente |
 | 7 | [07-verificacion-final](tareas/07-verificacion-final/07-verificacion-final.md) — checklist en vivo, ≥3 pantallas, mobile, `tsc` | 1-6 | ⬜ Pendiente |
