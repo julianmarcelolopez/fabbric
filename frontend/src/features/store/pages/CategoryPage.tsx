@@ -32,7 +32,6 @@ import type {
 // - Los cambios de filtro se debouncean 300ms antes de tocar la URL/el fetch.
 
 const SORT_OPTIONS: { value: string; label: string }[] = [
-  { value: "", label: "Orden sugerido" },
   { value: "precio_asc", label: "Menor precio" },
   { value: "precio_desc", label: "Mayor precio" },
   { value: "nuevos", label: "Más nuevos" },
@@ -92,7 +91,10 @@ export function CategoryPage({ mode = "category" }: Props) {
   const appliedMarca = searchParams.get("marca") ?? "";
   const appliedPrecioMin = searchParams.get("precioMin") ?? "";
   const appliedPrecioMax = searchParams.get("precioMax") ?? "";
-  const appliedSort = searchParams.get("sort") ?? "";
+  // Sin "Orden sugerido": el default visible/aplicado pasa a ser "Menor
+  // precio" (antes "" = sin mandar `sort`, dejaba que el backend ordenara
+  // por sortOrder/nombre).
+  const appliedSort = searchParams.get("sort") ?? "precio_asc";
 
   const [talle, setTalle] = useState(appliedTalle);
   const [color, setColor] = useState(appliedColor);
