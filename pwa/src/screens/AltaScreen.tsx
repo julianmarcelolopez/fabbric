@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
+import { QtyStepper } from "../components/QtyStepper";
 import { apiJson, apiUpload, ApiError } from "../lib/api";
 import { pesosToCents } from "../lib/money";
 import { colors, fonts, radius } from "../lib/theme";
@@ -26,10 +27,12 @@ export function AltaScreen({ barcode, onDone }: Props) {
   const [brands, setBrands] = useState<Brand[]>([]);
   const [categoryId, setCategoryId] = useState("");
   const [marca, setMarca] = useState("");
+  const [brandSelectValue, setBrandSelectValue] = useState("");
   const [modelo, setModelo] = useState("");
   const [talle, setTalle] = useState("");
   const [color, setColor] = useState("");
   const [precio, setPrecio] = useState("");
+  const [qty, setQty] = useState(1);
   const [formError, setFormError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -48,6 +51,20 @@ export function AltaScreen({ barcode, onDone }: Props) {
     // input de más abajo) — sin catch propio, un fallo acá no bloquea el alta.
     apiJson<Brand[]>("/admin/brands").then(setBrands).catch(() => {});
   }, []);
+
+  // T29 marca combo — <input list>+<datalist> nunca muestra sugerencias en
+  // Safari/iOS (WebKit no soporta el popup de datalist), justo el navegador
+  // donde se usa esta pantalla al escanear. Se reemplaza por un <select>
+  // nativo (que sí funciona en iPhone, igual que el de Categoría) con
+  // "Otra marca..." para el alta inline de una marca nueva.
+  function handleBrandSelect(value: string) {
+    setBrandSelectValue(value);
+    if (value === "__other__") {
+      setMarca("");
+    } else {
+      setMarca(brands.find((b) => b.id === value)?.name ?? "");
+    }
+  }
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -75,6 +92,7 @@ export function AltaScreen({ barcode, onDone }: Props) {
           talle: talle.trim(),
           color: color.trim(),
           barcode,
+          qty,
         }),
       });
       setProductId(result.product.id);
@@ -184,22 +202,28 @@ export function AltaScreen({ barcode, onDone }: Props) {
       <p style={{ fontSize: 12, color: colors.muted, marginBottom: 12 }}>Código {barcode}</p>
 
       <form onSubmit={(e) => void handleSubmit(e)} style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-        <input
-          type="text"
-          placeholder="Marca"
-          value={marca}
-          onChange={(e) => setMarca(e.target.value)}
-          list="alta-marcas"
+        <select
+          value={brandSelectValue}
+          onChange={(e) => handleBrandSelect(e.target.value)}
           style={inputStyle}
-        />
-        {/* T29 — elegir una marca existente o escribir una nueva (alta
-            inline al guardar) — mismo patrón simple que el combo del admin,
-            sin agregar ninguna librería de combobox a la PWA. */}
-        <datalist id="alta-marcas">
+        >
+          <option value="">Marca...</option>
           {brands.map((b) => (
-            <option key={b.id} value={b.name} />
+            <option key={b.id} value={b.id}>
+              {b.name}
+            </option>
           ))}
-        </datalist>
+          <option value="__other__">Otra marca...</option>
+        </select>
+        {brandSelectValue === "__other__" && (
+          <input
+            type="text"
+            placeholder="Nombre de la marca nueva"
+            value={marca}
+            onChange={(e) => setMarca(e.target.value)}
+            style={inputStyle}
+          />
+        )}
         <input
           type="text"
           placeholder="Modelo"
@@ -239,6 +263,7 @@ export function AltaScreen({ barcode, onDone }: Props) {
           onChange={(e) => setPrecio(e.target.value)}
           style={inputStyle}
         />
+        <QtyStepper qty={qty} onChange={setQty} disabled={submitting} label="Cantidad" />
 
         {formError && (
           <p style={{ color: colors.danger, fontSize: 13, margin: 0 }}>{formError}</p>

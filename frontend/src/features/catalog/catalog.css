@@ -177,6 +177,16 @@
 .store-logo-wrap img { height: 52px; display: block; }
 .store-logo-text { font-family: var(--tenant-font-display); font-size: 22px; color: var(--navy); font-weight: 400; letter-spacing: 0.05em; }
 .store-header-actions { display: flex; gap: 20px; align-items: center; justify-content: flex-end; margin-left: auto; flex-shrink: 0; }
+
+/* T32/xx — botón ☰ del drawer mobile (ver @media 768px más abajo): oculto en
+   desktop, el nav inline (.store-nav) sigue siendo lo que se ve ahí. */
+.mobile-nav-toggle { display: none; align-items: center; justify-content: center; background: none; border: none; cursor: pointer; color: var(--navy); padding: 4px; flex-shrink: 0; }
+.mobile-nav-toggle:hover { color: var(--tenant-primary); }
+
+/* Mismo lenguaje visual que .account-dropdown/.search-dropdown (panel
+   flotante que cuelga del header) — oculto salvo <=768px con el drawer
+   abierto (ver JSX en StoreLayout.tsx: solo se renderiza con mobileNavOpen). */
+.mobile-nav-drawer { display: none; }
 .header-action-btn { display: flex; align-items: center; justify-content: center; background: none; border: none; cursor: pointer; color: var(--navy); padding: 4px; transition: color 0.15s; position: relative; }
 .header-action-btn:hover:not(:disabled) { color: var(--tenant-primary); }
 .header-action-btn:disabled { opacity: 0.4; cursor: default; }
@@ -229,6 +239,26 @@
      enfocado con font-size menor a 16px (rompería el layout del overlay). */
   .search-field input { font-size: 16px; }
   .search-dropdown { position: static; flex: 1; border: none; box-shadow: none; max-height: none; overflow-y: auto; }
+
+  /* T32/xx — el header no tenía breakpoint mobile: .store-nav (4 links) hacía
+     flex-wrap dentro de .store-header-inner (alto fijo 72px) y se apilaba,
+     recortándose contra el borde del header. Abajo de 768px el nav inline se
+     oculta y se reemplaza por el botón ☰ + drawer de abajo. */
+  .store-header-inner { gap: 14px; padding: 0 16px; }
+  .mobile-nav-toggle { display: flex; }
+  .store-nav--public { display: none; }
+  .store-header-actions { gap: 14px; }
+
+  .mobile-nav-drawer {
+    display: flex;
+    flex-direction: column;
+    background: var(--white);
+    border-top: 1px solid var(--gray);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  }
+  .mobile-nav-drawer a { padding: 14px 20px; font-size: 13px; font-weight: 500; color: var(--navy); text-decoration: none; letter-spacing: 0.06em; text-transform: uppercase; border-bottom: 1px solid var(--gray); }
+  .mobile-nav-drawer a:last-child { border-bottom: none; }
+  .mobile-nav-drawer a.active { color: var(--tenant-primary); }
 }
 
 /* ── T20/02: footer nuevo ─────────────────────────────────────────────────── */
@@ -465,7 +495,11 @@
 .cat-hero-btn { display: inline-flex; align-items: center; gap: 8px; background: var(--tenant-primary); color: var(--white); padding: 10px 20px; font-size: 11px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; width: fit-content; }
 
 .collections-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
-.col-card { position: relative; aspect-ratio: 1; overflow: hidden; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 20px; background: var(--navy); text-decoration: none; }
+/* border transparente en reposo — mismo tamaño de caja, sin cambio visual —
+   para que el hover naranja de abajo se vea parejo en las 4 combinaciones
+   (colección/marca × con/sin foto), no solo en la que ya tenía borde gris
+   de base (.brand-logo-card). */
+.col-card { position: relative; aspect-ratio: 1; overflow: hidden; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 20px; background: var(--navy); text-decoration: none; border: 1px solid transparent; transition: border-color 0.2s; }
 .col-card::before { content: ""; position: absolute; inset: 0; background: var(--tenant-primary); opacity: 0.2; }
 .col-tag, .col-name, .col-count, .col-link { position: relative; }
 .col-tag { font-size: 9px; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; color: var(--white); opacity: 0.7; margin-bottom: 8px; }
@@ -473,6 +507,20 @@
 .col-count { font-size: 11px; color: rgba(255, 255, 255, 0.65); margin-bottom: 14px; }
 .col-link { font-size: 10px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: rgba(255, 255, 255, 0.7); border-bottom: 1px solid rgba(255, 255, 255, 0.3); padding-bottom: 2px; transition: color 0.2s, border-color 0.2s; }
 .col-card:hover .col-link { color: var(--tenant-primary); border-color: var(--tenant-primary); }
+
+/* T32/xx — marca con logo: el logo YA es la identidad (suele traer el
+   nombre escrito), así que se muestra completo en una tarjeta clara en vez
+   del tratamiento foto+scrim+texto de .col-card.has-photo (que lo recortaba
+   en cuadrado y le repetía el nombre encima). Sin tinte (::before) ni scrim,
+   sin texto — clic en toda la tarjeta lleva a la marca. */
+.col-card.brand-logo-card { background: var(--white); border-color: var(--gray); padding: 0; }
+.col-card.brand-logo-card::before { display: none; }
+.brand-logo-img { position: relative; width: 100%; height: 100%; object-fit: contain; }
+
+/* Hover naranja — declarado al final a propósito: misma especificidad que
+   .brand-logo-card (dos clases) de arriba, así que el orden decide y esta
+   regla necesita ganar siempre, hovereando cualquier variante de tarjeta. */
+.col-card:hover { border-color: var(--tenant-primary); }
 
 .bottom-banner { background: var(--navy); padding: 40px 48px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 20px; margin-top: 56px; }
 .bottom-banner-text h3 { font-family: var(--tenant-font-display); font-size: 28px; font-weight: 300; color: var(--white); margin: 0 0 6px; }

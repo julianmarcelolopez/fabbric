@@ -26,6 +26,11 @@ export function TaxonomyManager({ title, endpoint, noun, hideTitle }: Props) {
   const [uploadingId, setUploadingId] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const pendingId = useRef<string | null>(null);
+  // T32/xx — mismo paginado client-side que ProductsPage.tsx ("Todos los
+  // productos"), acá sin filtros/búsqueda propios: solo corta la lista ya
+  // cargada en páginas.
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
   const load = useCallback(async () => {
     try {
@@ -38,6 +43,16 @@ export function TaxonomyManager({ title, endpoint, noun, hideTitle }: Props) {
   useEffect(() => {
     void load();
   }, [load]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [pageSize]);
+
+  const totalPages = Math.max(1, Math.ceil((items?.length ?? 0) / pageSize));
+  // Clamp — por si items encoge por otra vía (borrar el último item de la
+  // página actual) sin pasar por el effect de arriba.
+  const safePage = Math.min(page, totalPages);
+  const pageItems = items?.slice((safePage - 1) * pageSize, safePage * pageSize) ?? null;
 
   async function run(fn: () => Promise<unknown>) {
     setError(null);
@@ -126,7 +141,7 @@ export function TaxonomyManager({ title, endpoint, noun, hideTitle }: Props) {
             </tr>
           </thead>
           <tbody>
-            {items.map((item) =>
+            {pageItems?.map((item) =>
               editing?.id === item.id ? (
                 <tr key={item.id}>
                   <td>
@@ -223,6 +238,41 @@ export function TaxonomyManager({ title, endpoint, noun, hideTitle }: Props) {
             )}
           </tbody>
         </table>
+        </div>
+      )}
+
+      {items && items.length > 0 && (
+        <div className="row" style={{ marginTop: 12, alignItems: "center", justifyContent: "space-between" }}>
+          <label className="field" style={{ display: "flex", flexDirection: "row", alignItems: "center", gap: 6 }}>
+            Por página
+            <select value={pageSize} onChange={(e) => setPageSize(Number(e.target.value))}>
+              <option value={10}>10</option>
+              <option value={20}>20</option>
+              <option value={30}>30</option>
+              <option value={50}>50</option>
+            </select>
+          </label>
+          <div className="row" style={{ alignItems: "center", gap: 8 }}>
+            <button
+              type="button"
+              className="btn small"
+              disabled={safePage <= 1}
+              onClick={() => setPage(safePage - 1)}
+            >
+              ← Anterior
+            </button>
+            <span className="muted">
+              Página {safePage} de {totalPages}
+            </span>
+            <button
+              type="button"
+              className="btn small"
+              disabled={safePage >= totalPages}
+              onClick={() => setPage(safePage + 1)}
+            >
+              Siguiente →
+            </button>
+          </div>
         </div>
       )}
 

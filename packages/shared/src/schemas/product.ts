@@ -66,9 +66,10 @@ export const setProductCollectionsSchema = z.object({
 });
 
 // Alta rápida por escaneo (T23): producto + variante en una sola operación
-// atómica. Sin stockLocal en el input — lo fija el backend en 1 (la prenda
-// física que el vendedor tiene en la mano al escanear). Sin descripción: el
-// formulario móvil no la pide, queda vacía como en createProductSchema.
+// atómica. qty opcional (default 1) fija el stockLocal inicial — cubre tanto
+// "la prenda física que tenés en la mano" como una entrada de varias unidades
+// idénticas nuevas de una sola vez. Sin descripción: el formulario móvil no
+// la pide, queda vacía como en createProductSchema.
 export const altaRapidaSchema = z.object({
   categoryId: z.string().uuid(),
   name: z.string().min(1),
@@ -78,6 +79,7 @@ export const altaRapidaSchema = z.object({
   talle: z.string().min(1),
   color: z.string().min(1),
   barcode: z.string().min(1),
+  qty: z.number().int().min(1).optional(),
 });
 
 export type ProductStatus = z.infer<typeof productStatusSchema>;

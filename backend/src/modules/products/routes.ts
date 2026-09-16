@@ -172,13 +172,13 @@ export async function productsRoutes(fastify: FastifyInstance) {
       schema: {
         ...tag,
         summary:
-          "Alta rápida por escaneo (T23): crea producto + variante en una sola transacción — visibleInCatalog false y stockLocal 1 fijos, nunca queda un producto sin variante.",
+          "Alta rápida por escaneo (T23): crea producto + variante en una sola transacción — visibleInCatalog false fijo, stockLocal según qty (default 1), nunca queda un producto sin variante.",
         body: altaRapidaSchema,
       },
     },
     async (request, reply) => {
       const orgId = requireOrgId(request);
-      const { categoryId, name, brandId, newBrandName, price, talle, color, barcode } = request.body;
+      const { categoryId, name, brandId, newBrandName, price, talle, color, barcode, qty } = request.body;
       await assertCategoryInOrg(categoryId, orgId);
 
       try {
@@ -190,7 +190,7 @@ export async function productsRoutes(fastify: FastifyInstance) {
             .returning();
           const [variant] = await tx
             .insert(productVariants)
-            .values({ orgId, productId: product.id, talle, color, barcode, stockLocal: 1 })
+            .values({ orgId, productId: product.id, talle, color, barcode, stockLocal: qty ?? 1 })
             .returning();
           return { product, variant };
         });

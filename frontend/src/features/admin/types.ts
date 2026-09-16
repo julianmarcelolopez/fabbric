@@ -64,6 +64,7 @@ export type ProductBase = {
   status: ProductStatus;
   visibleInCatalog: boolean;
   sortOrder: number;
+  createdAt: string;
 };
 
 export type ProductListItem = ProductBase & {

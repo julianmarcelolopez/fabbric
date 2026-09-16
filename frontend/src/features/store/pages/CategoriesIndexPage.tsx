@@ -96,9 +96,7 @@ export function CategoriesIndexPage() {
             <p className="category-page-empty">Todavía no hay categorías disponibles.</p>
           ) : (
             <>
-              <div className="section-label">
-                Categorías — {categories.length} disponible{categories.length === 1 ? "" : "s"}
-              </div>
+              <div className="section-label">Categorías</div>
               <div className="categories-hero">
                 {categories.map((c, i) => {
                   const count = c.totalCount ?? c.products.length;
@@ -141,34 +139,25 @@ export function CategoriesIndexPage() {
             <p className="category-page-empty">Próximamente nuevas colecciones.</p>
           ) : (
           <>
-            <div className="section-label">
-              Colecciones — {collections.length} activa{collections.length === 1 ? "" : "s"}
-            </div>
+            <div className="section-label">Colecciones</div>
             <div className="collections-grid">
-              {collections.map((c) => {
-                const count = c.totalCount ?? c.products.length;
-                return (
-                  // T21/02: ahora sí clickeable — existe /store/:slug/col/:slug.
-                  <Link
-                    key={c.id}
-                    to={`/store/${slug}/col/${c.refSlug}`}
-                    className={c.refImageUrl ? "col-card has-photo" : "col-card"}
-                  >
-                    {c.refImageUrl && (
-                      <>
-                        <img className="cat-hero-img" src={c.refImageUrl} alt="" />
-                        <div className="cat-hero-scrim" />
-                      </>
-                    )}
-                    <div className="col-tag">Colección</div>
-                    <div className="col-name">{c.refName}</div>
-                    <div className="col-count">
-                      {count} producto{count === 1 ? "" : "s"}
-                    </div>
-                    <span className="col-link">Ver colección →</span>
-                  </Link>
-                );
-              })}
+              {collections.map((c) => (
+                // T21/02: ahora sí clickeable — existe /store/:slug/col/:slug.
+                <Link
+                  key={c.id}
+                  to={`/store/${slug}/col/${c.refSlug}`}
+                  className={c.refImageUrl ? "col-card has-photo" : "col-card"}
+                >
+                  {c.refImageUrl && (
+                    <>
+                      <img className="cat-hero-img" src={c.refImageUrl} alt="" />
+                      <div className="cat-hero-scrim" />
+                    </>
+                  )}
+                  <div className="col-name">{c.refName}</div>
+                  <span className="col-link">Ver →</span>
+                </Link>
+              ))}
             </div>
           </>
           )
@@ -176,28 +165,28 @@ export function CategoriesIndexPage() {
           <p className="category-page-empty">Todavía no hay marcas disponibles.</p>
         ) : (
           <>
-            <div className="section-label">
-              Marcas — {brands.length} disponible{brands.length === 1 ? "" : "s"}
-            </div>
+            <div className="section-label">Marcas</div>
             <div className="collections-grid">
+              {/* T32/xx — un logo de marca ya ES la identidad (suele traer el
+                  nombre escrito) — a diferencia de una foto de colección
+                  genérica, no necesita el mismo tratamiento de foto+scrim+texto
+                  superpuesto: repetía el nombre y recortaba el logo en cuadrado.
+                  Con logo: tarjeta clara, logo entero sin recortar, sin texto.
+                  Sin logo: se mantiene el estilo de tinte + texto de antes. */}
               {brands.map((b) => (
                 <Link
                   key={b.id}
                   to={`/store/${slug}/m/${b.slug}`}
-                  className={b.imageUrl ? "col-card has-photo" : "col-card"}
+                  className={b.imageUrl ? "col-card brand-card brand-logo-card" : "col-card brand-card"}
                 >
-                  {b.imageUrl && (
+                  {b.imageUrl ? (
+                    <img className="brand-logo-img" src={b.imageUrl} alt={b.name} />
+                  ) : (
                     <>
-                      <img className="cat-hero-img" src={b.imageUrl} alt="" />
-                      <div className="cat-hero-scrim" />
+                      <div className="col-name">{b.name}</div>
+                      <span className="col-link">Ver →</span>
                     </>
                   )}
-                  <div className="col-tag">Marca</div>
-                  <div className="col-name">{b.name}</div>
-                  <div className="col-count">
-                    {b.productCount} producto{b.productCount === 1 ? "" : "s"}
-                  </div>
-                  <span className="col-link">Ver marca →</span>
                 </Link>
               ))}
             </div>

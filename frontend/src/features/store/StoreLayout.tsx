@@ -7,7 +7,7 @@ import { CartProvider, useCart } from "../cart/CartContext";
 import "../catalog/catalog.css";
 import { CustomerAuthProvider, useCustomerAuth } from "./CustomerAuthContext";
 import { SearchBar } from "./components/SearchBar";
-import { BagIcon, CheckIcon, FacebookIcon, InstagramIcon, ShareIcon, UserIcon, WhatsAppIcon } from "./icons";
+import { BagIcon, CheckIcon, CloseIcon, FacebookIcon, InstagramIcon, MenuIcon, ShareIcon, UserIcon, WhatsAppIcon } from "./icons";
 import type { PublicHomeSection, PublicStoreConfig, StoreContext } from "./types";
 
 // T20/02 — header/footer nuevos (docs/T20_UX-Store/mockups/*). Estructura y
@@ -186,6 +186,15 @@ export function StoreLayout() {
   // T31/03 — el buscador reemplaza el nav mientras está expandido (StoreLayout
   // decide qué se ve, SearchBar decide su propio contenido interno).
   const [searchOpen, setSearchOpen] = useState(false);
+  // T32/xx — el nav inline (Inicio/Explorar/Novedades/Ofertas) no tenía
+  // breakpoint mobile: con flex-wrap se apilaba dentro de una fila de alto
+  // fijo y se recortaba. Abajo de 768px pasa a un drawer con botón ☰
+  // (mismo patrón que .search-dropdown/.account-dropdown, ver catalog.css).
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
+
+  useEffect(() => {
+    setMobileNavOpen(false);
+  }, [location.pathname]);
 
   useEffect(() => {
     let cancelled = false;
@@ -289,6 +298,20 @@ export function StoreLayout() {
               </div>
             ) : (
               <div className="store-header-inner">
+                {/* T32/xx — solo visible <=768px (ver catalog.css); abre/cierra
+                    el drawer de abajo. Oculto mientras el buscador está
+                    expandido, mismo criterio que el resto de los íconos. */}
+                {!searchOpen && (
+                  <button
+                    type="button"
+                    className="mobile-nav-toggle"
+                    onClick={() => setMobileNavOpen((v) => !v)}
+                    aria-label={mobileNavOpen ? "Cerrar menú" : "Abrir menú"}
+                    aria-expanded={mobileNavOpen}
+                  >
+                    {mobileNavOpen ? <CloseIcon /> : <MenuIcon />}
+                  </button>
+                )}
                 <Link to={`/store/${slug}`} className="store-logo-wrap">
                   {config.logoUrl ? (
                     <img src={config.logoUrl} alt={config.storeName} />
@@ -307,8 +330,12 @@ export function StoreLayout() {
                 {/* T31/03 — el buscador expandido ocupa el lugar del nav (se
                     ocultan mutuamente); StoreLayout decide cuál de los dos se ve,
                     SearchBar decide su propio contenido interno (icono vs. campo). */}
+                {/* store-nav--public: modificador propio (no lo usa el preview
+                    estático de MyStorePage.tsx, que reusa .store-nav a propósito
+                    sin querer heredar este @media) para poder ocultar el nav
+                    inline en mobile sin afectar ese preview de admin. */}
                 {!searchOpen && (
-                  <nav className="store-nav">
+                  <nav className="store-nav store-nav--public">
                     <NavLink to={`/store/${slug}`} end>
                       Inicio
                     </NavLink>
@@ -336,6 +363,19 @@ export function StoreLayout() {
                   <CartButton />
                 </div>
               </div>
+            )}
+
+            {/* T32/xx — drawer mobile del nav, ver .mobile-nav-drawer en
+                catalog.css (oculto por defecto, display:flex solo <=768px). */}
+            {!isCheckout && mobileNavOpen && !searchOpen && (
+              <nav className="mobile-nav-drawer">
+                <NavLink to={`/store/${slug}`} end>
+                  Inicio
+                </NavLink>
+                <NavLink to={`/store/${slug}/categorias`}>Explorar</NavLink>
+                <NavLink to={`/store/${slug}/novedades`}>Novedades</NavLink>
+                <NavLink to={`/store/${slug}/ofertas`}>Ofertas</NavLink>
+              </nav>
             )}
           </header>
 

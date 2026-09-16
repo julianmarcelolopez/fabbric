@@ -2,6 +2,7 @@
 // "Registrar entrada" (Fase 4) ya está resuelto acá. "Agregar a la venta"
 // queda de placeholder hasta la Fase 5 del plan general.
 import { useState } from "react";
+import { QtyStepper } from "../components/QtyStepper";
 import { apiJson, ApiError } from "../lib/api";
 import { colors, fonts, radius } from "../lib/theme";
 import type { VariantByBarcode } from "../types";
@@ -18,39 +19,6 @@ type Props = {
 // stockLocal como fuente de verdad para la confirmación (T27, Fase 1), en vez
 // de calcularlo a mano sumando qty al valor que tenía la Ficha al abrirse.
 type StockMovementResult = { variant: { stockLocal: number } };
-
-// Reusado en los dos modos (T27): "cantidad recibida" para entrada, "cantidad
-// a vender" para venta — mismo control, misma cantidad mínima (1).
-function QtyStepper({
-  qty,
-  onChange,
-  disabled,
-  label,
-}: {
-  qty: number;
-  onChange: (qty: number) => void;
-  disabled: boolean;
-  label: string;
-}) {
-  return (
-    <div style={{ marginBottom: 6 }}>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10 }}>
-        <button
-          onClick={() => onChange(Math.max(1, qty - 1))}
-          disabled={disabled || qty <= 1}
-          style={{ width: 32, padding: 4 }}
-        >
-          −
-        </button>
-        <span style={{ fontSize: 14, minWidth: 20, textAlign: "center" }}>{qty}</span>
-        <button onClick={() => onChange(qty + 1)} disabled={disabled} style={{ width: 32, padding: 4 }}>
-          +
-        </button>
-      </div>
-      <p style={{ fontSize: 11, color: colors.muted, textAlign: "center", margin: "6px 0 10px" }}>{label}</p>
-    </div>
-  );
-}
 
 export function FichaScreen({ variant, modo, onDone, onEntradaOk, onAddToCart }: Props) {
   const [qty, setQty] = useState(1);
@@ -112,13 +80,23 @@ export function FichaScreen({ variant, modo, onDone, onEntradaOk, onAddToCart }:
 
       <div
         style={{
-          height: 140,
+          // Antes height:140 fijo: con el ancho casi completo del celular,
+          // eso da una caja panorámica (~3:1) que recorta la mayor parte de
+          // una foto de celular en vertical (~3:4) — dejaba ver solo una
+          // franja angosta del centro (a veces la etiqueta, no la prenda).
+          // 3:4 es el mismo aspect-ratio que usa el resto del catálogo para
+          // fotos de producto (ver pdv-gallery-main en catalog.css). maxWidth
+          // la mantiene como miniatura chica y fija en vez de estirarse a lo
+          // ancho de la pantalla (que en un iPhone daría una imagen enorme).
+          width: "100%",
+          maxWidth: 200,
+          aspectRatio: "3 / 4",
           borderRadius: radius,
           background: colors.gray,
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          marginBottom: 12,
+          margin: "0 auto 12px",
           overflow: "hidden",
         }}
       >
