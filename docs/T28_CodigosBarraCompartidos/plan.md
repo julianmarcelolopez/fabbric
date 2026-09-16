@@ -1,5 +1,7 @@
 # T28 — Plan de implementación (Opción A: la simple)
 
+**Estado (2026-09-16): NO implementado, diferido hasta validar con más casos reales — ver `analisis.md`.** El caso real conocido (medias) se resuelve mientras tanto con el parche manual (variante nueva sin código de barras). Este plan queda tal cual documentado para retomar directo si aparece un segundo caso que justifique el costo.
+
 Basado en `docs/T28_CodigosBarraCompartidos/analisis.md`. Alcance: permitir que un código de barras se repita entre variantes distintas (talle/color) cuando el proveedor no lo diferencia — sin resolver todavía el caso de "rotar entre variantes ya existentes que comparten código" (eso es la Opción B, diferida).
 
 No se implementa nada todavía — este es el plan a revisar antes de tocar código.

@@ -1,5 +1,16 @@
 # T28 — Análisis: códigos de barras compartidos entre variantes
 
+## Estado (2026-09-16): NO implementado, diferido hasta validar con más casos reales
+
+Se revisó el plan antes de arrancar y se decidió **no implementar todavía**, por dos motivos:
+
+1. **Un solo caso confirmado hasta ahora** (las medias, ver más abajo). Todo el costo de ingeniería (migración de schema + 3 capas de código) se justifica para un artículo puntual — si aparece un segundo o tercer proveedor con el mismo patrón, la balanza cambia y vale la pena retomarlo.
+2. **Costo no obvio detectado en la revisión:** aflojar el constraint único de `(orgId, barcode)` a `(orgId, barcode, talle, color)` no rompe el escaneo de productos con código único por variante (Taverniti, ver "Caso 2" abajo — la búsqueda sigue devolviendo la única fila posible), pero sí **debilita una protección real que hoy cubre a todo el catálogo**: si por error de carga alguien asigna el mismo código a dos variantes que en realidad no lo comparten (ej. Taverniti cargado a mano con un typo), hoy la base lo rechaza al instante con un 409. Con el constraint aflojado, ese error de carga ya no se detecta ahí — se manifiesta después, de forma mucho más sutil (un escaneo devuelve la ficha equivocada). Bajar esa guardia en todo el catálogo para resolver un caso puntual no valía la pena todavía.
+
+**Mientras tanto, el caso real de las medias se resuelve con el parche manual ya disponible hoy, sin tocar código:** cargar el segundo y tercer color como variante nueva del mismo producto con `barcode: null` (sin código de barras) desde el admin. Se pierde la posibilidad de escanearlos directamente (escanear el código común siempre lleva a la variante ya cargada), pero se pueden ubicar y vender por búsqueda manual de nombre/talle/color.
+
+Este análisis y el plan (`plan.md`) quedan documentados tal cual para retomarlos el día que un segundo caso real justifique el costo — no hace falta rehacer la investigación, solo re-evaluar la decisión de la sección "Las dos opciones de diseño consideradas" más abajo.
+
 ## Contexto
 
 Todo el modelo de escaneo de T23 (`docs/T23-App_ingreso_egreso_productos/overview.md`) asume una relación **1 código de barras ↔ 1 variante** — así lo refleja el schema:
