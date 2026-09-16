@@ -1,15 +1,17 @@
 import { Fragment, useCallback, useEffect, useState, type FormEvent } from "react";
 import { Link, useParams } from "react-router-dom";
 import { ApiError, apiJson } from "../../../lib/api";
-import { centsToPesosInput, pesosToCents } from "../../../lib/money";
+import { centsToPesosInput, formatPrice, pesosToCents } from "../../../lib/money";
 import { ProductDetailView } from "../../catalog/ProductDetailView";
 import { ImageDropzone } from "../components/ImageDropzone";
 import { Loading } from "../components/Loading";
 import { VariantEditor } from "../components/VariantEditor";
 import {
   STATUS_LABELS,
+  type CatalogConfig,
   type ProductDetail,
   type ProductStatus,
+  type ShippingZoneRow,
   type Taxonomy,
 } from "../types";
 
@@ -86,6 +88,11 @@ export function ProductEditPage() {
   const [categories, setCategories] = useState<Taxonomy[]>([]);
   const [collections, setCollections] = useState<Taxonomy[]>([]);
   const [brands, setBrands] = useState<Taxonomy[]>([]);
+  // Solo para que la "Vista previa" muestre los mismos beneficios (envío,
+  // WhatsApp) que la tienda real — antes faltaban acá y el preview mentía
+  // (mostraba solo "Pago seguro", que es el único que no depende de esto).
+  const [config, setConfig] = useState<CatalogConfig | null>(null);
+  const [shippingZones, setShippingZones] = useState<ShippingZoneRow[]>([]);
   const [form, setForm] = useState<Form | null>(null);
   const [step, setStep] = useState<Step>(1);
   const [error, setError] = useState<string | null>(null);
@@ -95,16 +102,20 @@ export function ProductEditPage() {
 
   const load = useCallback(async () => {
     try {
-      const [detail, cats, cols, brandList] = await Promise.all([
+      const [detail, cats, cols, brandList, cfg, zones] = await Promise.all([
         apiJson<ProductDetail>(`/admin/products/${id}`),
         apiJson<Taxonomy[]>("/admin/categories"),
         apiJson<Taxonomy[]>("/admin/collections"),
         apiJson<Taxonomy[]>("/admin/brands"),
+        apiJson<CatalogConfig>("/admin/catalog-config"),
+        apiJson<ShippingZoneRow[]>("/admin/shipping-zones"),
       ]);
       setProduct(detail);
       setCategories(cats);
       setCollections(cols);
       setBrands(brandList);
+      setConfig(cfg);
+      setShippingZones(zones);
       // El form solo se inicializa la primera vez — los reloads (variantes/imágenes)
       // no pisan lo que el usuario está tipeando
       setForm((prev) =>
@@ -239,6 +250,22 @@ export function ProductEditPage() {
   const previewCompareAtPrice =
     form.compareAtPrice.trim() === "" ? null : pesosToCents(form.compareAtPrice);
   const hasVariant = product.variants.length > 0;
+
+  // Mismo cálculo que StoreProductPage (la tienda real): la zona ACTIVA más
+  // barata es la que se anuncia — si hay varias, gana la de menor costo, no
+  // la primera de la lista ni la más nueva.
+  const previewWhatsappHref = config?.whatsapp
+    ? `https://wa.me/${config.whatsapp.replace(/\D/g, "")}`
+    : null;
+  const cheapestZone = shippingZones
+    .filter((z) => z.active)
+    .slice()
+    .sort((a, b) => a.cost - b.cost)[0];
+  const previewShippingSummary = cheapestZone
+    ? cheapestZone.cost === 0
+      ? `Envío gratis a ${cheapestZone.name}`
+      : `Envío a ${cheapestZone.name} desde ${formatPrice(cheapestZone.cost)}`
+    : null;
 
   return (
     <>
@@ -443,6 +470,11 @@ export function ProductEditPage() {
             brand={form.brandName.trim() === "" ? null : form.brandName}
             images={product.images}
             variants={product.variants}
+            whatsappHref={previewWhatsappHref}
+            shippingSummary={previewShippingSummary}
+            address={config?.address ?? null}
+            businessHours={config?.businessHours ?? null}
+            returnPolicy={config?.returnPolicy ?? null}
           />
         </aside>
       </div>

@@ -72,6 +72,11 @@ export function ShippingZonesPage() {
         Costo fijo por zona; opcionalmente envío gratis superando un monto. El comprador elige la
         zona en el checkout.
       </p>
+      <p className="muted" style={{ color: "#F07058", fontWeight: 500 }}>
+        La ficha de cada producto anuncia el envío de la <strong>zona activa con menor costo</strong>{" "}
+        (ej. "Envío a Solano desde $2.000") — no hay que elegir una zona "principal" a mano, alcanza
+        con que el costo más bajo sea el que querés mostrar.
+      </p>
 
       <div className="card">
         <h2>Nueva zona</h2>
