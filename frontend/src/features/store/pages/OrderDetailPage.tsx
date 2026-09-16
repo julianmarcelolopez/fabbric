@@ -3,6 +3,7 @@ import { Link, useOutletContext, useParams } from "react-router-dom";
 import { ApiError, apiJson } from "../../../lib/api";
 import { formatPrice } from "../../../lib/money";
 import { useCustomerAuth } from "../CustomerAuthContext";
+import { Loading } from "../components/Loading";
 import type { StoreContext } from "../types";
 import { ORDER_STATUS_LABELS, type OrderStatusPublic } from "./MyOrdersPage";
 
@@ -66,7 +67,7 @@ export function OrderDetailPage() {
       </div>
     );
   }
-  if (!order) return <p className="store-message">Cargando…</p>;
+  if (!order) return <div className="store-message"><Loading /></div>;
 
   const st = ORDER_STATUS_LABELS[order.status];
   return (

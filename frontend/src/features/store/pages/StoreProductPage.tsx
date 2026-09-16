@@ -4,6 +4,7 @@ import { ApiError, publicJson } from "../../../lib/api";
 import { formatPrice } from "../../../lib/money";
 import { useCart } from "../../cart/CartContext";
 import { ProductDetailView, type RelatedProduct } from "../../catalog/ProductDetailView";
+import { Loading } from "../components/Loading";
 import type { PublicCategoryProducts, PublicProductDetail, StoreContext } from "../types";
 
 type ShippingZone = { id: string; name: string; cost: number; freeShippingFrom: number | null };
@@ -63,7 +64,7 @@ export function StoreProductPage() {
       .catch(() => {});
   }, [slug]);
 
-  if (state.status === "loading") return <p className="store-message">Cargando…</p>;
+  if (state.status === "loading") return <div className="store-message"><Loading /></div>;
   if (state.status === "not-found") {
     return (
       <div className="store-message">
@@ -120,6 +121,7 @@ export function StoreProductPage() {
         description={product.description}
         price={product.price}
         compareAtPrice={product.compareAtPrice}
+        installmentsText={product.installmentsText}
         brand={product.brand?.name ?? null}
         images={product.images}
         variants={product.variants}

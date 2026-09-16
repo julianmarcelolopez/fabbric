@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate, useOutletContext } from "react-router-dom";
 import { ApiError, publicJson } from "../../../lib/api";
 import { HomeSectionsRenderer } from "../../catalog/HomeSectionsRenderer";
+import { Loading } from "../components/Loading";
 import type { PublicBrandRef, PublicHomeSection, StoreContext } from "../types";
 
 // T29/06 — el backend devuelve brand como {name, slug} | null (para poder
@@ -92,9 +93,6 @@ function CategoriesGrid({ sections, slug }: { sections: PublicHomeSection[]; slu
             )}
             <div className="home-cat-overlay">
               <div className="home-cat-name">{c.refName}</div>
-              <div className="home-cat-count">
-                {c.totalCount ?? c.products.length} producto{(c.totalCount ?? c.products.length) === 1 ? "" : "s"}
-              </div>
             </div>
           </Link>
         ))}
@@ -170,7 +168,7 @@ export function CatalogHomePage() {
   }, [slug]);
 
   if (error) return <p className="store-message">{error}</p>;
-  if (sections === null) return <p className="store-message">Cargando…</p>;
+  if (sections === null) return <div className="store-message"><Loading /></div>;
 
   return (
     // T20/03: .store-main usa flex:1 (sticky footer, ya existía antes de T20)

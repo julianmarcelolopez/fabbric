@@ -4,6 +4,7 @@ import { ApiError, publicJson } from "../../../lib/api";
 import { pesosToCents } from "../../../lib/money";
 import { colorSwatchStyle } from "../../catalog/colorSwatch";
 import { ProductCard } from "../../catalog/ProductCard";
+import { Loading } from "../components/Loading";
 import type {
   PublicBrandProducts,
   PublicCategoryProducts,
@@ -228,7 +229,7 @@ export function CategoryPage({ mode = "category" }: Props) {
       </div>
     );
   }
-  if (data === null) return <p className="store-message">Cargando…</p>;
+  if (data === null) return <div className="store-message"><Loading /></div>;
 
   // T30/02 — antes se resolvía por qué clave tenía `data` ("collection" in
   // data ? ... : ...), pero Novedades/Ofertas no tienen ninguna clave de
@@ -289,9 +290,6 @@ export function CategoryPage({ mode = "category" }: Props) {
             <span className="breadcrumb-current">{item.name}</span>
           </div>
           <h1 className="cat-banner-title">{item.name}</h1>
-          <p className="cat-banner-sub">
-            {data.totalCount} producto{data.totalCount === 1 ? "" : "s"}
-          </p>
         </div>
       </div>
 

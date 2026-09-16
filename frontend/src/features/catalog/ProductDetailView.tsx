@@ -39,6 +39,10 @@ type Props = {
   price: number;
   /** precio anterior en centavos, tachado si es mayor que price — no aplica si hay priceOverride de variante */
   compareAtPrice?: number | null;
+  /** T33 — leyenda de cuotas propia del producto (texto libre, ej. "3 cuotas
+   * sin interés de $11.666"); antes era un texto fijo igual para todos. Sin
+   * esto (null/vacío) no se muestra nada. */
+  installmentsText?: string | null;
   brand?: string | null;
   images: { url: string }[];
   variants: PdvVariant[];
@@ -127,6 +131,7 @@ export function ProductDetailView({
   description,
   price,
   compareAtPrice,
+  installmentsText,
   brand,
   images,
   variants,
@@ -147,13 +152,18 @@ export function ProductDetailView({
 
   const talles = [...new Set(variants.map((v) => v.talle))];
   const talleHasStock = (t: string) => variants.some((v) => v.talle === t && v.stockOnline > 0);
+  // Si ningún talle tiene stock, todos los chips quedan disabled (no-stock,
+  // solo una rayita gris sutil sobre el número) y nunca se llega a
+  // seleccionar talle+color — el aviso de "Sin stock online" de más abajo
+  // nunca se mostraba porque dependía de `selected`. Con 0 stock en todas
+  // las variantes ya se sabe la respuesta sin necesitar la selección.
+  const hasAnyStock = variants.some((v) => v.stockOnline > 0);
   const colores = [...new Set(variants.filter((v) => talle === null || v.talle === talle).map((v) => v.color))];
   const selected = variants.find((v) => v.talle === talle && v.color === color) ?? null;
 
   const effectivePrice = selected?.priceOverride ?? price;
   // El tachado es sobre el precio base — si la variante pisa el precio, no se combinan
   const hasDiscount = !selected?.priceOverride && compareAtPrice != null && compareAtPrice > price;
-  const installment = Math.round(effectivePrice / 3);
 
   const canBuy = !!onAddToCart && !!selected && selected.stockOnline > 0;
 
@@ -175,9 +185,7 @@ export function ProductDetailView({
             <span className="pdv-price-save">Ahorrás {formatPrice(compareAtPrice! - effectivePrice)}</span>
           )}
         </div>
-        <p className="pdv-installments">
-          o <strong>3 cuotas sin interés de {formatPrice(installment)}</strong> con todas las tarjetas
-        </p>
+        {installmentsText && <p className="pdv-installments">{installmentsText}</p>}
 
         <div className="pdv-divider" />
 
@@ -231,7 +239,7 @@ export function ProductDetailView({
           </>
         )}
 
-        {selected && (
+        {selected ? (
           <p
             className={`pdv-stock-indicator${
               selected.stockOnline === 0 ? " out" : selected.stockOnline <= 3 ? " low" : ""
@@ -244,6 +252,14 @@ export function ProductDetailView({
                 ? `Quedan solo ${selected.stockOnline} unidades en talle ${talle} · ${color}`
                 : `Stock disponible (${selected.stockOnline})`}
           </p>
+        ) : (
+          variants.length > 0 &&
+          !hasAnyStock && (
+            <p className="pdv-stock-indicator out">
+              <span className="pdv-stock-dot" />
+              Sin stock online
+            </p>
+          )
         )}
 
         <div className="pdv-cta-group">

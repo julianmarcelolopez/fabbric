@@ -142,6 +142,10 @@ export const products = pgTable("products", {
   costPrice: integer("cost_price"),
   // Precio anterior, para mostrar tachado (T11) — solo si es mayor que price; público
   compareAtPrice: integer("compare_at_price"),
+  // Leyenda de cuotas de la ficha de producto (ej. "3 cuotas sin interés de
+  // $11.666") — texto libre por producto, nullable: sin ella no se muestra
+  // nada (antes esta línea estaba hardcodeada e igual para todos, T33).
+  installmentsText: text("installments_text"),
   // T29 — catálogo propio de marcas (antes: brand era texto libre, T12).
   // Nullable: no todo producto tiene marca. onDelete: "set null" — a
   // diferencia de categoryId (obligatorio, borrado bloqueado si hay

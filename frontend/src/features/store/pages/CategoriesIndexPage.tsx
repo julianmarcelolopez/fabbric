@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useOutletContext, useSearchParams } from "react-router-dom";
 import { ApiError, publicJson } from "../../../lib/api";
+import { Loading } from "../components/Loading";
 import type { PublicBrandSummary, StoreContext } from "../types";
 import { normalizeHomeSections, type PublicHomeSectionRaw } from "./CatalogHomePage";
 
@@ -39,7 +40,7 @@ export function CategoriesIndexPage() {
   }, [slug]);
 
   if (error) return <p className="store-message">{error}</p>;
-  if (sections === null || brands === null) return <p className="store-message">Cargando…</p>;
+  if (sections === null || brands === null) return <div className="store-message"><Loading /></div>;
 
   const categories = sections.filter((s) => s.refType === "category" && s.refActive && s.refName && s.refSlug);
   const collections = sections.filter((s) => s.refType === "collection" && s.refActive && s.refName);
@@ -98,36 +99,30 @@ export function CategoriesIndexPage() {
             <>
               <div className="section-label">Categorías</div>
               <div className="categories-hero">
-                {categories.map((c, i) => {
-                  const count = c.totalCount ?? c.products.length;
-                  return (
-                    <Link
-                      key={c.id}
-                      to={`/store/${slug}/c/${c.refSlug}`}
-                      className={
-                        (i === 0 && categories.length > 1 ? "cat-hero-card wide" : "cat-hero-card") +
-                        (c.refImageUrl ? " has-photo" : "")
-                      }
-                    >
-                      {/* T21/01: con imagen real, la tarjeta pasa del tinte de
-                         color plano (T20/04) a la foto + scrim con degradé
-                         oscuro para que el texto siga siendo legible. */}
-                      {c.refImageUrl && (
-                        <>
-                          <img className="cat-hero-img" src={c.refImageUrl} alt="" />
-                          <div className="cat-hero-scrim" />
-                        </>
-                      )}
-                      <div className="cat-hero-content">
-                        <div className="cat-hero-name">{c.refName}</div>
-                        <div className="cat-hero-count">
-                          {count} producto{count === 1 ? "" : "s"}
-                        </div>
-                        <span className="cat-hero-btn">Ver todo →</span>
-                      </div>
-                    </Link>
-                  );
-                })}
+                {categories.map((c, i) => (
+                  <Link
+                    key={c.id}
+                    to={`/store/${slug}/c/${c.refSlug}`}
+                    className={
+                      (i === 0 && categories.length > 1 ? "cat-hero-card wide" : "cat-hero-card") +
+                      (c.refImageUrl ? " has-photo" : "")
+                    }
+                  >
+                    {/* T21/01: con imagen real, la tarjeta pasa del tinte de
+                       color plano (T20/04) a la foto + scrim con degradé
+                       oscuro para que el texto siga siendo legible. */}
+                    {c.refImageUrl && (
+                      <>
+                        <img className="cat-hero-img" src={c.refImageUrl} alt="" />
+                        <div className="cat-hero-scrim" />
+                      </>
+                    )}
+                    <div className="cat-hero-content">
+                      <div className="cat-hero-name">{c.refName}</div>
+                      <span className="cat-hero-btn">Ver todo →</span>
+                    </div>
+                  </Link>
+                ))}
               </div>
             </>
           )

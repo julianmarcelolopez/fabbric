@@ -6,6 +6,7 @@ import { CartDrawer } from "../cart/CartDrawer";
 import { CartProvider, useCart } from "../cart/CartContext";
 import "../catalog/catalog.css";
 import { CustomerAuthProvider, useCustomerAuth } from "./CustomerAuthContext";
+import { Loading } from "./components/Loading";
 import { SearchBar } from "./components/SearchBar";
 import { BagIcon, CheckIcon, CloseIcon, FacebookIcon, InstagramIcon, MenuIcon, ShareIcon, UserIcon, WhatsAppIcon } from "./icons";
 import type { PublicHomeSection, PublicStoreConfig, StoreContext } from "./types";
@@ -235,7 +236,11 @@ export function StoreLayout() {
   }, [slug]);
 
   if (state.status === "loading") {
-    return <div className="store-message">Cargando tienda…</div>;
+    return (
+      <div className="store-message">
+        <Loading label="Cargando tienda…" />
+      </div>
+    );
   }
   if (state.status === "not-found") {
     return (

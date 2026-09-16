@@ -28,6 +28,9 @@ type Form = {
   price: string;
   costPrice: string;
   compareAtPrice: string;
+  // T33 — leyenda de cuotas propia del producto (texto libre); vacío = no
+  // se muestra nada en la ficha (antes era un texto fijo para todos).
+  installmentsText: string;
   // T29 — texto tipeado en el combo: puede ser el nombre de una marca
   // existente (se resuelve por slug en el backend, resolveBrandId) o uno
   // nuevo (alta inline). Vacío = sin marca.
@@ -111,6 +114,7 @@ export function ProductEditPage() {
           price: centsToPesosInput(detail.price),
           costPrice: centsToPesosInput(detail.costPrice),
           compareAtPrice: centsToPesosInput(detail.compareAtPrice),
+          installmentsText: detail.installmentsText ?? "",
           brandName: detail.brandName ?? "",
           categoryId: detail.categoryId,
           status: detail.status,
@@ -166,6 +170,7 @@ export function ProductEditPage() {
           price,
           costPrice,
           compareAtPrice,
+          installmentsText: form.installmentsText.trim() === "" ? null : form.installmentsText.trim(),
           brandId: brandName === "" ? null : undefined,
           newBrandName: brandName === "" ? undefined : brandName,
           categoryId: form.categoryId,
@@ -242,7 +247,11 @@ export function ProductEditPage() {
       </p>
       <div className="row" style={{ justifyContent: "space-between", alignItems: "center" }}>
         <h1 style={{ margin: 0 }}>{product.name}</h1>
-        {!product.visibleInCatalog && <span className="badge" style={{ background: "#fef3c7", color: "#92400e" }}>Borrador</span>}
+        {/* "No publicado" en vez de "Borrador": un producto dado de alta por
+            escaneo (T23) ya está completo y vendible en el local, solo le
+            falta el clic de publicar en la tienda online — no es un trabajo
+            a medias como sugiere "borrador". */}
+        {!product.visibleInCatalog && <span className="badge" style={{ background: "#fef3c7", color: "#92400e" }}>No publicado</span>}
       </div>
 
       <WizardSteps step={step} hasVariant={hasVariant} published={product.visibleInCatalog} onGoto={goToStep} />
@@ -331,6 +340,15 @@ export function ProductEditPage() {
                   />
                 </label>
               </div>
+              <label className="field" style={{ marginBottom: 12 }}>
+                Cuotas / leyenda de pago
+                <input
+                  value={form.installmentsText}
+                  onChange={(e) => setForm({ ...form, installmentsText: e.target.value })}
+                  placeholder='opcional — ej: "3 cuotas sin interés de $11.666". Vacío = no se muestra nada.'
+                  maxLength={200}
+                />
+              </label>
               <label className="field" style={{ marginBottom: 12 }}>
                 Descripción
                 <textarea
@@ -421,6 +439,7 @@ export function ProductEditPage() {
             description={form.description}
             price={previewPrice}
             compareAtPrice={previewCompareAtPrice}
+            installmentsText={form.installmentsText.trim() === "" ? null : form.installmentsText}
             brand={form.brandName.trim() === "" ? null : form.brandName}
             images={product.images}
             variants={product.variants}

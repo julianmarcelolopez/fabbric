@@ -136,6 +136,25 @@
 .store-banner { width: 100%; max-height: 240px; object-fit: cover; display: block; }
 .store-message { max-width: 480px; margin: 12vh auto; text-align: center; font-family: var(--font-body, system-ui), system-ui, sans-serif; color: #374151; padding: 0 20px; }
 
+/* T32/xx — spinner reutilizable de la tienda pública, mismo criterio que
+   .loading-state/.spinner del admin (admin.css) — reemplaza el "Cargando…"
+   en texto plano suelto por toda la tienda. Color del spinner en
+   --tenant-primary (no hardcodeado como en el admin) para que respete el
+   accent de cada tenant en vez de quedar siempre coral. */
+.store-loading { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 32px 0; color: var(--muted, #8A8278); font-size: 13px; }
+.store-spinner {
+  display: inline-block;
+  width: 13px;
+  height: 13px;
+  border: 2px solid var(--gray, #E8E4DF);
+  border-top-color: var(--tenant-primary);
+  border-radius: 50%;
+  animation: store-spin 0.6s linear infinite;
+}
+@keyframes store-spin {
+  to { transform: rotate(360deg); }
+}
+
 /* .store-topbar / .store-brand / .store-brand-badge / .store-auth-btn / .store-back:
    NO están huérfanas — siguen en uso por MyStorePage.tsx (preview del admin, T19/07)
    y por CartDrawer.tsx / CategoryPage.tsx (todavía no rediseñados, tareas 05/07).
@@ -401,12 +420,16 @@
 .home-section { display: grid; gap: 12px; padding: 40px 0; }
 
 .home-categories-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 14px; }
-.home-cat-card { position: relative; aspect-ratio: 3 / 4; overflow: hidden; display: block; text-decoration: none; color: inherit; }
+/* border transparente en reposo + naranja al hover — mismo criterio que
+   .cat-hero-card/.col-card (categorías/colecciones/marcas de la página
+   "Explorá la tienda"), para que el efecto sea consistente en toda la tienda. */
+.home-cat-card { position: relative; aspect-ratio: 3 / 4; overflow: hidden; display: block; text-decoration: none; color: inherit; border: 1px solid transparent; transition: border-color 0.2s; box-sizing: border-box; }
+.home-cat-card:hover { border-color: var(--tenant-primary); }
+.home-cat-card:hover .home-cat-name { color: var(--tenant-primary); }
 .home-cat-card-ph { position: absolute; inset: 0; background: linear-gradient(135deg, var(--gray) 0%, var(--off) 100%); }
 .home-cat-card-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 .home-cat-overlay { position: absolute; inset: 0; background: linear-gradient(to top, rgba(30, 42, 74, 0.72) 0%, transparent 55%); display: flex; flex-direction: column; justify-content: flex-end; padding: 16px; }
-.home-cat-name { font-family: var(--tenant-font-display); font-size: 19px; font-weight: 400; color: var(--white); }
-.home-cat-count { font-size: 11px; color: rgba(255, 255, 255, 0.7); margin-top: 3px; }
+.home-cat-name { font-family: var(--tenant-font-display); font-size: 19px; font-weight: 400; color: var(--white); transition: color 0.2s; }
 
 /* home-page: .store-main ya es flex-column (ver arriba) — flex:1 acá hace
    que .home-page ocupe toda la altura disponible de .store-main, para que
@@ -475,9 +498,13 @@
    navy, vía un ::before (rgba directo sobre --tenant-primary no es posible
    porque es un hex arbitrario por tenant, no un valor rgb component-izable). */
 .categories-hero { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
-.cat-hero-card { position: relative; aspect-ratio: 2 / 3; overflow: hidden; display: flex; flex-direction: column; justify-content: flex-end; text-decoration: none; background: var(--navy); }
+/* border transparente en reposo — mismo criterio que .col-card (catalog.css,
+   sección Categorías/Colecciones/Marcas): tamaño de caja sin cambios, para
+   que el hover naranja de más abajo se vea con o sin foto. */
+.cat-hero-card { position: relative; aspect-ratio: 2 / 3; overflow: hidden; display: flex; flex-direction: column; justify-content: flex-end; text-decoration: none; background: var(--navy); border: 1px solid transparent; transition: border-color 0.2s; }
 .cat-hero-card.wide { grid-column: span 2; aspect-ratio: unset; }
 .cat-hero-card::before { content: ""; position: absolute; inset: 0; background: var(--tenant-primary); opacity: 0.2; }
+.cat-hero-card:hover { border-color: var(--tenant-primary); }
 /* T21/01: con foto real, la tarjeta cambia el tinte plano (::before, queda
    detrás de la imagen y no se ve) por la imagen + un scrim con degradé oscuro
    ENCIMA de la foto (elemento real, no ::before — el ::before pinta antes que
@@ -489,7 +516,6 @@
 .cat-hero-content { position: relative; padding: 28px; }
 .cat-hero-name { font-family: var(--tenant-font-display); font-size: 32px; font-weight: 400; color: var(--white); line-height: 1.1; margin-bottom: 6px; }
 .cat-hero-card.wide .cat-hero-name { font-size: 44px; }
-.cat-hero-count { font-size: 12px; color: rgba(255, 255, 255, 0.65); margin-bottom: 16px; }
 /* T20/03 ya estableció que las acciones "quick" quedan siempre visibles (no
    hover-only) porque en mobile no hay estado hover — mismo criterio acá. */
 .cat-hero-btn { display: inline-flex; align-items: center; gap: 8px; background: var(--tenant-primary); color: var(--white); padding: 10px 20px; font-size: 11px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; width: fit-content; }

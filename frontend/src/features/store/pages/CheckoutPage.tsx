@@ -4,6 +4,7 @@ import { ApiError, apiJson, publicJson } from "../../../lib/api";
 import { formatPrice } from "../../../lib/money";
 import { useCart } from "../../cart/CartContext";
 import { useCustomerAuth } from "../CustomerAuthContext";
+import { Loading } from "../components/Loading";
 import type { StoreContext } from "../types";
 
 type Zone = { id: string; name: string; cost: number; freeShippingFrom: number | null };
@@ -196,7 +197,7 @@ export function CheckoutPage() {
           </div>
           <div className="form-body">
             {zones === null ? (
-              <p className="muted">Cargando zonas…</p>
+              <Loading label="Cargando zonas…" />
             ) : zones.length === 0 ? (
               <p className="error">La tienda no configuró zonas de envío todavía.</p>
             ) : (

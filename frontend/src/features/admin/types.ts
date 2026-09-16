@@ -59,6 +59,7 @@ export type ProductBase = {
   price: number;
   costPrice: number | null;
   compareAtPrice: number | null;
+  installmentsText: string | null;
   // T29 — antes texto libre (brand: string | null); ahora catálogo propio.
   brandId: string | null;
   status: ProductStatus;

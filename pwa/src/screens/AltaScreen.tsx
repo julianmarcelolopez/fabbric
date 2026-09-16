@@ -20,6 +20,7 @@ type Brand = { id: string; name: string };
 // reintentar sin perder los datos del formulario (ver overview.md).
 type AltaRapidaResult = {
   product: { id: string };
+  variant: { id: string };
 };
 
 export function AltaScreen({ barcode, onDone }: Props) {
@@ -38,9 +39,19 @@ export function AltaScreen({ barcode, onDone }: Props) {
 
   // Una vez creado el producto (paso 1 ok), pasamos al paso de la foto.
   const [productId, setProductId] = useState<string | null>(null);
+  const [variantId, setVariantId] = useState<string | null>(null);
   const [photoError, setPhotoError] = useState<string | null>(null);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  // El alta por escaneo carga todo en stockLocal (plata física en el local) —
+  // stockOnline y stockLocal son contadores independientes (no un pool
+  // compartido, ver stock-movements), así que "publicar en la tienda online"
+  // sin asignarle nada de stockOnline deja el producto visible pero
+  // imposible de comprar. qtyOnline (default 1, tope qty) es lo que de esas
+  // unidades se separa para venta online — el resto queda solo en el local.
+  const [publicarOnline, setPublicarOnline] = useState(false);
+  const [qtyOnline, setQtyOnline] = useState(1);
+  const [publishing, setPublishing] = useState(false);
 
   useEffect(() => {
     apiJson<Category[]>("/admin/categories")
@@ -96,6 +107,8 @@ export function AltaScreen({ barcode, onDone }: Props) {
         }),
       });
       setProductId(result.product.id);
+      setVariantId(result.variant.id);
+      setQtyOnline(Math.min(qtyOnline, qty));
     } catch (err) {
       if (err instanceof ApiError && err.status === 409) {
         setFormError(`Ya existe un producto con el código ${barcode}.`);
@@ -107,13 +120,39 @@ export function AltaScreen({ barcode, onDone }: Props) {
     }
   }
 
+  async function finish() {
+    if (productId && variantId && publicarOnline) {
+      setPublishing(true);
+      try {
+        if (qtyOnline > 0) {
+          await apiJson(`/admin/variants/${variantId}/stock-movements`, {
+            method: "POST",
+            body: JSON.stringify({ channel: "online", type: "entrada", delta: qtyOnline }),
+          });
+        }
+        await apiJson(`/admin/products/${productId}`, {
+          method: "PATCH",
+          body: JSON.stringify({ visibleInCatalog: true }),
+        });
+      } catch (err) {
+        setPhotoError(
+          err instanceof Error ? err.message : "No se pudo publicar el producto en la tienda"
+        );
+        setPublishing(false);
+        return;
+      }
+      setPublishing(false);
+    }
+    onDone();
+  }
+
   async function handlePhoto(file: File) {
     if (!productId) return;
     setPhotoError(null);
     setUploadingPhoto(true);
     try {
       await apiUpload(`/admin/products/${productId}/images`, file);
-      onDone();
+      await finish();
     } catch (err) {
       setPhotoError(err instanceof Error ? err.message : "No se pudo subir la foto");
     } finally {
@@ -132,6 +171,33 @@ export function AltaScreen({ barcode, onDone }: Props) {
           El producto ya se guardó. Sacale una foto (opcional, se puede agregar después).
         </p>
 
+        <label
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
+            fontSize: 13,
+            color: colors.text,
+            marginBottom: 16,
+          }}
+        >
+          <input
+            type="checkbox"
+            checked={publicarOnline}
+            onChange={(e) => setPublicarOnline(e.target.checked)}
+          />
+          Publicar también en la tienda online
+        </label>
+
+        {publicarOnline && (
+          <QtyStepper
+            qty={qtyOnline}
+            onChange={(v) => setQtyOnline(Math.min(v, qty))}
+            disabled={publishing}
+            label={`Cantidad para la tienda online (de ${qty})`}
+          />
+        )}
+
         <input
           ref={fileInputRef}
           type="file"
@@ -146,7 +212,7 @@ export function AltaScreen({ barcode, onDone }: Props) {
         />
         <button
           onClick={() => fileInputRef.current?.click()}
-          disabled={uploadingPhoto}
+          disabled={uploadingPhoto || publishing}
           style={{
             width: "100%",
             minHeight: 44,
@@ -170,7 +236,8 @@ export function AltaScreen({ barcode, onDone }: Props) {
         )}
 
         <button
-          onClick={onDone}
+          onClick={() => void finish()}
+          disabled={uploadingPhoto || publishing}
           style={{
             display: "block",
             margin: "14px auto 0",
@@ -182,7 +249,7 @@ export function AltaScreen({ barcode, onDone }: Props) {
             textDecoration: "underline",
           }}
         >
-          Continuar sin foto por ahora
+          {publishing ? "Publicando..." : "Continuar sin foto por ahora"}
         </button>
       </div>
     );

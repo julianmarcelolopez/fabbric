@@ -3,6 +3,7 @@ import { Link, useOutletContext } from "react-router-dom";
 import { ApiError, apiJson } from "../../../lib/api";
 import { formatPrice } from "../../../lib/money";
 import { useCustomerAuth } from "../CustomerAuthContext";
+import { Loading } from "../components/Loading";
 import type { StoreContext } from "../types";
 
 export type OrderStatusPublic =
@@ -62,7 +63,7 @@ export function MyOrdersPage() {
       <h1>Mis pedidos</h1>
       {error && <p className="error">{error}</p>}
       {ordersList === null ? (
-        <p className="muted">Cargando…</p>
+        <Loading />
       ) : ordersList.length === 0 ? (
         <p className="muted">Todavía no hiciste ningún pedido en esta tienda.</p>
       ) : (

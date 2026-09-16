@@ -27,6 +27,10 @@ export const productSchema = z.object({
   status: productStatusSchema,
   visibleInCatalog: z.boolean(),
   sortOrder: z.number().int(),
+  // T33 — leyenda de cuotas propia del producto (texto libre, ej. "3 cuotas
+  // sin interés de $11.666"). Nullable: sin ella no se muestra nada en la
+  // ficha (antes era un texto fijo igual para todos los productos).
+  installmentsText: z.string().max(200).nullable(),
   createdAt: z.coerce.date(),
   updatedAt: z.coerce.date(),
 });
@@ -43,6 +47,7 @@ export const createProductSchema = z.object({
   status: productStatusSchema.default("active"),
   visibleInCatalog: z.boolean().default(true),
   sortOrder: z.number().int().default(0),
+  installmentsText: z.string().max(200).nullable().optional(),
 });
 
 export const updateProductSchema = z
@@ -58,6 +63,7 @@ export const updateProductSchema = z
     status: productStatusSchema,
     visibleInCatalog: z.boolean(),
     sortOrder: z.number().int(),
+    installmentsText: z.string().max(200).nullable(),
   })
   .partial();
 

@@ -183,6 +183,13 @@
       "when": 1789496230245,
       "tag": "0025_nifty_virginia_dare",
       "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1789600394862,
+      "tag": "0026_calm_junta",
+      "breakpoints": true
     }
   ]
 }

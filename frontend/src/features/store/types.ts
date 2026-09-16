@@ -40,6 +40,7 @@ export type PublicProductDetail = {
   description: string;
   price: number;
   compareAtPrice: number | null;
+  installmentsText: string | null;
   brand: PublicBrandRef | null;
   status: "active" | "out_of_stock";
   // T20/06: para "también te puede gustar" (misma categoría, sin endpoint nuevo)
