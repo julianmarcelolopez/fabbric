@@ -75,12 +75,25 @@ export function EscanearScreen({ modo, onModoChange, onFound, onNotFound }: Prop
         video: { facingMode: { exact: "environment" } },
       });
       streamRef.current = stream;
-      if (videoRef.current) videoRef.current.srcObject = stream;
+      // No asignar acá: el <video> todavía no existe en el DOM (se monta
+      // recién cuando cameraOn pase a true, más abajo, por el render
+      // condicional) — el efecto de abajo lo conecta una vez montado.
       setCameraOn(true);
     } catch (err) {
       setCameraError(err instanceof Error ? err.message : String(err));
     }
   }
+
+  // Conecta el stream al <video> una vez que el elemento existe (recién
+  // montado, cameraOn ya en true) — separado del try/catch de arriba a
+  // propósito, por el timing de mount explicado en el comentario de esa
+  // función.
+  useEffect(() => {
+    if (cameraOn && videoRef.current && streamRef.current) {
+      videoRef.current.srcObject = streamRef.current;
+      videoRef.current.play().catch(() => {});
+    }
+  }, [cameraOn]);
 
   useEffect(() => () => clearTimeout(warningTimer.current), []);
   // Cortar el stream al desmontar (cambiar de pantalla) — evita que quede
