@@ -1,8 +1,27 @@
 import { useEffect, useRef, useState, type ChangeEvent, type FormEvent } from "react";
-import { readBarcodes } from "zxing-wasm/reader";
+import { prepareZXingModule, readBarcodes } from "zxing-wasm/reader";
+// El .wasm real (import con "?url": Vite lo copia a dist/assets/ con hash
+// propio y devuelve la URL final ya resuelta). Necesario por lo encontrado
+// en T33/06: por default, zxing-wasm 3.1.3 pide el binario a
+// `https://fastly.jsdelivr.net/npm/zxing-wasm@3.1.3/dist/reader/zxing_reader.wasm`
+// (CDN externo, ver share.js de la librería) — "Load failed" en la Tarea 6
+// (PC y iPhone, mismo error en los dos) fue esa red bloqueando/no llegando a
+// ese dominio, no un bug de la cámara ni del loop de decodificación (el CDN
+// respondía bien probado desde otra red). Se saca la dependencia del CDN
+// del todo: el .wasm se sirve desde el mismo origen que el resto de la app.
+import zxingWasmUrl from "zxing-wasm/reader/zxing_reader.wasm?url";
 import { ApiError, apiJson } from "../lib/api";
 import { colors, fonts, radius } from "../lib/theme";
 import type { VariantByBarcode } from "../types";
+
+// Configurar ANTES de la primera llamada a readBarcodes (foto o cámara en
+// vivo, lo que ocurra primero) — efecto de módulo a propósito, no dentro del
+// componente, así corre una sola vez por carga de página.
+prepareZXingModule({
+  overrides: {
+    locateFile: (path: string, prefix: string) => (path.endsWith(".wasm") ? zxingWasmUrl : prefix + path),
+  },
+});
 
 type Modo = "venta" | "entrada";
 
