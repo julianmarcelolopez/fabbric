@@ -36,22 +36,40 @@ const WARNING_MS = 2200;
 
 // Formatos de indumentaria/retail: EAN/UPC (el caso normal), + Code128/
 // Code39/Codabar/DataBar por si algún proveedor usa otro esquema.
-// Deliberadamente SIN "ITF"/"ITF14" (a diferencia del "AllLinear" que se
-// usaba antes): ITF es un formato de logística (cajas/embalaje, siempre con
-// cantidad par de dígitos) que nunca aparece en una etiqueta de indumentaria
-// real — pero zxing a veces confunde un EAN-13 borroso/con mal encuadre con
-// un ITF válido y devuelve un resultado con un dígito de más, con total
-// confianza (caso real: "0333242180304" de 13 dígitos leído como
-// "03332421803043" de 14). Sacando ITF del set, esa lectura ambigua ahora
-// falla limpio en vez de guardar un código incorrecto sin que nadie se dé
-// cuenta. Compartido entre la foto (handlePhoto) y el escaneo en vivo
-// (decodeFrame, T33) — un cambio de formatos no debe hacerse en dos lugares.
+// Deliberadamente SIN "ITF"/"ITF14": ITF es un formato de logística
+// (cajas/embalaje, siempre con cantidad par de dígitos) que nunca aparece en
+// una etiqueta de indumentaria real — pero zxing a veces confunde un EAN-13
+// borroso/con mal encuadre con un ITF válido y devuelve un resultado con un
+// dígito de más, con total confianza (caso real: "0333242180304" de 13
+// dígitos leído como "03332421803043" de 14). En una FOTO (una sola
+// captura, sin margen para confirmar) esa lectura ambigua no tiene forma de
+// corregirse sola, así que acá se prefiere que falle limpio antes que
+// guardar un código incorrecto sin que nadie se dé cuenta. Usado tal cual
+// por `handlePhoto` — no tocar esta lista para agregar ITF ahí.
 const BARCODE_FORMATS = ["EAN13", "EAN8", "UPCA", "UPCE", "Code128", "Code39", "Codabar", "DataBar"] as const;
+
+// T33/07: el escaneo en vivo SÍ puede permitirse ITF/ITF14 (a diferencia de
+// la foto) porque ve muchos frames seguidos, no uno solo — decodeFrame exige
+// CONFIRM_READS lecturas idénticas antes de aceptar un resultado de estos
+// dos formatos (ver más abajo), lo que hace estadísticamente muy improbable
+// que sea la misma lectura fantasma repetida 8 veces. Caso real que motivó
+// esto: la etiqueta de Zara del ejemplo de arriba (0333242180304) es
+// genuinamente ITF (el checksum de EAN-13 no le cierra con esos dígitos, no
+// es una confusión), y antes de este cambio no había forma de escanearla
+// sin escribirla a mano.
+const ITF_FORMATS = ["ITF", "ITF14"] as const;
+const LIVE_BARCODE_FORMATS = [...BARCODE_FORMATS, ...ITF_FORMATS] as const;
 
 // T33, Fase 2: intervalo del loop de escaneo en vivo — no cada frame (WASM
 // de más, batería de más), pero suficientemente seguido para sentirse
 // instantáneo.
 const DECODE_INTERVAL_MS = 250;
+
+// T33/07: cuántas lecturas idénticas seguidas exigir para un resultado ITF/
+// ITF14 antes de aceptarlo (~2 segundos al ritmo de DECODE_INTERVAL_MS) —
+// el resto de los formatos se aceptan al instante, sin este freno.
+const ITF_CONFIRM_MS = 2000;
+const ITF_CONFIRM_READS = Math.ceil(ITF_CONFIRM_MS / DECODE_INTERVAL_MS);
 
 // Enfoque final (T23, Fase 3 Tarea 2), tras una sesión larga de pruebas en un
 // iPhone 13 real:
@@ -113,6 +131,11 @@ export function EscanearScreen({ modo, onModoChange, onFound, onNotFound }: Prop
   // el setInterval podría arrancar una segunda decodificación mientras la
   // primera sigue en curso.
   const decodeBusyRef = useRef(false);
+  // T33/07: cuenta de lecturas idénticas consecutivas para un resultado
+  // ITF/ITF14 (ver ITF_CONFIRM_READS) — null cuando no hay ninguna en curso.
+  // Un frame sin resultado no lo resetea (una mano temblando un instante no
+  // rompe la racha); solo lo resetea una lectura DISTINTA.
+  const itfPendingRef = useRef<{ code: string; count: number } | null>(null);
 
   function stopCamera() {
     streamRef.current?.getTracks().forEach((track) => track.stop());
@@ -168,10 +191,30 @@ export function EscanearScreen({ modo, onModoChange, onFound, onNotFound }: Prop
       if (!ctx) return;
       ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
       const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-      const results = await readBarcodes(imageData, { formats: [...BARCODE_FORMATS], tryHarder: true });
-      if (results.length > 0) {
+      const results = await readBarcodes(imageData, { formats: [...LIVE_BARCODE_FORMATS], tryHarder: true });
+      if (results.length === 0) return;
+      const result = results[0];
+
+      if (!(ITF_FORMATS as readonly string[]).includes(result.format)) {
+        // Formato normal (EAN/UPC/Code128/etc.) — se acepta al instante,
+        // como siempre.
+        itfPendingRef.current = null;
         stopCamera();
-        await handleCode(results[0].text);
+        await handleCode(result.text);
+        return;
+      }
+
+      // ITF/ITF14 — exigir varias lecturas idénticas seguidas antes de
+      // aceptar (ver comentario de ITF_FORMATS arriba).
+      if (itfPendingRef.current?.code === result.text) {
+        itfPendingRef.current.count += 1;
+      } else {
+        itfPendingRef.current = { code: result.text, count: 1 };
+      }
+      if (itfPendingRef.current.count >= ITF_CONFIRM_READS) {
+        itfPendingRef.current = null;
+        stopCamera();
+        await handleCode(result.text);
       }
     } catch {
       // Un frame fallido no es un error real (desenfoque de movimiento,
@@ -190,6 +233,7 @@ export function EscanearScreen({ modo, onModoChange, onFound, onNotFound }: Prop
   // en segundo plano.
   useEffect(() => {
     if (!cameraOn) return;
+    itfPendingRef.current = null;
     const video = videoRef.current;
     const stream = streamRef.current;
     if (video && stream) {
