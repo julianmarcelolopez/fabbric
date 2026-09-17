@@ -48,7 +48,44 @@ export function EscanearScreen({ modo, onModoChange, onFound, onNotFound }: Prop
   const fileInputRef = useRef<HTMLInputElement>(null);
   const warningTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
+  // T33/03 — spike descartable: ¿getUserMedia simple (sin enumerar
+  // dispositivos ni elegir deviceId a mano) abre la cámara TRASERA en el
+  // iPhone real? En T23 esto falló armado a mano (ver comentario de arriba,
+  // punto 1) — acá se prueba la versión más simple posible antes de asumir
+  // que sigue fallando. Sin decodificación todavía, solo mostrar el video.
+  const [cameraOn, setCameraOn] = useState(false);
+  const [cameraError, setCameraError] = useState<string | null>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+
+  function stopCamera() {
+    streamRef.current?.getTracks().forEach((track) => track.stop());
+    streamRef.current = null;
+    setCameraOn(false);
+  }
+
+  async function toggleCamera() {
+    if (cameraOn) {
+      stopCamera();
+      return;
+    }
+    setCameraError(null);
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: { exact: "environment" } },
+      });
+      streamRef.current = stream;
+      if (videoRef.current) videoRef.current.srcObject = stream;
+      setCameraOn(true);
+    } catch (err) {
+      setCameraError(err instanceof Error ? err.message : String(err));
+    }
+  }
+
   useEffect(() => () => clearTimeout(warningTimer.current), []);
+  // Cortar el stream al desmontar (cambiar de pantalla) — evita que quede
+  // el indicador de cámara prendido si el vendedor navega sin apagarla.
+  useEffect(() => () => stopCamera(), []);
 
   async function handleCode(code: string) {
     try {
@@ -198,6 +235,42 @@ export function EscanearScreen({ modo, onModoChange, onFound, onNotFound }: Prop
       {error && (
         <p style={{ color: colors.danger, fontSize: 13, marginTop: 12, textAlign: "center" }}>{error}</p>
       )}
+
+      {/* T33/03 — spike descartable, no es UI final. Se saca si el resultado es no-go, o se reemplaza por el viewfinder real de la Fase 2 si es go. */}
+      <div style={{ marginTop: 16, padding: 10, border: `1px dashed ${colors.muted}`, borderRadius: 12 }}>
+        <p style={{ fontSize: 11, color: colors.muted, margin: "0 0 8px", textAlign: "center" }}>
+          T33 — spike de cámara en vivo (temporal)
+        </p>
+        <button
+          onClick={() => void toggleCamera()}
+          style={{
+            width: "100%",
+            padding: "10px",
+            borderRadius: 10,
+            border: `1px solid ${colors.navy}`,
+            background: cameraOn ? colors.navy : colors.white,
+            color: cameraOn ? colors.white : colors.navy,
+            fontSize: 13,
+            cursor: "pointer",
+          }}
+        >
+          {cameraOn ? "Apagar cámara" : "Probar cámara en vivo"}
+        </button>
+        {cameraError && (
+          <p style={{ color: colors.danger, fontSize: 12, marginTop: 8, textAlign: "center" }}>
+            Error: {cameraError}
+          </p>
+        )}
+        {cameraOn && (
+          <video
+            ref={videoRef}
+            playsInline
+            muted
+            autoPlay
+            style={{ width: "100%", marginTop: 10, borderRadius: 8, background: "#000" }}
+          />
+        )}
+      </div>
 
       <p style={{ fontSize: 12, color: colors.muted, textAlign: "center", margin: "16px 0 8px" }}>
         o escribilo a mano

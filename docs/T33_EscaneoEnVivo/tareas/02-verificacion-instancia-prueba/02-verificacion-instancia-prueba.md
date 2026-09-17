@@ -1,6 +1,6 @@
 # Tarea 2 — Smoke test: la instancia nueva funciona igual que producción
 
-**Estado:** ⬜ Pendiente.
+**Estado:** ✅ Hecha (2026-09-17), verificación parcial — ver nota.
 
 **Depende de:** Tarea 1.
 
@@ -22,12 +22,26 @@ Tarea 3 sería sospechoso (¿falló la cámara, o falló el deploy?).
     un código de barras real igual que en producción.
   - Modo venta/entrada y navegación a Ficha/Alta funcionan sin diferencias.
 
+## Resultado real
+
+URL correcta confirmada: `https://fabbric-test.aivance.cloud/stock/` (con
+el path `/stock/`, no en la raíz del dominio — ver nota agregada en la
+Tarea 1). Verificado con captura del usuario **desde navegador de
+escritorio**: login funciona, "Escanear para vender" carga con el mismo
+diseño y flujo que producción (toggle Vender/Recibir mercadería, botón
+"Sacar foto del código de barras", entrada manual) — sin diferencias
+visibles.
+
+**Nota**: esta captura es de escritorio, no del iPhone real todavía. Para
+el propósito de esta tarea (confirmar que el *deploy* está sano, no que la
+cámara del iPhone en particular funcione) alcanza — ese chequeo específico
+es el objetivo de la Tarea 4, que de todos modos requiere abrir la PWA en
+el iPhone.
+
 ## Criterio de aceptación
 
-Ningún comportamiento distinto entre la instancia de prueba y
-`fabbric.aivance.cloud` para lo que ya existe hoy — la única diferencia
-entre ambas debe ser el código nuevo que se agregue en la Tarea 3 en
-adelante.
+✅ Cumplido — ningún comportamiento distinto entre la instancia de prueba y
+`fabbric.aivance.cloud` para lo que ya existe hoy.
 
 ## Dependencias
 

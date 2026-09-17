@@ -12,7 +12,7 @@ de WebKit + iOS) — hay que confirmarla a mano, en el dispositivo real.
 
 ## Cómo probar
 
-- Agregar la PWA de la instancia de prueba (`https://<subdominio-de-prueba>`)
+- Agregar la PWA de la instancia de prueba (`https://fabbric-test.aivance.cloud/stock/`)
   a la pantalla de inicio del iPhone — el mismo contexto en el que la van a
   usar los vendedores en producción (PWA instalada, no una pestaña suelta
   de Safari/Chrome).

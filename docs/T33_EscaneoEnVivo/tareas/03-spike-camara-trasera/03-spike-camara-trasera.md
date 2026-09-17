@@ -1,6 +1,6 @@
 # Tarea 3 — Implementar el spike de `getUserMedia` en `develop`
 
-**Estado:** ⬜ Pendiente.
+**Estado:** 🟡 Código listo en `develop` (working tree), pendiente de commit/push del usuario — ver nota.
 
 **Depende de:** Tarea 2.
 
@@ -36,11 +36,34 @@ decodificación encima.
 - Commit a `develop`, deploy automático (o manual, según cómo quede
   configurado el servicio de la Tarea 1) a la instancia de prueba.
 
+## Resultado real
+
+Implementado en `pwa/src/screens/EscanearScreen.tsx`:
+- `toggleCamera()` — llama `getUserMedia({ video: { facingMode: { exact: "environment" } } })`
+  tal cual el snippet de arriba, sin `enumerateDevices()`/`deviceId`.
+- Caja con borde punteado, claramente marcada "T33 — spike de cámara en
+  vivo (temporal)" (no se mezcla visualmente con la UI final), con botón
+  "Probar cámara en vivo" / "Apagar cámara" y el `<video>` (`playsInline
+  muted autoPlay`) que se muestra solo mientras `cameraOn`.
+- Se agregó cleanup del stream (`track.stop()`) tanto al apagar el botón
+  como al desmontar la pantalla — no estaba en el alcance original de esta
+  tarea (es tema de la Fase 2), pero es gratis y evita dejar el indicador de
+  cámara prendido durante las pruebas de la Tarea 4.
+- `npx tsc --noEmit` limpio dentro del contenedor Docker de `pwa`.
+
+**Nota — no comiteado por esta sesión**: por instrucción del proyecto, los
+commits los hace el usuario, no el asistente (ver
+`feedback_no_auto_commit` en memoria). El código está en el working tree de
+la rama `develop`, listo para `git add`/`commit`/`push` — una vez pusheado,
+confirmar si el servicio `fabbric-pwa2` de EasyPanel redeploya solo o hace
+falta un "Implementar" manual (según cómo haya quedado configurado en la
+Tarea 1).
+
 ## Criterio de aceptación
 
-El código está en `develop` y desplegado en la instancia de prueba, listo
-para que la Tarea 4 lo pruebe en el iPhone real. No es criterio de esta
-tarea que la cámara abra bien — eso se confirma recién en la Tarea 4.
+Código listo y typecheck limpio ✅. Falta: commit/push del usuario +
+confirmar que `https://fabbric-test.aivance.cloud/stock/` sirve la versión
+nueva — recién ahí queda 100% cumplido, listo para la Tarea 4.
 
 ## Dependencias
 

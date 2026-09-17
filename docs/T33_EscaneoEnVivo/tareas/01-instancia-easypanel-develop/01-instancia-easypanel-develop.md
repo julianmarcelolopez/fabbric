@@ -1,6 +1,6 @@
 # Tarea 1 — Servicio nuevo en EasyPanel apuntando a `develop`
 
-**Estado:** ⬜ Pendiente.
+**Estado:** ✅ Hecha (2026-09-17).
 
 **Depende de:** nada (la rama `develop` ya existe, creada por el usuario).
 
@@ -38,11 +38,29 @@ entre sesiones, según T23).
   requisito de contexto seguro para `getUserMedia` sin depender de
   `cloudflared`.
 
+## Resultado real
+
+Servicio `fabbric-pwa2` (proyecto `frontend` en EasyPanel), rama `develop`,
+repo `julianmarcelolopez/fabbric` — **no usa un subdominio propio**, sigue
+el mismo patrón que producción: mismo dominio base (`fabbric-test.aivance.cloud`),
+path `/stock/` (ver `pwa/nginx.conf` y `pwa/vite.config.ts`, `base:"/stock/"`
+horneado en build time). URL real:
+**`https://fabbric-test.aivance.cloud/stock/`** — la raíz del dominio sin
+`/stock/` devuelve 404 (página propia de EasyPanel/Traefik, no es un error
+de la app: ese path no está mapeado a ningún servicio).
+
+Verificado por este lado (sin browser, por `curl`):
+- `GET /stock/` → 200, HTML correcto (`<title>Eliathi Modas — Stock</title>`,
+  referencias a `/stock/assets/...`).
+- El bundle JS horneado apunta a
+  `https://frontend-fabbric-backend.ka3c6z.easypanel.host` (el backend real
+  de producción) — confirma que `VITE_API_URL` quedó bien seteado en el
+  build, sin backend nuevo de por medio.
+
 ## Criterio de aceptación
 
-El servicio nuevo builda sin error y sirve algo en
-`https://<subdominio-de-prueba>` — no hace falta que funcione todavía
-(eso lo confirma la Tarea 2), solo que el deploy en sí termine OK.
+✅ Cumplido — el servicio buildeó sin error y sirve el bundle correcto en
+`https://fabbric-test.aivance.cloud/stock/`, apuntando al backend real.
 
 ## Dependencias
 

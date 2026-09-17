@@ -40,8 +40,8 @@ mismo en T23, agregar un servicio pago no suma nada.
 
 | # | Tarea | Depende de | Estado |
 |---|---|---|---|
-| 1 | [01-instancia-easypanel-develop](tareas/01-instancia-easypanel-develop/01-instancia-easypanel-develop.md) — servicio nuevo en EasyPanel apuntando a `develop` | nada | ⬜ |
-| 2 | [02-verificacion-instancia-prueba](tareas/02-verificacion-instancia-prueba/02-verificacion-instancia-prueba.md) — smoke test: la instancia nueva funciona igual que producción | 1 | ⬜ |
+| 1 | [01-instancia-easypanel-develop](tareas/01-instancia-easypanel-develop/01-instancia-easypanel-develop.md) — servicio nuevo en EasyPanel apuntando a `develop` | nada | ✅ |
+| 2 | [02-verificacion-instancia-prueba](tareas/02-verificacion-instancia-prueba/02-verificacion-instancia-prueba.md) — smoke test: la instancia nueva funciona igual que producción | 1 | ✅ |
 | 3 | [03-spike-camara-trasera](tareas/03-spike-camara-trasera/03-spike-camara-trasera.md) — implementar el spike de `getUserMedia` en `develop` | 2 | ⬜ |
 | 4 | [04-verificacion-iphone](tareas/04-verificacion-iphone/04-verificacion-iphone.md) — probar en el iPhone real, decisión go/no-go | 3 | ⬜ |
 
@@ -67,13 +67,15 @@ entre sesiones (como en T23).
   — este último apunta al **backend que ya está en producción**
   (`https://frontend-fabbric-backend.ka3c6z.easypanel.host`), no se crea un
   backend nuevo, porque esta tarea no toca lógica de backend en absoluto.
-- Subdominio propio para esta instancia de prueba (ej. `scan-test.aivance.cloud`
-  o el que prefiera el usuario) — EasyPanel da HTTPS automático, lo que
-  además resuelve gratis el requisito de contexto seguro para
-  `getUserMedia` (no hace falta `cloudflared` como en T23).
+- Subdominio propio para esta instancia de prueba — EasyPanel da HTTPS
+  automático, lo que además resuelve gratis el requisito de contexto
+  seguro para `getUserMedia` (no hace falta `cloudflared` como en T23).
+  **Resultado real (Tarea 1)**: `https://fabbric-test.aivance.cloud/stock/`
+  — mismo patrón de path `/stock/` que producción, no un subdominio "limpio"
+  sin path.
 
-**Criterio de aceptación**: la PWA de la rama nueva carga en
-`https://<subdominio-de-prueba>` y funciona igual que producción (login,
+**Criterio de aceptación**: la PWA de la rama nueva carga y funciona igual
+que producción (login,
 Escanear con el flujo de foto actual) — confirma que la infra de prueba
 está bien armada antes de tocar código nuevo.
 
@@ -96,10 +98,9 @@ de construir nada más encima.
   vivo, sí o no?".
 
 **Verificación** (manual, en el iPhone real — no lo puedo probar yo desde
-acá): el usuario agrega la PWA de `scan-test.aivance.cloud` (o el
-subdominio que se haya elegido) a la pantalla de inicio, como van a usarla
-los vendedores en producción, y confirma si el video muestra la cámara
-trasera.
+acá): el usuario agrega la PWA de `https://fabbric-test.aivance.cloud/stock/`
+a la pantalla de inicio, como van a usarla los vendedores en producción, y
+confirma si el video muestra la cámara trasera.
 
 **Decisión go/no-go**
 - **Abre bien** → Fase 2.
