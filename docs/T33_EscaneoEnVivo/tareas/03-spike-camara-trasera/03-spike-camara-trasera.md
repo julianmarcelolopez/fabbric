@@ -1,6 +1,6 @@
 # Tarea 3 — Implementar el spike de `getUserMedia` en `develop`
 
-**Estado:** 🟡 Código listo en `develop` (working tree), pendiente de commit/push del usuario — ver nota.
+**Estado:** ✅ Hecha (2026-09-17) — verificado en el iPhone real en la Tarea 4.
 
 **Depende de:** Tarea 2.
 

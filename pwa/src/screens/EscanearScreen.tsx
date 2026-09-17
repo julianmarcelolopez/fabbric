@@ -15,6 +15,25 @@ type Props = {
 
 const WARNING_MS = 2200;
 
+// Formatos de indumentaria/retail: EAN/UPC (el caso normal), + Code128/
+// Code39/Codabar/DataBar por si algún proveedor usa otro esquema.
+// Deliberadamente SIN "ITF"/"ITF14" (a diferencia del "AllLinear" que se
+// usaba antes): ITF es un formato de logística (cajas/embalaje, siempre con
+// cantidad par de dígitos) que nunca aparece en una etiqueta de indumentaria
+// real — pero zxing a veces confunde un EAN-13 borroso/con mal encuadre con
+// un ITF válido y devuelve un resultado con un dígito de más, con total
+// confianza (caso real: "0333242180304" de 13 dígitos leído como
+// "03332421803043" de 14). Sacando ITF del set, esa lectura ambigua ahora
+// falla limpio en vez de guardar un código incorrecto sin que nadie se dé
+// cuenta. Compartido entre la foto (handlePhoto) y el escaneo en vivo
+// (decodeFrame, T33) — un cambio de formatos no debe hacerse en dos lugares.
+const BARCODE_FORMATS = ["EAN13", "EAN8", "UPCA", "UPCE", "Code128", "Code39", "Codabar", "DataBar"] as const;
+
+// T33, Fase 2: intervalo del loop de escaneo en vivo — no cada frame (WASM
+// de más, batería de más), pero suficientemente seguido para sentirse
+// instantáneo.
+const DECODE_INTERVAL_MS = 250;
+
 // Enfoque final (T23, Fase 3 Tarea 2), tras una sesión larga de pruebas en un
 // iPhone 13 real:
 //
@@ -31,11 +50,17 @@ const WARNING_MS = 2200;
 //    compilado a WebAssembly — mucho más preciso que la versión JS).
 //
 // T27, Fase 3: el mockup (mockups_v5.html:70-78) dibuja una caja navy con
-// "CÁMARA LISTA" y scanline animado, simulando una cámara en vivo — esta app
-// NO tiene eso (no hay viewfinder, se toma una foto y se decodifica aparte).
-// Se decidió no agregar esa caja decorativa: mostraría una funcionalidad que
-// no existe. En su lugar, el tratamiento navy del mockup se aplica donde sí
-// hay un paralelo funcional real: el botón "Buscar" del código manual.
+// "CÁMARA LISTA" y scanline animado, simulando una cámara en vivo — en su
+// momento esta app NO tenía eso (se tomaba una foto y se decodificaba
+// aparte). Eso cambió en T33: un spike confirmó que `getUserMedia` simple
+// (sin enumerar dispositivos ni elegir deviceId a mano, a diferencia del
+// intento fallido del punto 1) SÍ abre bien la cámara trasera en el iPhone
+// real — lo que fallaba antes era el decoder de `html5-qrcode`, no la idea
+// de escanear en vivo. `zxing-wasm` (mismo motor de arriba) también acepta
+// `ImageData`, no solo `Blob`/`File`, así que ahora decodifica frames de
+// video en vivo con el mismo motor fuerte que ya decodificaba fotos. El
+// flujo de foto se mantiene igual (fallback, ver docs/T33_EscaneoEnVivo/
+// analisis.md sección 7 — decisión de si se saca del todo, pendiente).
 export function EscanearScreen({ modo, onModoChange, onFound, onNotFound }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [decoding, setDecoding] = useState(false);
@@ -47,16 +72,28 @@ export function EscanearScreen({ modo, onModoChange, onFound, onNotFound }: Prop
   const [warning, setWarning] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const warningTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  // El loop de decodificación en vivo (más abajo) arranca un setInterval una
+  // sola vez, cuando cameraOn pasa a true — su closure captura `modo` tal
+  // como estaba en ese momento. Sin este ref, si el vendedor cambia
+  // Vender/Recibir mientras la cámara sigue prendida, handleCode seguiría
+  // usando el modo viejo hasta apagar y prender la cámara de nuevo.
+  const modoRef = useRef(modo);
+  useEffect(() => {
+    modoRef.current = modo;
+  }, [modo]);
 
-  // T33/03 — spike descartable: ¿getUserMedia simple (sin enumerar
-  // dispositivos ni elegir deviceId a mano) abre la cámara TRASERA en el
-  // iPhone real? En T23 esto falló armado a mano (ver comentario de arriba,
-  // punto 1) — acá se prueba la versión más simple posible antes de asumir
-  // que sigue fallando. Sin decodificación todavía, solo mostrar el video.
+  // T33 — escaneo en vivo. `cameraOn` prende/apaga el stream; el loop de
+  // decodificación corre mientras esté prendido (efecto de abajo).
   const [cameraOn, setCameraOn] = useState(false);
   const [cameraError, setCameraError] = useState<string | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
+  // Evita solapar decodeFrame() si una llamada a readBarcodes tarda más que
+  // DECODE_INTERVAL_MS (WASM, no siempre es instantáneo) — sin este guard,
+  // el setInterval podría arrancar una segunda decodificación mientras la
+  // primera sigue en curso.
+  const decodeBusyRef = useRef(false);
 
   function stopCamera() {
     streamRef.current?.getTracks().forEach((track) => track.stop());
@@ -71,9 +108,21 @@ export function EscanearScreen({ modo, onModoChange, onFound, onNotFound }: Prop
     }
     setCameraError(null);
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: { exact: "environment" } },
-      });
+      let stream: MediaStream;
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: { exact: "environment" } },
+        });
+      } catch (err) {
+        // Fallback SOLO para poder iterar en la PC (sin cámara trasera
+        // declarada, ver plan.md Fase 2) — en el iPhone real "exact" siempre
+        // resuelve (confirmado en T33/04), así que este catch no debería
+        // dispararse nunca ahí. No es un cambio de comportamiento para
+        // producción, es habilitar el desarrollo local.
+        const name = err instanceof Error ? err.name : "";
+        if (name !== "OverconstrainedError") throw err;
+        stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      }
       streamRef.current = stream;
       // No asignar acá: el <video> todavía no existe en el DOM (se monta
       // recién cuando cameraOn pase a true, más abajo, por el render
@@ -84,15 +133,52 @@ export function EscanearScreen({ modo, onModoChange, onFound, onNotFound }: Prop
     }
   }
 
-  // Conecta el stream al <video> una vez que el elemento existe (recién
-  // montado, cameraOn ya en true) — separado del try/catch de arriba a
-  // propósito, por el timing de mount explicado en el comentario de esa
-  // función.
-  useEffect(() => {
-    if (cameraOn && videoRef.current && streamRef.current) {
-      videoRef.current.srcObject = streamRef.current;
-      videoRef.current.play().catch(() => {});
+  async function decodeFrame() {
+    if (decodeBusyRef.current) return;
+    const video = videoRef.current;
+    const canvas = canvasRef.current;
+    // readyState < 2 (HAVE_CURRENT_DATA): todavía no hay un frame real para
+    // capturar (justo después de play(), por ejemplo) — esperar al próximo tick.
+    if (!video || !canvas || video.readyState < 2) return;
+
+    decodeBusyRef.current = true;
+    try {
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return;
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const results = await readBarcodes(imageData, { formats: [...BARCODE_FORMATS], tryHarder: true });
+      if (results.length > 0) {
+        stopCamera();
+        await handleCode(results[0].text);
+      }
+    } catch {
+      // Un frame fallido no es un error real (desenfoque de movimiento,
+      // ángulo momentáneo) — se reintenta solo en el próximo tick, sin
+      // mostrar nada al vendedor.
+    } finally {
+      decodeBusyRef.current = false;
     }
+  }
+
+  // Conecta el stream al <video> una vez que el elemento existe (recién
+  // montado, cameraOn ya en true — ver comentario de toggleCamera sobre el
+  // timing) y arranca el loop de decodificación. El cleanup (cuando
+  // cameraOn vuelve a false, o al desmontar la pantalla) corta el interval
+  // — junto con stopCamera() cortando el stream, no queda nada corriendo
+  // en segundo plano.
+  useEffect(() => {
+    if (!cameraOn) return;
+    const video = videoRef.current;
+    const stream = streamRef.current;
+    if (video && stream) {
+      video.srcObject = stream;
+      video.play().catch(() => {});
+    }
+    const timer = setInterval(() => void decodeFrame(), DECODE_INTERVAL_MS);
+    return () => clearInterval(timer);
   }, [cameraOn]);
 
   useEffect(() => () => clearTimeout(warningTimer.current), []);
@@ -108,7 +194,7 @@ export function EscanearScreen({ modo, onModoChange, onFound, onNotFound }: Prop
       onFound(variant);
     } catch (err) {
       if (err instanceof ApiError && err.status === 404) {
-        if (modo === "venta") {
+        if (modoRef.current === "venta") {
           setWarning(true);
           clearTimeout(warningTimer.current);
           warningTimer.current = setTimeout(() => setWarning(false), WARNING_MS);
@@ -129,21 +215,7 @@ export function EscanearScreen({ modo, onModoChange, onFound, onNotFound }: Prop
     setError(null);
     setDecoding(true);
     try {
-      // Formatos de indumentaria/retail: EAN/UPC (el caso normal), + Code128/
-      // Code39/Codabar/DataBar por si algún proveedor usa otro esquema.
-      // Deliberadamente SIN "ITF"/"ITF14" (a diferencia del "AllLinear" que
-      // se usaba antes): ITF es un formato de logística (cajas/embalaje,
-      // siempre con cantidad par de dígitos) que nunca aparece en una
-      // etiqueta de indumentaria real — pero zxing a veces confunde un
-      // EAN-13 borroso/con mal encuadre con un ITF válido y devuelve un
-      // resultado con un dígito de más, con total confianza (caso real:
-      // "0333242180304" de 13 dígitos leído como "03332421803043" de 14).
-      // Sacando ITF del set, esa lectura ambigua ahora falla limpio en vez
-      // de guardar un código incorrecto sin que nadie se dé cuenta.
-      const results = await readBarcodes(file, {
-        formats: ["EAN13", "EAN8", "UPCA", "UPCE", "Code128", "Code39", "Codabar", "DataBar"],
-        tryHarder: true,
-      });
+      const results = await readBarcodes(file, { formats: [...BARCODE_FORMATS], tryHarder: true });
       if (results.length === 0) {
         setError("No se detectó ningún código en la foto. Probá con más luz, más cerca, y bien enfocado.");
         return;
@@ -249,41 +321,72 @@ export function EscanearScreen({ modo, onModoChange, onFound, onNotFound }: Prop
         <p style={{ color: colors.danger, fontSize: 13, marginTop: 12, textAlign: "center" }}>{error}</p>
       )}
 
-      {/* T33/03 — spike descartable, no es UI final. Se saca si el resultado es no-go, o se reemplaza por el viewfinder real de la Fase 2 si es go. */}
-      <div style={{ marginTop: 16, padding: 10, border: `1px dashed ${colors.muted}`, borderRadius: 12 }}>
-        <p style={{ fontSize: 11, color: colors.muted, margin: "0 0 8px", textAlign: "center" }}>
-          T33 — spike de cámara en vivo (temporal)
+      <p style={{ fontSize: 12, color: colors.muted, textAlign: "center", margin: "16px 0 8px" }}>
+        o escaneá en vivo
+      </p>
+      <button
+        onClick={() => void toggleCamera()}
+        style={{
+          width: "100%",
+          padding: "14px",
+          borderRadius: 12,
+          border: `1px solid ${colors.navy}`,
+          background: cameraOn ? colors.navy : colors.white,
+          color: cameraOn ? colors.white : colors.navy,
+          fontSize: 15,
+          cursor: "pointer",
+        }}
+      >
+        {cameraOn ? "Apagar cámara" : "Escanear con la cámara"}
+      </button>
+
+      {cameraError && (
+        <p style={{ color: colors.danger, fontSize: 13, marginTop: 8, textAlign: "center" }}>
+          No se pudo abrir la cámara: {cameraError}
         </p>
-        <button
-          onClick={() => void toggleCamera()}
-          style={{
-            width: "100%",
-            padding: "10px",
-            borderRadius: 10,
-            border: `1px solid ${colors.navy}`,
-            background: cameraOn ? colors.navy : colors.white,
-            color: cameraOn ? colors.white : colors.navy,
-            fontSize: 13,
-            cursor: "pointer",
-          }}
-        >
-          {cameraOn ? "Apagar cámara" : "Probar cámara en vivo"}
-        </button>
-        {cameraError && (
-          <p style={{ color: colors.danger, fontSize: 12, marginTop: 8, textAlign: "center" }}>
-            Error: {cameraError}
-          </p>
-        )}
-        {cameraOn && (
+      )}
+
+      {cameraOn && (
+        <div style={{ position: "relative", marginTop: 10, borderRadius: 12, overflow: "hidden" }}>
           <video
             ref={videoRef}
             playsInline
             muted
             autoPlay
-            style={{ width: "100%", marginTop: 10, borderRadius: 8, background: "#000" }}
+            style={{ width: "100%", display: "block", background: "#000" }}
           />
-        )}
-      </div>
+          {/* Viewfinder — puramente visual, no recorta el frame que se decodifica (siempre se procesa el video completo). */}
+          <div
+            style={{
+              position: "absolute",
+              top: "35%",
+              left: "10%",
+              right: "10%",
+              height: "30%",
+              border: `2px solid ${colors.accent}`,
+              borderRadius: 8,
+              pointerEvents: "none",
+            }}
+          />
+          <p
+            style={{
+              position: "absolute",
+              bottom: 8,
+              left: 0,
+              right: 0,
+              textAlign: "center",
+              color: colors.white,
+              fontSize: 12,
+              textShadow: "0 1px 3px rgba(0,0,0,0.8)",
+              margin: 0,
+            }}
+          >
+            Apuntá al código de barras
+          </p>
+          {/* Fuera de pantalla: acá se dibuja cada frame para decodificarlo (decodeFrame), nunca se muestra. */}
+          <canvas ref={canvasRef} style={{ display: "none" }} />
+        </div>
+      )}
 
       <p style={{ fontSize: 12, color: colors.muted, textAlign: "center", margin: "16px 0 8px" }}>
         o escribilo a mano

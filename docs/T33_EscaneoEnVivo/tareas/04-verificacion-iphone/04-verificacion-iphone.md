@@ -1,6 +1,6 @@
 # Tarea 4 — Probar en el iPhone real: decisión go/no-go
 
-**Estado:** ⬜ Pendiente.
+**Estado:** ✅ Hecha (2026-09-17) — **resultado: GO.**
 
 **Depende de:** Tarea 3.
 
@@ -21,22 +21,29 @@ de WebKit + iOS) — hay que confirmarla a mano, en el dispositivo real.
 - Confirmar qué cámara abre: ¿la trasera (la que apunta "para afuera", la
   que sirve para escanear un código de barras) o la frontal?
 
-## Decisión go/no-go
+## Resultado real
 
-- **Abre la trasera** → se confirma que el problema de T23 (enfoque 1) no
-  se repite con esta versión simplificada del pedido de cámara. Se pasa a
-  desglosar la Fase 2 del plan (loop de decodificación con `zxing-wasm`) en
-  tareas nuevas.
-- **Abre la frontal, o falla directamente** → mismo resultado que T23. Se
-  cierra T33 acá:
-  - Documentar el resultado en esta tarea (qué exactamente pasó — error en
-    consola, cámara equivocada, permiso denegado, etc., por si en el futuro
-    aparece una pista nueva para reintentar).
-  - El flujo de foto en producción queda intacto, sin ningún cambio — nada
-    de esto tocó `main`.
-  - A criterio del usuario: borrar la rama `develop` y la instancia de
-    EasyPanel de prueba, o dejarlas para el próximo experimento (`develop`
-    no tiene por qué ser exclusiva de esta tarea).
+Probado en el iPhone real, PWA instalada en pantalla de inicio: permiso de
+cámara concedido, video mostró la **cámara trasera** — el usuario vio el
+código de barras real en la pantalla, no su propia cara.
+
+Antes de llegar a este resultado hubo dos vueltas: (1) EasyPanel no
+redeploya solo con el push a `develop`, hace falta apretar "Implementar" a
+mano cada vez (confirmado comparando el hash del bundle antes/después); (2)
+un primer intento dio pantalla en negro — no era el bug de T23, era un bug
+de timing de React en este código (`videoRef.current` era `null` en el
+momento de `toggleCamera()` porque el `<video>` recién se monta cuando
+`cameraOn` pasa a `true` — el fix movió la asignación del stream a un
+`useEffect([cameraOn])`, ver Tarea 3). Con eso corregido, el resultado real
+del spike es limpio: **la cámara trasera abre bien**.
+
+## Decisión go/no-go: **GO**
+
+El problema de T23 (enfoque 1: `getUserMedia` armado a mano nunca abría la
+trasera) **no se repite** con esta versión simplificada del pedido de
+cámara (sin `enumerateDevices()`/`deviceId` a mano). Se desglosa la Fase 2
+del plan (loop de decodificación con `zxing-wasm`) en tareas nuevas — ver
+`plan.md`.
 
 ## Dependencias
 

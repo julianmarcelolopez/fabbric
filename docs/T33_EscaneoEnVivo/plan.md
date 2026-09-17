@@ -30,8 +30,8 @@ mismo en T23, agregar un servicio pago no suma nada.
 
 | # | Fase | Depende de | Estado |
 |---|---|---|---|
-| 0 | Infra de prueba aislada (rama + instancia EasyPanel) | nada | ⬜ |
-| 1 | Spike: ¿abre la cámara trasera? (go/no-go) | 0 | ⬜ |
+| 0 | Infra de prueba aislada (rama + instancia EasyPanel) | nada | ✅ |
+| 1 | Spike: ¿abre la cámara trasera? (go/no-go) | 0 | ✅ GO |
 | 2 | Loop de decodificación en vivo (solo si Fase 1 = go) | 1 | ⬜ |
 | 3 | Decidir fallback de foto | 2 | ⬜ |
 | 4 | Verificación final + merge a producción | 2, 3 | ⬜ |
@@ -42,11 +42,31 @@ mismo en T23, agregar un servicio pago no suma nada.
 |---|---|---|---|
 | 1 | [01-instancia-easypanel-develop](tareas/01-instancia-easypanel-develop/01-instancia-easypanel-develop.md) — servicio nuevo en EasyPanel apuntando a `develop` | nada | ✅ |
 | 2 | [02-verificacion-instancia-prueba](tareas/02-verificacion-instancia-prueba/02-verificacion-instancia-prueba.md) — smoke test: la instancia nueva funciona igual que producción | 1 | ✅ |
-| 3 | [03-spike-camara-trasera](tareas/03-spike-camara-trasera/03-spike-camara-trasera.md) — implementar el spike de `getUserMedia` en `develop` | 2 | ⬜ |
-| 4 | [04-verificacion-iphone](tareas/04-verificacion-iphone/04-verificacion-iphone.md) — probar en el iPhone real, decisión go/no-go | 3 | ⬜ |
+| 3 | [03-spike-camara-trasera](tareas/03-spike-camara-trasera/03-spike-camara-trasera.md) — implementar el spike de `getUserMedia` en `develop` | 2 | ✅ |
+| 4 | [04-verificacion-iphone](tareas/04-verificacion-iphone/04-verificacion-iphone.md) — probar en el iPhone real, decisión go/no-go | 3 | ✅ GO |
 
-Las Fases 2-4 del plan (loop de decodificación, fallback, merge final) se
-desglosan en tareas más adelante, una vez que la Tarea 4 confirme el go.
+**Resultado de la Fase 1: GO** — la cámara trasera abre bien en el iPhone
+real (PWA instalada). El problema de T23 no se repitió con el pedido de
+cámara simplificado. Detalle de las dos vueltas que hizo falta dar
+(EasyPanel no redeploya solo con el push; un bug de timing de React en el
+`<video>`) en las Tareas 3 y 4.
+
+**Gotcha nuevo, no documentado antes en la memoria del proyecto**: a
+diferencia de lo que se podía asumir por cómo está armado `frontend`/
+`backend` en EasyPanel, el servicio `fabbric-pwa2` **no redeploya solo al
+pushear** a `develop` — hace falta apretar "Implementar" a mano en el panel
+cada vez. Confirmado comparando el hash del bundle servido antes/después de
+tocar el botón, dos veces en esta sesión.
+
+## Desglose en tareas (Fase 2)
+
+| # | Tarea | Depende de | Estado |
+|---|---|---|---|
+| 5 | [05-loop-decodificacion](tareas/05-loop-decodificacion/05-loop-decodificacion.md) — reemplazar el spike por el loop real (`zxing-wasm` + `ImageData`) | 4 | ⬜ |
+| 6 | [06-verificacion-iphone-decodificacion](tareas/06-verificacion-iphone-decodificacion/06-verificacion-iphone-decodificacion.md) — verificar el loop completo en el iPhone real | 5 | ⬜ |
+
+Las Fases 3-4 del plan (decidir fallback de foto, merge final) se desglosan
+en tareas después de la Tarea 6.
 
 ## Fase 0 — Infra de prueba aislada
 
