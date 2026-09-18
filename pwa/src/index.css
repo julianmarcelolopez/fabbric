@@ -7,4 +7,20 @@
    pantalla (Tareas 2 a 4 de esta fase). */
 body {
   font-family: "DM Sans", system-ui, sans-serif;
+  /* T33/09: sin esto, el margen por default del navegador (8px) sumado al
+     min-height:100vh del contenedor raíz de App.tsx alcanza para forzar
+     scroll aunque el contenido de la pantalla entre justo en el viewport. */
+  margin: 0;
+}
+
+/* T33/09: causa real del scroll/espacio en blanco reportado — sin esto
+   (box-sizing default del navegador: content-box), el padding-top/bottom
+   que App.tsx le agrega a su div raíz (para reservar el espacio del header
+   y el footer fijos) se SUMA al min-height:100vh en vez de quedar incluido
+   adentro — el resultado es una página de 100vh + 96px de alto siempre, sin
+   importar cuánto contenido real tenga la pantalla. */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
 }

@@ -64,19 +64,14 @@ export function CarritoScreen({
   const total = items.reduce((sum, it) => sum + it.unitPrice * it.qty, 0);
   const facturaIncompleta = facturar && !facturaFormCompleto(facturaForm);
 
-  // El formulario agrega ~160px de contenido nuevo, suficiente para empujar
-  // "Confirmar venta" detrás de la barra inferior fija en pantallas más
-  // bajas — se lleva el botón a la vista solo (sin esto, queda tapado hasta
-  // que el usuario scrollea manualmente, algo nada obvio en el momento).
-  // `scrollIntoView` no sirve acá: la barra inferior es `position: fixed`, así
-  // que el navegador considera al botón "visible" aunque quede tapado por
-  // ella (fixed no participa del cálculo de intersección con el scroll) — se
-  // fuerza el scroll al final real del documento en su lugar.
-  useEffect(() => {
-    if (facturar) {
-      window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
-    }
-  }, [facturar]);
+  // T33/11: Productos y Forma de pago pasan a ser dos tabs en vez de una
+  // sola pantalla apilada — cada una scrollea de forma independiente dentro
+  // de su propio espacio (flex:1 + overflow:auto más abajo), Total/
+  // Confirmar venta quedan siempre visibles afuera de las tabs. Esto deja
+  // obsoleto el scroll-to-bottom que existía antes para destapar "Confirmar
+  // venta" cuando se abría el formulario de facturación (ya no lo empuja
+  // fuera de vista, así que se saca).
+  const [tab, setTab] = useState<"productos" | "pago">("productos");
 
   // Stock en vivo por ítem — se pide fresco cada vez que se entra/cambia el
   // carrito (no el que tenía la variante al momento de escanearla), así se ve
@@ -108,6 +103,36 @@ export function CarritoScreen({
         Venta en curso
       </p>
 
+      {/* T33/11: Productos / Forma de pago como dos tabs — mismo patrón
+          segmentado que el resto de la app. */}
+      <div style={{ display: "flex", background: colors.gray, borderRadius: radius, padding: 3, marginBottom: 12 }}>
+        {(
+          [
+            { value: "productos", label: items.length > 0 ? `Productos (${items.length})` : "Productos" },
+            { value: "pago", label: "Forma de pago" },
+          ] as const
+        ).map((t) => (
+          <button
+            key={t.value}
+            onClick={() => setTab(t.value)}
+            style={{
+              flex: 1,
+              border: "none",
+              borderRadius: radius - 2,
+              padding: "9px 4px",
+              fontSize: 12,
+              fontWeight: 500,
+              background: tab === t.value ? colors.white : "transparent",
+              color: tab === t.value ? colors.navy : colors.muted,
+              cursor: "pointer",
+            }}
+          >
+            {t.label}
+          </button>
+        ))}
+      </div>
+
+      {tab === "productos" && (
       <div style={{ display: "flex", flexDirection: "column", gap: 8, flex: 1, overflow: "auto" }}>
         {items.length === 0 && (
           <p style={{ fontSize: 13, color: colors.muted, textAlign: "center", marginTop: 20 }}>
@@ -170,77 +195,95 @@ export function CarritoScreen({
           );
         })}
       </div>
-
-      <p style={{ fontSize: 12, color: colors.muted, margin: "10px 0 6px" }}>Medio de pago</p>
-      <div style={{ display: "flex", gap: 6, marginBottom: 10 }}>
-        {MEDIOS.map((m) => (
-          <button
-            key={m.value}
-            onClick={() => onMedioPagoChange(m.value)}
-            style={{
-              flex: 1,
-              fontSize: 12,
-              padding: "6px 4px",
-              borderRadius: radius,
-              border: medioPago === m.value ? "none" : `1px solid ${colors.gray}`,
-              background: medioPago === m.value ? colors.navy : "transparent",
-              color: medioPago === m.value ? colors.white : colors.text,
-              cursor: "pointer",
-            }}
-          >
-            {m.label}
-          </button>
-        ))}
-      </div>
-
-      <label
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          padding: "8px 2px",
-          fontSize: 13,
-          cursor: "pointer",
-        }}
-      >
-        Facturar esta venta
-        <input
-          type="checkbox"
-          checked={facturar}
-          onChange={(e) => onFacturarChange(e.target.checked)}
-          style={{ width: 18, height: 18 }}
-        />
-      </label>
-
-      {facturar && (
-        <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 10 }}>
-          <input
-            type="text"
-            placeholder="Nombre del cliente"
-            value={facturaForm.nombre}
-            onChange={(e) => onFacturaFormChange({ ...facturaForm, nombre: e.target.value })}
-            style={{ padding: "8px 10px", borderRadius: radius, border: `1px solid ${colors.gray}`, fontSize: 14 }}
-          />
-          <input
-            type="email"
-            inputMode="email"
-            placeholder="Email (para enviar la factura)"
-            value={facturaForm.email}
-            onChange={(e) => onFacturaFormChange({ ...facturaForm, email: e.target.value })}
-            style={{ padding: "8px 10px", borderRadius: radius, border: `1px solid ${colors.gray}`, fontSize: 14 }}
-          />
-          <input
-            type="text"
-            inputMode="numeric"
-            placeholder="DNI"
-            value={facturaForm.dni}
-            onChange={(e) => onFacturaFormChange({ ...facturaForm, dni: e.target.value })}
-            style={{ padding: "8px 10px", borderRadius: radius, border: `1px solid ${colors.gray}`, fontSize: 14 }}
-          />
-        </div>
       )}
 
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", margin: "0 0 14px" }}>
+      {tab === "pago" && (
+      <div style={{ flex: 1, overflow: "auto" }}>
+        <p style={{ fontSize: 12, color: colors.muted, margin: "0 0 6px" }}>Medio de pago</p>
+        {/* T33/10: mismo patrón de pestaña segmentada que el toggle Vender/
+            Recibir mercadería de EscanearScreen (contenedor gris + padding 3 +
+            activo recortado en blanco) — antes era un estilo distinto acá
+            (botones con borde individual, activo = navy sólido). */}
+        <div
+          style={{
+            display: "flex",
+            background: colors.gray,
+            borderRadius: radius,
+            padding: 3,
+            marginBottom: 10,
+          }}
+        >
+          {MEDIOS.map((m) => (
+            <button
+              key={m.value}
+              onClick={() => onMedioPagoChange(m.value)}
+              style={{
+                flex: 1,
+                border: "none",
+                borderRadius: radius - 2,
+                padding: "8px 4px",
+                fontSize: 12,
+                fontWeight: 500,
+                background: medioPago === m.value ? colors.white : "transparent",
+                color: medioPago === m.value ? colors.navy : colors.muted,
+                cursor: "pointer",
+              }}
+            >
+              {m.label}
+            </button>
+          ))}
+        </div>
+
+        <label
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            padding: "8px 2px",
+            fontSize: 13,
+            cursor: "pointer",
+          }}
+        >
+          Facturar esta venta
+          <input
+            type="checkbox"
+            checked={facturar}
+            onChange={(e) => onFacturarChange(e.target.checked)}
+            style={{ width: 18, height: 18 }}
+          />
+        </label>
+
+        {facturar && (
+          <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 10 }}>
+            <input
+              type="text"
+              placeholder="Nombre del cliente"
+              value={facturaForm.nombre}
+              onChange={(e) => onFacturaFormChange({ ...facturaForm, nombre: e.target.value })}
+              style={{ padding: "8px 10px", borderRadius: radius, border: `1px solid ${colors.gray}`, fontSize: 14 }}
+            />
+            <input
+              type="email"
+              inputMode="email"
+              placeholder="Email (para enviar la factura)"
+              value={facturaForm.email}
+              onChange={(e) => onFacturaFormChange({ ...facturaForm, email: e.target.value })}
+              style={{ padding: "8px 10px", borderRadius: radius, border: `1px solid ${colors.gray}`, fontSize: 14 }}
+            />
+            <input
+              type="text"
+              inputMode="numeric"
+              placeholder="DNI"
+              value={facturaForm.dni}
+              onChange={(e) => onFacturaFormChange({ ...facturaForm, dni: e.target.value })}
+              style={{ padding: "8px 10px", borderRadius: radius, border: `1px solid ${colors.gray}`, fontSize: 14 }}
+            />
+          </div>
+        )}
+      </div>
+      )}
+
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", margin: "10px 0 14px" }}>
         <span style={{ fontSize: 12, color: colors.muted }}>Total</span>
         <span style={{ fontFamily: fonts.display, fontSize: 21, fontWeight: 600, color: colors.navy }}>
           {formatPrice(total)}
