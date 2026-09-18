@@ -5,7 +5,7 @@ import { BottomNav } from "./BottomNav";
 import { apiJson, ApiError } from "./lib/api";
 import { supabase } from "./lib/supabaseClient";
 import { LoginScreen } from "./LoginScreen";
-import { colors } from "./lib/theme";
+import { colors, fonts } from "./lib/theme";
 import { AltaScreen } from "./screens/AltaScreen";
 import { CarritoScreen, type CartItem } from "./screens/CarritoScreen";
 import { ConfirmarScreen } from "./screens/ConfirmarScreen";
@@ -31,6 +31,11 @@ type Screen =
   | { kind: "confirmar"; total: number; medioPago: MedioPago; factura: InvoiceStatus | null };
 
 const FACTURA_FORM_VACIO: FacturaAfipInput = { nombre: "", email: "", dni: "" };
+
+// T33/09: alto fijo del header (antes implícito, dado por su contenido) —
+// necesario ahora que es position:fixed, para reservarle el mismo espacio
+// exacto como paddingTop del contenido debajo.
+const HEADER_HEIGHT = 40;
 
 export default function App() {
   const [session, setSession] = useState<Session | null>(null);
@@ -138,9 +143,43 @@ export default function App() {
 
   const backToEscanear = () => setScreen({ kind: "escanear" });
 
+  // T33/08: header global — antes el logo vivía solo dentro de
+  // EscanearScreen, así que desaparecía en Alta/Ficha/Carrito/etc. Se mueve
+  // acá (junto a "Cerrar sesión", lo único que ya era global) para que la
+  // identidad de marca esté presente en toda la PWA, no solo en Escanear.
+  const navActive = screen.kind === "carrito" || screen.kind === "confirmar" ? "carrito" : "escanear";
+  // BottomNav antes solo se montaba en escanear/carrito (T23/T27: Alta y
+  // Ficha son estados de un flujo, no destinos) — se sigue respetando esa
+  // restricción de NAVEGACIÓN tal cual (no se agregan links nuevos), pero
+  // ahora la barra se muestra igual en todas las pantallas (atenuada/no
+  // interactiva) para que el layout no "salte" al entrar a un estado
+  // intermedio.
+  const navDisabled = screen.kind !== "escanear" && screen.kind !== "carrito";
+
   return (
-    <div style={{ minHeight: "100vh", background: colors.off, color: colors.text, paddingBottom: 56 }}>
-      <div style={{ display: "flex", justifyContent: "flex-end", padding: "6px 10px 0" }}>
+    // T33/09: header y footer fijos — antes el header vivía en el flujo
+    // normal del documento (se iba con el scroll), a diferencia del footer
+    // (BottomNav) que ya era position:fixed. paddingTop/paddingBottom acá
+    // reservan exactamente el alto de cada barra fija (HEADER_HEIGHT abajo,
+    // 56 ya usado desde antes para el footer) para que el contenido no
+    // arranque tapado debajo del header ni termine tapado detrás del footer.
+    <div style={{ minHeight: "100vh", background: colors.off, color: colors.text, paddingTop: HEADER_HEIGHT, paddingBottom: 56 }}>
+      <div
+        style={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          right: 0,
+          zIndex: 10,
+          height: HEADER_HEIGHT,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          padding: "0 10px",
+          background: colors.off,
+        }}
+      >
+        <p style={{ fontFamily: fonts.script, fontSize: 20, color: colors.navy, margin: 0 }}>Eliathi</p>
         <button
           onClick={() => supabase.auth.signOut()}
           style={{ border: "none", background: "none", fontSize: 11, color: colors.muted, cursor: "pointer" }}
@@ -203,13 +242,12 @@ export default function App() {
         />
       )}
 
-      {(screen.kind === "escanear" || screen.kind === "carrito") && (
-        <BottomNav
-          active={screen.kind}
-          onNavigate={(dest) => setScreen({ kind: dest })}
-          cartCount={cart.reduce((sum, it) => sum + it.qty, 0)}
-        />
-      )}
+      <BottomNav
+        active={navActive}
+        disabled={navDisabled}
+        onNavigate={(dest) => setScreen({ kind: dest })}
+        cartCount={cart.reduce((sum, it) => sum + it.qty, 0)}
+      />
     </div>
   );
 }

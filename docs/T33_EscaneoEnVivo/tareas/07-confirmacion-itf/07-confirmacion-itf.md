@@ -1,6 +1,6 @@
 # Tarea 7 — Reactivar ITF/ITF14 en vivo, con confirmación de varias lecturas
 
-**Estado:** 🟡 Código listo (working tree, `develop`), pendiente de que el usuario lo pruebe.
+**Estado:** ✅ Hecha (2026-09-18) — confirmada por el usuario ("ok perfecto") antes de pasar al pulido de diseño.
 
 **Depende de:** Tarea 6 (loop de decodificación funcionando de punta a punta, confirmado en la sesión real).
 

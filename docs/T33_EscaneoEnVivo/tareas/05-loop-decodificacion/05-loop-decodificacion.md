@@ -1,6 +1,6 @@
 # Tarea 5 — Reemplazar el spike por el loop real de decodificación
 
-**Estado:** 🟡 Código listo (working tree, `develop`), pendiente de que el usuario lo pruebe con webcam en la PC antes de pushear.
+**Estado:** ✅ Hecha (2026-09-18) — verificada directo en el iPhone real (ver Tarea 6), no hizo falta la vuelta intermedia por webcam de PC.
 
 **Depende de:** Tarea 4 (GO confirmado).
 

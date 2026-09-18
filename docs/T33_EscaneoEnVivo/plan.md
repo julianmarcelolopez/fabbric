@@ -32,8 +32,8 @@ mismo en T23, agregar un servicio pago no suma nada.
 |---|---|---|---|
 | 0 | Infra de prueba aislada (rama + instancia EasyPanel) | nada | ✅ |
 | 1 | Spike: ¿abre la cámara trasera? (go/no-go) | 0 | ✅ GO |
-| 2 | Loop de decodificación en vivo (solo si Fase 1 = go) | 1 | ⬜ |
-| 3 | Decidir fallback de foto | 2 | ⬜ |
+| 2 | Loop de decodificación en vivo (solo si Fase 1 = go) | 1 | ✅ |
+| 3 | Decidir fallback de foto + pulido de diseño | 2 | ✅ |
 | 4 | Verificación final + merge a producción | 2, 3 | ⬜ |
 
 ## Desglose en tareas (Fases 0 y 1)
@@ -62,11 +62,33 @@ tocar el botón, dos veces en esta sesión.
 
 | # | Tarea | Depende de | Estado |
 |---|---|---|---|
-| 5 | [05-loop-decodificacion](tareas/05-loop-decodificacion/05-loop-decodificacion.md) — reemplazar el spike por el loop real (`zxing-wasm` + `ImageData`) | 4 | ⬜ |
-| 6 | [06-verificacion-iphone-decodificacion](tareas/06-verificacion-iphone-decodificacion/06-verificacion-iphone-decodificacion.md) — verificar el loop completo en el iPhone real | 5 | ⬜ |
+| 5 | [05-loop-decodificacion](tareas/05-loop-decodificacion/05-loop-decodificacion.md) — reemplazar el spike por el loop real (`zxing-wasm` + `ImageData`) | 4 | ✅ |
+| 6 | [06-verificacion-iphone-decodificacion](tareas/06-verificacion-iphone-decodificacion/06-verificacion-iphone-decodificacion.md) — verificar el loop completo en el iPhone real | 5 | ✅ |
+| 7 | [07-confirmacion-itf](tareas/07-confirmacion-itf/07-confirmacion-itf.md) — reactivar ITF/ITF14 en vivo con confirmación de varias lecturas | 6 | ✅ |
 
-Las Fases 3-4 del plan (decidir fallback de foto, merge final) se desglosan
-en tareas después de la Tarea 6.
+**Dos bugs reales encontrados en la Tarea 6, ninguno de la cámara/loop en
+sí**: (1) `zxing-wasm` pedía su `.wasm` a un CDN externo por default,
+bloqueado en la red del usuario — se pasó a self-host vía Vite; (2) CORS
+del backend no tenía `fabbric-test.aivance.cloud` en la lista de orígenes
+permitidos (`PWA_URL` no estaba seteada) — se agregó esa variable de
+entorno en EasyPanel, sin tocar código. Detalle completo en la Tarea 6.
+
+## Desglose en tareas (Fase 3 — fallback de foto + pulido de diseño)
+
+| # | Tarea | Depende de | Estado |
+|---|---|---|---|
+| 8 | [08-diseno-escanear](tareas/08-diseno-escanear/08-diseno-escanear.md) — orden (vivo/foto/manual), colores, tamaño de cámara | 7 | ✅ |
+| 9 | [09-header-footer-globales](tareas/09-header-footer-globales/09-header-footer-globales.md) — header/footer globales, fijos, fix de scroll | 8 | ✅ |
+| 10 | [10-medio-pago-tab](tareas/10-medio-pago-tab/10-medio-pago-tab.md) — "Medio de pago" como pestaña segmentada | 9 | ✅ |
+| 11 | [11-carrito-tabs](tareas/11-carrito-tabs/11-carrito-tabs.md) — Carrito: tabs "Productos" / "Forma de pago" | 10 | ✅ |
+
+**Decisión de la Fase 3**: no se saca "Sacar foto" — se mantiene como
+respaldo, pasa a ser la opción secundaria (Tarea 8). Las Tareas 9-11 son
+pulido de diseño que surgió en el camino (no estaban en el plan original),
+abarcando toda la PWA, no solo Escanear.
+
+Falta desglosar la Fase 4 (verificación final + merge a `main`) — pendiente
+de que el usuario confirme que está conforme con el diseño actual.
 
 ## Fase 0 — Infra de prueba aislada
 
@@ -163,6 +185,11 @@ verificación final (Fase 4).
 real lo decodifica sin tocar "sacar foto", en menos de ~1-2 segundos, en el
 iPhone real (no solo en desktop).
 
+**Resultado real**: cumplido, después de los dos bugs de infraestructura
+descritos arriba (CDN del `.wasm` y CORS) — ninguno de los dos era del
+loop de decodificación en sí. De paso se encontró y resolvió un caso real
+de formato ITF no soportado (Tarea 7).
+
 ## Fase 3 — Decidir fallback de foto
 
 Pendiente de decidir según cómo salga la Fase 2 (no se prescribe acá, ver
@@ -171,17 +198,27 @@ Pendiente de decidir según cómo salga la Fase 2 (no se prescribe acá, ver
 - Reemplazarlo del todo (el escaneo en vivo pasa a ser el único camino
   además de la entrada manual).
 
+**Resultado real**: se mantiene "Sacar foto", como opción secundaria
+(Tarea 8). Esta fase terminó abarcando mucho más que la decisión original
+— pulido de diseño de toda la PWA (header/footer globales y fijos, fix de
+scroll, rediseño de `CarritoScreen` en tabs) — ver Tareas 8-11.
+
 ## Fase 4 — Verificación final + merge a producción
 
 **Checklist**
-- [ ] Escaneo en vivo verificado con un código de barras físico real en el
+- [x] Escaneo en vivo verificado con un código de barras físico real en el
       iPhone de pruebas (no simulador), como PWA instalada.
-- [ ] Entrada manual sigue funcionando sin cambios.
-- [ ] Modo venta (404 → warning) y modo entrada (404 → Alta) sin cambios de
-      comportamiento respecto a hoy.
-- [ ] Stream de cámara se corta correctamente al salir de la pantalla
-      (confirmar que no queda el indicador de cámara prendido).
-- [ ] `npx tsc --noEmit` limpio en `pwa/`.
+- [x] Entrada manual sigue funcionando sin cambios (confirmado por el
+      usuario: "esta todo bien confirmo").
+- [x] Modo venta (404 → warning) y modo entrada (404 → Alta) sin cambios de
+      comportamiento respecto a hoy (mismo caso — confirmado).
+- [x] Stream de cámara se corta correctamente al salir de la pantalla
+      (confirmado explícitamente por el usuario: "el apagado de la camara
+      funciona bien").
+- [x] `npx tsc --noEmit` limpio en `pwa/` (verificado después de cada
+      tarea de esta sesión).
+- [x] Verificación visual final de las Tareas 8-11 (diseño) por el usuario
+      — confirmado ("esta todo bien confirmo").
 - [ ] Merge de la rama a `main`, deploy a la instancia real de producción.
 - [ ] Decidir qué hacer con la instancia de prueba de EasyPanel (dar de baja
       o dejarla para el próximo experimento).

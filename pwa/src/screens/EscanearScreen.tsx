@@ -306,8 +306,6 @@ export function EscanearScreen({ modo, onModoChange, onFound, onNotFound }: Prop
 
   return (
     <div style={{ padding: 14 }}>
-      <p style={{ fontFamily: fonts.script, fontSize: 20, color: colors.navy, margin: "0 0 10px" }}>Eliathi</p>
-
       <div style={{ display: "flex", background: colors.gray, borderRadius: radius, padding: 3, marginBottom: 14 }}>
         {(
           [
@@ -354,17 +352,13 @@ export function EscanearScreen({ modo, onModoChange, onFound, onNotFound }: Prop
         </p>
       )}
 
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept="image/*"
-        capture="environment"
-        onChange={(e) => void handlePhoto(e)}
-        style={{ display: "none" }}
-      />
+      {/* T33/08: escaneo en vivo pasa a ser la opción PRIMARIA (naranja/accent,
+          el color reservado para la acción principal en toda la app) — la
+          foto pasa a secundaria (navy outline, mismo tratamiento que ya usa
+          "Buscar" en el ingreso manual). Orden acordado con el usuario:
+          1) en vivo, 2) foto, 3) manual. */}
       <button
-        onClick={() => fileInputRef.current?.click()}
-        disabled={decoding}
+        onClick={() => void toggleCamera()}
         style={{
           width: "100%",
           padding: "14px",
@@ -372,30 +366,6 @@ export function EscanearScreen({ modo, onModoChange, onFound, onNotFound }: Prop
           border: "none",
           background: colors.accent,
           color: colors.white,
-          fontSize: 15,
-          cursor: decoding ? "default" : "pointer",
-          opacity: decoding ? 0.7 : 1,
-        }}
-      >
-        {decoding ? "Leyendo código..." : "Sacar foto del código de barras"}
-      </button>
-
-      {error && (
-        <p style={{ color: colors.danger, fontSize: 13, marginTop: 12, textAlign: "center" }}>{error}</p>
-      )}
-
-      <p style={{ fontSize: 12, color: colors.muted, textAlign: "center", margin: "16px 0 8px" }}>
-        o escaneá en vivo
-      </p>
-      <button
-        onClick={() => void toggleCamera()}
-        style={{
-          width: "100%",
-          padding: "14px",
-          borderRadius: 12,
-          border: `1px solid ${colors.navy}`,
-          background: cameraOn ? colors.navy : colors.white,
-          color: cameraOn ? colors.white : colors.navy,
           fontSize: 15,
           cursor: "pointer",
         }}
@@ -410,13 +380,25 @@ export function EscanearScreen({ modo, onModoChange, onFound, onNotFound }: Prop
       )}
 
       {cameraOn && (
-        <div style={{ position: "relative", marginTop: 10, borderRadius: 12, overflow: "hidden" }}>
+        // T33/08: antes sin restricción de alto (lo que sea que la cámara
+        // devolviera nativamente, variable por dispositivo y más grande de
+        // lo necesario) — aspect-ratio fijo + object-fit:cover da un tamaño
+        // predecible en cualquier cámara, recortando en vez de estirar.
+        <div
+          style={{
+            position: "relative",
+            marginTop: 10,
+            borderRadius: 12,
+            overflow: "hidden",
+            aspectRatio: "3 / 2",
+          }}
+        >
           <video
             ref={videoRef}
             playsInline
             muted
             autoPlay
-            style={{ width: "100%", display: "block", background: "#000" }}
+            style={{ width: "100%", height: "100%", objectFit: "cover", display: "block", background: "#000" }}
           />
           {/* Viewfinder — puramente visual, no recorta el frame que se decodifica (siempre se procesa el video completo). */}
           <div
@@ -449,6 +431,39 @@ export function EscanearScreen({ modo, onModoChange, onFound, onNotFound }: Prop
           {/* Fuera de pantalla: acá se dibuja cada frame para decodificarlo (decodeFrame), nunca se muestra. */}
           <canvas ref={canvasRef} style={{ display: "none" }} />
         </div>
+      )}
+
+      <p style={{ fontSize: 12, color: colors.muted, textAlign: "center", margin: "16px 0 8px" }}>
+        o sacá una foto
+      </p>
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        capture="environment"
+        onChange={(e) => void handlePhoto(e)}
+        style={{ display: "none" }}
+      />
+      <button
+        onClick={() => fileInputRef.current?.click()}
+        disabled={decoding}
+        style={{
+          width: "100%",
+          padding: "14px",
+          borderRadius: 12,
+          border: `1px solid ${colors.navy}`,
+          background: colors.white,
+          color: colors.navy,
+          fontSize: 15,
+          cursor: decoding ? "default" : "pointer",
+          opacity: decoding ? 0.7 : 1,
+        }}
+      >
+        {decoding ? "Leyendo código..." : "Sacar foto del código de barras"}
+      </button>
+
+      {error && (
+        <p style={{ color: colors.danger, fontSize: 13, marginTop: 12, textAlign: "center" }}>{error}</p>
       )}
 
       <p style={{ fontSize: 12, color: colors.muted, textAlign: "center", margin: "16px 0 8px" }}>

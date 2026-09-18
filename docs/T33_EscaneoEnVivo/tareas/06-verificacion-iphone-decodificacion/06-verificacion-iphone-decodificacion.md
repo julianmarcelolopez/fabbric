@@ -1,6 +1,6 @@
 # Tarea 6 — Verificar el loop completo en el iPhone real
 
-**Estado:** 🟡 Primer intento reveló un bug real (ya arreglado, ver abajo) — pendiente reintentar.
+**Estado:** ✅ Hecha (2026-09-18) — confirmada de punta a punta después del fix de CORS (ver abajo): decodifica, busca contra el backend y navega correctamente; apagado de cámara confirmado explícitamente ("el apagado de la camara funciona bien").
 
 **Depende de:** Tarea 5.
 
@@ -61,15 +61,47 @@ mismo problema): esto también arregla el flujo de foto existente, que tenía
 la misma dependencia silenciosa del CDN — en cualquier ambiente, no solo el
 de prueba.
 
-**Pendiente**: commit/push + "Implementar" en EasyPanel, y reintentar el
-checklist completo de esta tarea.
+## Segundo intento: "Load failed" persistía, incluso en Safari (no era el `.wasm`)
+
+Con el fix de arriba deployado (confirmado por curl: el `.wasm` propio se
+servía bien, 200, `Content-Type: application/wasm`), el error seguía
+apareciendo — igual en Chrome incógnito y en Safari. Se descartó caché de
+service worker (incógnito ya lo hacía irrelevante) y se descartó que fuera
+el archivo `.wasm` en sí (el usuario lo pudo descargar directo desde el
+navegador del iPhone, 1.1 MB, sin problema).
+
+**Causa real**: CORS en el **backend**, no la descarga del `.wasm`.
+`backend/src/index.ts:100` solo permite orígenes `[FRONTEND_URL, PWA_URL,
+*.trycloudflare.com]` — `fabbric-test.aivance.cloud` no estaba en esa
+lista, así que el navegador bloqueaba la respuesta de
+`/admin/variants/by-barcode/:code` (la búsqueda del código ya decodificado
+contra el backend), y eso es lo que se veía como "Load failed" — nada que
+ver con la cámara ni con el `.wasm`, que ya andaban bien.
+
+**Fix**: sin tocar código — `PWA_URL` ya existe en el schema de env del
+backend (`backend/src/config/env.ts:21`, pensada justo para "un segundo
+cliente autenticado, mismo backend, otro origen") pero no estaba seteada
+(default `http://localhost:5174`). Se agregó
+`PWA_URL=https://fabbric-test.aivance.cloud` en las variables de entorno de
+EasyPanel (servicio `fabbric-backend`) + restart (no rebuild — variable de
+runtime). Verificado con un preflight OPTIONS real: `Access-Control-Allow-Origin:
+https://fabbric-test.aivance.cloud` en la respuesta, y confirmado que
+`fabbric.aivance.cloud` (producción) seguía funcionando igual después del
+restart.
+
+**Con los dos fixes (wasm propio + CORS), el escaneo en vivo funcionó de
+punta a punta en el iPhone real** — decodificó una serie de códigos reales,
+buscó contra el backend y navegó bien. Un caso puntual (`0333242180304`,
+etiqueta de Zara) no se reconoció — investigado y resuelto por separado en
+la Tarea 7 (es un formato ITF real, no un bug).
 
 ## Criterio de aceptación
 
-Apuntar la cámara a un código de barras físico real en el iPhone lo
-decodifica en menos de ~1-2 segundos, navega correctamente a Ficha (código
-existente) o Alta (código nuevo, modo Recibir mercadería), y no deja el
-indicador de cámara prendido en ningún caso.
+✅ Cumplido. Apuntar la cámara a un código de barras físico real en el
+iPhone lo decodifica en menos de ~1-2 segundos, navega correctamente a
+Ficha (código existente) o Alta (código nuevo, modo Recibir mercadería), y
+no deja el indicador de cámara prendido en ningún caso (confirmado
+explícitamente por el usuario).
 
 ## Dependencias
 
