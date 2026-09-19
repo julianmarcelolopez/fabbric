@@ -1,6 +1,6 @@
 # Tarea 4 — Backend: `cobrar-saldo` + detalle de pedido
 
-**Estado:** ⬜ Pendiente.
+**Estado:** ✅ Hecha (2026-09-18).
 
 **Depende de:** Tarea 3.
 
@@ -34,15 +34,27 @@ ese saldo.
   orderId = :id AND type = 'income'`) y `saldoPendiente` (`order.total -
   pagado`) — los necesita la Tarea 7 (`OrderAdminDetailPage.tsx`).
 
+## Resultado real
+
+`pagadoDePedido(orderId)` — helper nuevo, mismo patrón
+`coalesce(sum(...),0)::int` que ya usa `finance/service.ts` (no el helper
+`sum()` de drizzle-orm, por consistencia con el resto del proyecto — se
+probó y se revirtió a propósito). Reusado por `GET /admin/orders/:id`
+(ahora devuelve `pagado`/`saldoPendiente`) y por `cobrar-saldo`. El insert
+del movimiento + el posible pase a `"paid"` quedaron en su propia
+transacción (`db.transaction`) — atomicidad entre las dos escrituras.
+
 ## Criterio de aceptación
 
-`npx tsc --noEmit` + `curl`: cobrar de a partes hasta completar el total
-confirma que el pedido pasa a `paid` solo, sin acción manual extra;
-intentar cobrar de más devuelve 400 sin dejar movimientos a medias (mismo
-pedido probado dos veces: un cobro parcial válido, y uno que se pasa).
-Confirmar explícitamente que un **segundo** cobro sobre el mismo pedido sí
-inserta un movimiento nuevo (no lo pisa el guard de idempotencia que tiene
-`recordOrderCharge`).
+✅ Cumplido. Verificado con script `.mjs` descartable (14/14 checks OK):
+`GET /admin/orders/:id` trae `pagado`/`saldoPendiente` correctos tras el
+anticipo inicial; un cobro parcial no completa el pedido; un intento de
+`overpayment` devuelve 400 **sin dejar movimientos a medias** (confirmado
+contando filas de `financial_movements` antes/después); el cobro que
+completa el total pasa a `paid` solo; cobrar sobre un pedido ya `paid`
+devuelve 409; **el segundo cobro sí insertó un movimiento nuevo** — prueba
+directa de que el fix del guard de idempotencia de `recordOrderCharge`
+funciona (con el bug original, ese cobro se habría perdido en silencio).
 
 ## Dependencias
 

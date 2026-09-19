@@ -24,6 +24,15 @@ export function monthRange(year: number, month: number): { from: string; to: str
   return { from, to };
 }
 
+/** Rango [desde, hasta) de un único día calendario */
+export function dayRange(date: string): { from: string; to: string } {
+  const [y, m, d] = date.split("-").map(Number);
+  const from = date;
+  const next = new Date(Date.UTC(y, m - 1, d + 1));
+  const to = next.toISOString().slice(0, 10);
+  return { from, to };
+}
+
 /** Año/mes actuales en fecha contable AR (defaults de movimientos y resumen) */
 export function currentArYearMonth(): { year: number; month: number } {
   const [year, month] = todayAr().split("-").map(Number);

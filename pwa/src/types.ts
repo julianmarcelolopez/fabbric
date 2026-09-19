@@ -1,3 +1,12 @@
+// T34 — subconjunto de la respuesta de GET /admin/customers (search) que
+// usa el buscador de cliente del anticipo; el endpoint devuelve más campos
+// (orderCount, totalSpent, lastOrderAt) que acá no hacen falta.
+export type CustomerSearchResult = {
+  id: string;
+  name: string;
+  phone: string | null;
+};
+
 // Forma exacta de la respuesta de GET /admin/variants/by-barcode/:code
 // (backend/src/modules/variants/routes.ts, Fase 1 de T23).
 export type VariantByBarcode = {

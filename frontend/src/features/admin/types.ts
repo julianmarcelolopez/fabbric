@@ -164,11 +164,13 @@ export const MOVEMENT_TYPE_LABELS: Record<StockMovementRow["type"], string> = {
   sync: "Sync (auto)",
 };
 
-export type AdminOrderStatus = "pending" | "paid" | "preparing" | "shipped" | "delivered" | "cancelled";
+export type AdminOrderStatus = "pending" | "partial" | "paid" | "preparing" | "shipped" | "delivered" | "cancelled";
 export type AdminOrderType = "catalogo" | "personalizado" | "mixto";
 
 export const ADMIN_ORDER_STATUS: Record<AdminOrderStatus, { label: string; color: string }> = {
   pending: { label: "Pendiente de pago", color: "#b45309" },
+  // T34 — mismo ámbar que "pending": es un estado de atención, no de marca.
+  partial: { label: "Saldo pendiente", color: "#b45309" },
   paid: { label: "Pagado", color: "#15803d" },
   preparing: { label: "En preparación", color: "#1d4ed8" },
   shipped: { label: "Enviado", color: "#7c3aed" },
@@ -187,6 +189,10 @@ export type AdminOrderRow = {
   orderNumber: number;
   status: AdminOrderStatus;
   total: number;
+  // T34 — mismo criterio que AdminOrderDetail: derivados de financialMovements.
+  balanceDueDate: string | null;
+  pagado: number;
+  saldoPendiente: number;
   createdAt: string;
   customerName: string | null;
   customerEmail: string | null;
@@ -233,6 +239,12 @@ export type AdminOrderDetail = {
   trackingNumber: string | null;
   mpPaymentId: string | null;
   note: string | null;
+  // T34 — solo no-null en pedidos que nacieron con anticipo.
+  balanceDueDate: string | null;
+  // T34 — derivados en el backend a partir de financialMovements, no
+  // columnas propias (ver Tarea 4). pagado === total cuando status !== "partial".
+  pagado: number;
+  saldoPendiente: number;
   createdAt: string;
   customerName: string | null;
   customerEmail: string | null;
@@ -247,7 +259,8 @@ export type AdminOrderDetail = {
 export type AdminCustomerRow = {
   id: string;
   name: string;
-  email: string;
+  // T34: nullable — alta puerta a puerta (POST /admin/customers) no pide email.
+  email: string | null;
   phone: string | null;
   orderCount: number;
   totalSpent: number;
@@ -266,7 +279,8 @@ export type AdminCustomerOrder = {
 export type AdminCustomerDetail = {
   id: string;
   name: string;
-  email: string;
+  // T34: nullable — alta puerta a puerta (POST /admin/customers) no pide email.
+  email: string | null;
   phone: string | null;
   address: string | null;
   createdAt: string;

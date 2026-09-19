@@ -33,3 +33,14 @@ export const fonts = {
   // Solo el logotipo "Eliathi" — nunca precios, tabs ni texto largo.
   script: '"Alex Brush", cursive',
 } as const;
+
+// T33/09 — alto del header fijo (App.tsx) y del footer fijo (BottomNav) —
+// centralizados acá porque varias pantallas los necesitan para su propio
+// `calc(100vh - ...)` (contenido que debe llenar exactamente el espacio
+// visible entre header y footer, ej. las confirmaciones de pantalla
+// completa). Antes cada pantalla tenía "calc(100vh - 56px)" hardcodeado
+// pensado solo para el footer, de cuando el header todavía no era fijo —
+// al agregarse el header fijo (T33/09) ese cálculo quedó corto y generaba
+// un scroll de sobra (encontrado en T34, ver docs/T34_VentaConAnticipo).
+export const HEADER_HEIGHT = 40;
+export const FOOTER_HEIGHT = 56;

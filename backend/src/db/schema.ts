@@ -19,8 +19,14 @@ export const productStatus = pgEnum("product_status", ["active", "paused", "out_
 export const homeSectionRefType = pgEnum("home_section_ref_type", ["category", "collection"]);
 export const stockChannel = pgEnum("stock_channel", ["online", "local"]);
 export const stockMovementType = pgEnum("stock_movement_type", ["entrada", "venta", "ajuste", "sync"]);
+// T34 — "partial" (venta con anticipo, puerta a puerta): nace directo en
+// este estado en vez de "paid" cuando el cobro no fue completo, igual que
+// "paid" nunca se alcanza por PATCH genérico (ver ORDER_TRANSITIONS en
+// @fabbric/shared) — solo por el endpoint /venta-local (nace así) o
+// /cobrar-saldo (llega a "paid" al completarse).
 export const orderStatus = pgEnum("order_status", [
   "pending",
+  "partial",
   "paid",
   "preparing",
   "shipped",
@@ -279,8 +285,16 @@ export const customers = pgTable(
     orgId: uuid("org_id")
       .notNull()
       .references(() => organizations.id),
-    googleSub: uuid("google_sub").notNull(),
-    email: text("email").notNull(),
+    // T34 — nullable: un cliente puerta a puerta (POST /admin/customers,
+    // alta manual sin login) todavía no tiene cuenta de Google. Si esa misma
+    // persona se loguea más adelante en la tienda online, resolveCustomer
+    // (auth.ts) empareja por googleSub — no encuentra esta fila (null nunca
+    // matchea) y crea una segunda, separada; limitación conocida, no
+    // resuelta en T34 (ver docs/T34_VentaConAnticipo/plan.md, Hallazgo 3).
+    googleSub: uuid("google_sub"),
+    // T34 — nullable por el mismo motivo: el alta puerta a puerta no pide
+    // email. notifyCustomer() ya maneja email nulo con un early-return.
+    email: text("email"),
     name: text("name").notNull(),
     phone: text("phone"),
     address: text("address"),
@@ -335,6 +349,11 @@ export const orders = pgTable(
     mpPreferenceId: text("mp_preference_id"),
     mpPaymentId: text("mp_payment_id"),
     note: text("note"),
+    // T34 — solo se completa cuando el pedido nace con medioPago "anticipo"
+    // (venta con saldo pendiente, puerta a puerta); null en cualquier otro
+    // pedido. Fecha límite única, sin cuotas (decisión de negocio, ver
+    // docs/T34_VentaConAnticipo/analisis.md).
+    balanceDueDate: date("balance_due_date"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true })
       .notNull()

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { Fragment, useCallback, useEffect, useState, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { ApiError, apiJson } from "../../../lib/api";
 import { centsToPesosInput, formatPrice, pesosToCents } from "../../../lib/money";
@@ -33,6 +33,7 @@ export function FinanzasPage() {
 
   // Filtros
   const [month, setMonth] = useState(currentMonth());
+  const [day, setDay] = useState("");
   const [filterWallet, setFilterWallet] = useState("");
   const [filterType, setFilterType] = useState<"" | MovementType>("");
 
@@ -58,15 +59,18 @@ export function FinanzasPage() {
 
   const loadMonth = useCallback(async () => {
     const params = new URLSearchParams(monthQuery(month));
+    if (day) params.set("day", day);
     if (filterWallet) params.set("walletId", filterWallet);
     if (filterType) params.set("type", filterType);
+    const summaryParams = new URLSearchParams(monthQuery(month));
+    if (day) summaryParams.set("day", day);
     const [movs, sum] = await Promise.all([
       apiJson<AdminMovementRow[]>(`/admin/finance/movements?${params}`),
-      apiJson<FinanceSummary>(`/admin/finance/summary?${monthQuery(month)}`),
+      apiJson<FinanceSummary>(`/admin/finance/summary?${summaryParams}`),
     ]);
     setMovements(movs);
     setSummary(sum);
-  }, [month, filterWallet, filterType]);
+  }, [month, day, filterWallet, filterType]);
 
   useEffect(() => {
     loadWallets().catch((err) => setError(err instanceof ApiError ? err.message : String(err)));
@@ -275,10 +279,26 @@ export function FinanzasPage() {
       </div>
 
       <div className="card">
-        <label className="field">
-          Mes
-          <input type="month" value={month} onChange={(e) => e.target.value && setMonth(e.target.value)} />
-        </label>
+        <div className="row" style={{ alignItems: "flex-end" }}>
+          <label className="field">
+            Mes
+            <input
+              type="month"
+              value={month}
+              disabled={!!day}
+              onChange={(e) => e.target.value && setMonth(e.target.value)}
+            />
+          </label>
+          <label className="field">
+            Ver un día puntual
+            <input type="date" value={day} onChange={(e) => setDay(e.target.value)} />
+          </label>
+          {day && (
+            <button className="btn" onClick={() => setDay("")}>
+              Ver todo el mes
+            </button>
+          )}
+        </div>
       </div>
 
       {summary && (
@@ -366,7 +386,7 @@ export function FinanzasPage() {
       </div>
 
       <div className="row" style={{ alignItems: "flex-end" }}>
-        <h2 style={{ marginRight: "auto" }}>Movimientos del mes</h2>
+        <h2 style={{ marginRight: "auto" }}>{day ? "Movimientos del día" : "Movimientos del mes"}</h2>
         <label className="field">
           Cartera
           <select value={filterWallet} onChange={(e) => setFilterWallet(e.target.value)}>
@@ -405,53 +425,76 @@ export function FinanzasPage() {
             </tr>
           </thead>
           <tbody>
-            {movements.map((mov) => {
+            {movements.map((mov, i) => {
               const ui = MOVEMENT_TYPE_UI[mov.type];
+              const groupEnd = i === movements.length - 1 || movements[i + 1].date !== mov.date;
+              let subtotalRow: ReactNode = null;
+              if (groupEnd) {
+                const group = movements.filter((m) => m.date === mov.date);
+                const subtotal = group.reduce(
+                  (acc, m) => acc + (m.type === "income" ? m.amount : -m.amount),
+                  0
+                );
+                subtotalRow = (
+                  <tr key={`${mov.date}-subtotal`} className="muted">
+                    <td colSpan={5} style={{ textAlign: "right" }}>
+                      Subtotal {new Date(`${mov.date}T00:00:00`).toLocaleDateString("es-AR")}
+                    </td>
+                    <td style={{ color: subtotal >= 0 ? MOVEMENT_TYPE_UI.income.color : MOVEMENT_TYPE_UI.expense.color }}>
+                      <strong>{formatPrice(subtotal)}</strong>
+                    </td>
+                    <td />
+                  </tr>
+                );
+              }
               return (
-                <tr key={mov.id}>
-                  <td className="muted">{new Date(`${mov.date}T00:00:00`).toLocaleDateString("es-AR")}</td>
-                  <td>
-                    <span
-                      style={{
-                        display: "inline-block",
-                        width: 8,
-                        height: 8,
-                        borderRadius: "50%",
-                        background: mov.walletColor ?? "#8A8278",
-                        marginRight: 6,
-                      }}
-                    />
-                    {mov.walletName}
-                  </td>
-                  <td>{mov.category ?? <span className="muted">—</span>}</td>
-                  <td className="muted">{mov.description ?? "—"}</td>
-                  <td>
-                    {mov.orderId ? (
-                      <Link to={`/admin/orders/${mov.orderId}`}>#{mov.orderNumber}</Link>
-                    ) : (
-                      <span className="muted">—</span>
-                    )}
-                  </td>
-                  <td style={{ color: ui.color }}>
-                    <strong>{ui.sign} {formatPrice(mov.amount)}</strong>
-                  </td>
-                  <td>
-                    {!mov.orderId && (
-                      <button
-                        className="btn danger"
-                        disabled={busy}
-                        onClick={() => {
-                          if (!confirm("¿Borrar este movimiento?")) return;
-                          void run(() =>
-                            apiJson(`/admin/finance/movements/${mov.id}`, { method: "DELETE" })
-                          );
+                <Fragment key={mov.id}>
+                  <tr>
+                    <td className="muted">{new Date(`${mov.date}T00:00:00`).toLocaleDateString("es-AR")}</td>
+                    <td>
+                      <span
+                        style={{
+                          display: "inline-block",
+                          width: 8,
+                          height: 8,
+                          borderRadius: "50%",
+                          background: mov.walletColor ?? "#8A8278",
+                          marginRight: 6,
                         }}
-                      >
-                        Borrar
-                      </button>
-                    )}
-                  </td>
-                </tr>
+                      />
+                      {mov.walletName}
+                    </td>
+                    <td>{mov.category ?? <span className="muted">—</span>}</td>
+                    <td className="muted">{mov.description ?? "—"}</td>
+                    <td>
+                      {mov.orderId ? (
+                        <Link to={`/admin/orders/${mov.orderId}`}>#{mov.orderNumber}</Link>
+                      ) : (
+                        <span className="muted">—</span>
+                      )}
+                    </td>
+                    <td style={{ color: ui.color }}>
+                      <strong>{ui.sign} {formatPrice(mov.amount)}</strong>
+                    </td>
+                    <td>
+                      {!mov.orderId && (
+                        <button
+                          className="btn danger"
+                          disabled={busy}
+                          onClick={() => {
+                            if (!confirm("¿Borrar este movimiento?")) return;
+                            void run(() =>
+                              apiJson(`/admin/finance/movements/${mov.id}`, { method: "DELETE" })
+                            );
+                          }}
+                        >
+                          Borrar
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                  {subtotalRow}
+                </Fragment>
               );
             })}
           </tbody>

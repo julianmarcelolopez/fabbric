@@ -25,6 +25,44 @@ const monthQuery = z.object({
 // como timestamps, para filtrar columnas createdAt (timestamptz).
 const arTimestamp = (dateStr: string) => new Date(`${dateStr}T00:00:00-03:00`);
 
+// T34 — "Por cobrar" (deuda viva, GLOBAL no del mes) pasa a sumar DOS cosas
+// de naturaleza distinta pero mismo concepto ("plata que falta cobrar"):
+// pedidos `pending` (checkout online, nada pagado todavía) + el saldo real
+// de los pedidos `partial` (venta con anticipo, puerta a puerta — total
+// menos lo ya cobrado). Decisión de negocio charlada con el usuario:
+// fusionar en un solo número en vez de agregar un segundo stat aparte.
+async function receivableTotal(orgId: string): Promise<number> {
+  const [[pendingRow], partialOrders] = await Promise.all([
+    db
+      .select({ total: sql<number>`coalesce(sum(${orders.total}), 0)::int` })
+      .from(orders)
+      .where(and(eq(orders.orgId, orgId), eq(orders.status, "pending"))),
+    db
+      .select({ id: orders.id, total: orders.total })
+      .from(orders)
+      .where(and(eq(orders.orgId, orgId), eq(orders.status, "partial"))),
+  ]);
+
+  const partialIds = partialOrders.map((o) => o.id);
+  const pagos = partialIds.length
+    ? await db
+        .select({
+          orderId: financialMovements.orderId,
+          pagado: sql<number>`coalesce(sum(${financialMovements.amount}), 0)::int`,
+        })
+        .from(financialMovements)
+        .where(and(inArray(financialMovements.orderId, partialIds), eq(financialMovements.type, "income")))
+        .groupBy(financialMovements.orderId)
+    : [];
+
+  const partialSaldo = partialOrders.reduce((sum, o) => {
+    const pagado = pagos.find((p) => p.orderId === o.id)?.pagado ?? 0;
+    return sum + (o.total - pagado);
+  }, 0);
+
+  return pendingRow.total + partialSaldo;
+}
+
 /** Los 6 meses que terminan en el elegido (ascendente), para el gráfico */
 function lastSixMonths(year: number, month: number): { year: number; month: number }[] {
   const result: { year: number; month: number }[] = [];
@@ -90,7 +128,7 @@ export async function metricsRoutes(fastify: FastifyInstance) {
       // ── Stats del mes ────────────────────────────────────────────────────
       const summary = await monthSummary(orgId, from, to);
 
-      const [[ordersCount], [newCustomers], [receivable], [charges]] = await Promise.all([
+      const [[ordersCount], [newCustomers], receivable, [charges]] = await Promise.all([
         db
           .select({ count: sql<number>`count(*)::int` })
           .from(orders)
@@ -112,11 +150,9 @@ export async function metricsRoutes(fastify: FastifyInstance) {
               lt(customers.createdAt, toTs)
             )
           ),
-        // Deuda viva: GLOBAL, no del mes
-        db
-          .select({ total: sql<number>`coalesce(sum(${orders.total}), 0)::int` })
-          .from(orders)
-          .where(and(eq(orders.orgId, orgId), eq(orders.status, "pending"))),
+        // Deuda viva: GLOBAL, no del mes. T34 — ver receivableTotal() arriba:
+        // pending (online) + saldo real de partial (anticipo), fusionados.
+        receivableTotal(orgId),
         // Cobros del mes (movimientos income vinculados a pedido) → ticket promedio
         db
           .select({
@@ -244,7 +280,7 @@ export async function metricsRoutes(fastify: FastifyInstance) {
           pedidosMes: ordersCount.count,
           ...summary,
           clientesNuevos: newCustomers.count,
-          porCobrar: receivable.total,
+          porCobrar: receivable,
           ticketPromedio: charges.pedidos > 0 ? Math.round(charges.cobrado / charges.pedidos) : 0,
         },
         paneles: {

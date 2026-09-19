@@ -1,4 +1,4 @@
-import { colors, fonts, radius } from "../lib/theme";
+import { colors, FOOTER_HEIGHT, fonts, HEADER_HEIGHT, radius } from "../lib/theme";
 
 // T27, Fase 1: confirmación visible tras "Registrar entrada" (hoy la app
 // vuelve a Escanear sin ninguna señal de que la operación se ejecutó). Solo
@@ -22,7 +22,8 @@ export function EntradaOkScreen({ qty, stockNuevo, onDone }: Props) {
         flexDirection: "column",
         alignItems: "center",
         justifyContent: "center",
-        minHeight: "calc(100vh - 56px)",
+        // T34 — mismo fix que VentaAgregadaOkScreen (ver ese comentario).
+        minHeight: `calc(100vh - ${HEADER_HEIGHT + FOOTER_HEIGHT}px)`,
         gap: 10,
       }}
     >

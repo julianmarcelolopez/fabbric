@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { ApiError, apiDownload, apiJson } from "../../../lib/api";
-import { formatPrice } from "../../../lib/money";
+import { centsToPesosInput, formatPrice, pesosToCents } from "../../../lib/money";
 import { Loading } from "../components/Loading";
 import {
   ADMIN_ORDER_STATUS,
@@ -18,6 +18,98 @@ const ACTION_LABELS: Partial<Record<AdminOrderStatus, string>> = {
   delivered: "Marcar entregado",
   cancelled: "Cancelar",
 };
+
+// T34 — "cobrar saldo" resuelve la cartera del lado del servidor a partir
+// del medio de pago (igual que /venta-local) — a diferencia de "Cobrar
+// (venta manual)" más abajo, que sí le pide al admin elegir una cartera
+// concreta. Mismo endpoint que usa la PWA (decisión de negocio, ver
+// docs/T34_VentaConAnticipo/analisis.md) — no reusar el patrón de walletId.
+const MEDIOS_COBRO: { value: string; label: string }[] = [
+  { value: "efectivo", label: "Efectivo" },
+  { value: "transferencia", label: "Transferencia" },
+  { value: "tarjeta", label: "Tarjeta" },
+  { value: "mercadopago", label: "Mercado Pago" },
+];
+
+function vencido(balanceDueDate: string | null): boolean {
+  if (!balanceDueDate) return false;
+  return balanceDueDate < new Date().toISOString().slice(0, 10);
+}
+
+// T34 — tarjeta de saldo pendiente + formulario de cobro, solo para pedidos
+// `partial`. Componente aparte (no inline en OrderAdminDetailPage) porque
+// tiene su propio estado de formulario, igual que InvoiceCard más arriba.
+function SaldoPendienteCard({ order, onCobrado }: { order: AdminOrderDetail; onCobrado: () => Promise<void> }) {
+  const [monto, setMonto] = useState<number | null>(null);
+  const [medioPago, setMedioPago] = useState("efectivo");
+  const [busy, setBusy] = useState(false);
+  const [localError, setLocalError] = useState<string | null>(null);
+
+  async function cobrar() {
+    if (!monto) return;
+    setLocalError(null);
+    setBusy(true);
+    try {
+      await apiJson(`/admin/orders/${order.id}/cobrar-saldo`, {
+        method: "POST",
+        body: JSON.stringify({ monto, medioPago }),
+      });
+      setMonto(null);
+      await onCobrado();
+    } catch (err) {
+      setLocalError(err instanceof ApiError ? err.message : String(err));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  const excedeSaldo = monto != null && monto > order.saldoPendiente;
+
+  return (
+    <div className="card">
+      <h2>Saldo pendiente</h2>
+      <p>
+        Total {formatPrice(order.total)} · Pagado {formatPrice(order.pagado)} ·{" "}
+        <strong>Saldo {formatPrice(order.saldoPendiente)}</strong>
+      </p>
+      {order.balanceDueDate && (
+        <p className={vencido(order.balanceDueDate) ? "error" : "muted"}>
+          {vencido(order.balanceDueDate) ? "Venció" : "Vence"} el{" "}
+          {new Date(`${order.balanceDueDate}T00:00:00`).toLocaleDateString("es-AR")}
+        </p>
+      )}
+      <div className="row" style={{ alignItems: "flex-end" }}>
+        <label className="field">
+          Monto a cobrar
+          <input
+            type="text"
+            inputMode="decimal"
+            placeholder="0,00"
+            value={centsToPesosInput(monto)}
+            onChange={(e) => setMonto(pesosToCents(e.target.value))}
+          />
+        </label>
+        <label className="field">
+          Medio de pago
+          <select value={medioPago} onChange={(e) => setMedioPago(e.target.value)}>
+            {MEDIOS_COBRO.map((m) => (
+              <option key={m.value} value={m.value}>{m.label}</option>
+            ))}
+          </select>
+        </label>
+        <button className="btn primary" disabled={busy || !monto || excedeSaldo} onClick={() => void cobrar()}>
+          {busy ? "Registrando…" : "Registrar cobro"}
+        </button>
+      </div>
+      {excedeSaldo && (
+        <p className="error" style={{ marginTop: 8 }}>
+          El monto no puede ser mayor al saldo pendiente ({formatPrice(order.saldoPendiente)}).
+        </p>
+      )}
+      {localError && <p className="error" style={{ marginTop: 8 }}>{localError}</p>}
+    </div>
+  );
+}
 
 // T25 — estado de la factura AFIP del pedido (a lo sumo una por pedido).
 // Reintentar reusa el mismo endpoint que el botón "Reintentar" de otras
@@ -226,6 +318,9 @@ export function OrderAdminDetailPage() {
           {order.shippingCost === 0 ? "—" : formatPrice(order.shippingCost)} · <strong>Total: {formatPrice(order.total)}</strong>
         </p>
       </div>
+
+      {/* T34 — solo pedidos que nacieron con anticipo (venta-local, PWA) */}
+      {order.status === "partial" && <SaldoPendienteCard order={order} onCobrado={load} />}
 
       {/* T25 — sin factura (toggle nunca activado en la venta), esta tarjeta
           no aparece: cero cambio respecto de un pedido de T23. */}

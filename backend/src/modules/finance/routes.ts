@@ -14,6 +14,7 @@ import { AppError } from "../../lib/errors.js";
 import { requireOrgId } from "../../lib/tenant.js";
 import {
   currentArYearMonth,
+  dayRange,
   monthRange,
   monthSummary,
   requireActiveWallet,
@@ -23,10 +24,12 @@ import {
 const tag = { tags: ["finanzas (admin)"], security: [{ bearerAuth: [] }] };
 const idParam = z.object({ id: z.string().uuid() });
 
-// year/month opcionales juntos: sin ellos, mes contable actual (AR)
+// year/month opcionales juntos: sin ellos, mes contable actual (AR). `day`
+// pisa a los dos: filtra ese único día calendario en vez del mes.
 const monthQuery = z.object({
   year: z.coerce.number().int().min(2000).max(2100).optional(),
   month: z.coerce.number().int().min(1).max(12).optional(),
+  day: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
 });
 
 const movementsQuery = monthQuery.extend({
@@ -34,7 +37,8 @@ const movementsQuery = monthQuery.extend({
   type: movementTypeSchema.optional(),
 });
 
-function resolveMonth(query: { year?: number; month?: number }) {
+function resolveRange(query: { year?: number; month?: number; day?: string }) {
+  if (query.day) return dayRange(query.day);
   const now = currentArYearMonth();
   return monthRange(query.year ?? now.year, query.month ?? now.month);
 }
@@ -150,7 +154,7 @@ export async function financeRoutes(fastify: FastifyInstance) {
     async (request) => {
       const orgId = requireOrgId(request);
       const { walletId, type } = request.query;
-      const { from, to } = resolveMonth(request.query);
+      const { from, to } = resolveRange(request.query);
 
       const conditions = [
         eq(financialMovements.orgId, orgId),
@@ -261,7 +265,7 @@ export async function financeRoutes(fastify: FastifyInstance) {
     },
     async (request) => {
       const orgId = requireOrgId(request);
-      const { from, to } = resolveMonth(request.query);
+      const { from, to } = resolveRange(request.query);
       // Única fuente de estos números (la comparte el overview del dashboard)
       const summary = await monthSummary(orgId, from, to);
       return { from, to, ...summary };

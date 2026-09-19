@@ -1,6 +1,6 @@
 # Tarea 3 — Backend: `venta-local` con anticipo
 
-**Estado:** ⬜ Pendiente.
+**Estado:** ✅ Hecha (2026-09-18).
 
 **Depende de:** Tarea 2.
 
@@ -34,11 +34,20 @@ de la orden en la línea ~498-507, cálculo de `wallet` en la línea 470,
 
 ## Criterio de aceptación
 
-`npx tsc --noEmit` + probado con `curl` contra Docker (org de prueba): una
-venta con `medioPago: "anticipo"` deja el pedido en `partial`, con un solo
-movimiento financiero por `montoPagado` (no por el total), y con
-`customerId`/`balanceDueDate` guardados. Una venta con cualquier otro
-medio de pago se comporta exactamente igual que antes (sin regresión).
+✅ Cumplido. Implementado tal cual el alcance — destructuring de
+`montoPagado`/`customerId`/`balanceDueDate` del body, `wallet` condicional
+(`esAnticipo ? LOCAL_SALE_WALLETS.efectivo : LOCAL_SALE_WALLETS[medioPago]`),
+insert de la orden condicional, `recordOrderCharge` con `amount:
+esAnticipo ? montoPagado! : order.total`.
+
+Verificado con script `.mjs` descartable (org/producto/variante/cliente
+temporales, borrados al final): 12/12 checks OK — venta normal sin
+regresión (sigue naciendo `paid`), anticipo nace `partial` con `total` =
+precio completo (no el monto pagado), `customerId`/`balanceDueDate`
+guardados, un único movimiento financiero por `montoPagado` (4000 de
+10000) en la cartera Efectivo, anticipo sin los 3 campos rechaza con 400
+(el `.refine()` de `ventaLocalSchema` funciona), y el stock se descuenta
+igual en los dos casos.
 
 ## Dependencias
 

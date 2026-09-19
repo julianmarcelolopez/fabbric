@@ -59,7 +59,12 @@ export async function portalRoutes(fastify: FastifyInstance) {
         .set(input)
         .where(eq(customers.id, request.customer!.id))
         .returning();
-      return publicProfile(row);
+      // T34: email pasó a nullable en el schema (alta puerta a puerta sin
+      // Google, ver customers en db/schema.ts) — pero esta ruta solo la
+      // alcanza un customer ya autenticado por requireCustomerAuth, que
+      // siempre viene de resolveCustomer (auth.ts) con email no-null (mismo
+      // razonamiento que ahí). Un cliente walk-in no tiene JWT para llegar acá.
+      return publicProfile({ ...row, email: row.email! });
     }
   );
 

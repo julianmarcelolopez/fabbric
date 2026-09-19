@@ -24,6 +24,11 @@ paralelo si hay dos personas. La Fase 9 (verificación) cierra todo.
 | 8 | Admin: filtro/badge + stat "Por cobrar" | 1 | Admin |
 | 9 | Verificación end-to-end | 5, 6, 7, 8 | — |
 
+**T34 completa (2026-09-18)** — las 9 fases / 9 tareas hechas y verificadas
+(backend por `curl`/scripts descartables, PWA y admin en vivo por el
+usuario). Detalle del cruce final contra los criterios de aceptación de
+`analisis.md` en `tareas/09-verificacion-end-to-end/`.
+
 ## Desglose en tareas
 
 Cada fase de arriba baja a una tarea propia en `tareas/`, mismo formato
@@ -33,15 +38,15 @@ fase de este plan ya está acotada a una unidad de trabajo/verificación.
 
 | # | Tarea | Depende de | Rama | Estado |
 |---|---|---|---|---|
-| 1 | [01-modelo-de-datos](tareas/01-modelo-de-datos/01-modelo-de-datos.md) | nada | — | ⬜ |
-| 2 | [02-alta-cliente-sin-google](tareas/02-alta-cliente-sin-google/02-alta-cliente-sin-google.md) | 1 | — | ⬜ |
-| 3 | [03-venta-local-anticipo](tareas/03-venta-local-anticipo/03-venta-local-anticipo.md) | 2 | — | ⬜ |
-| 4 | [04-cobrar-saldo-detalle-pedido](tareas/04-cobrar-saldo-detalle-pedido/04-cobrar-saldo-detalle-pedido.md) | 3 | — | ⬜ |
-| 5 | [05-pwa-carrito-anticipo](tareas/05-pwa-carrito-anticipo/05-pwa-carrito-anticipo.md) | 2, 3 | PWA | ⬜ |
-| 6 | [06-pwa-saldos-pendientes](tareas/06-pwa-saldos-pendientes/06-pwa-saldos-pendientes.md) | 4 | PWA | ⬜ |
-| 7 | [07-admin-cobrar-saldo](tareas/07-admin-cobrar-saldo/07-admin-cobrar-saldo.md) | 4 | Admin | ⬜ |
-| 8 | [08-admin-filtro-stat](tareas/08-admin-filtro-stat/08-admin-filtro-stat.md) | 1 | Admin | ⬜ |
-| 9 | [09-verificacion-end-to-end](tareas/09-verificacion-end-to-end/09-verificacion-end-to-end.md) | 5, 6, 7, 8 | — | ⬜ |
+| 1 | [01-modelo-de-datos](tareas/01-modelo-de-datos/01-modelo-de-datos.md) | nada | — | ✅ |
+| 2 | [02-alta-cliente-sin-google](tareas/02-alta-cliente-sin-google/02-alta-cliente-sin-google.md) | 1 | — | ✅ |
+| 3 | [03-venta-local-anticipo](tareas/03-venta-local-anticipo/03-venta-local-anticipo.md) | 2 | — | ✅ |
+| 4 | [04-cobrar-saldo-detalle-pedido](tareas/04-cobrar-saldo-detalle-pedido/04-cobrar-saldo-detalle-pedido.md) | 3 | — | ✅ |
+| 5 | [05-pwa-carrito-anticipo](tareas/05-pwa-carrito-anticipo/05-pwa-carrito-anticipo.md) | 2, 3 | PWA | ✅ |
+| 6 | [06-pwa-saldos-pendientes](tareas/06-pwa-saldos-pendientes/06-pwa-saldos-pendientes.md) | 4 | PWA | ✅ |
+| 7 | [07-admin-cobrar-saldo](tareas/07-admin-cobrar-saldo/07-admin-cobrar-saldo.md) | 4 | Admin | ✅ |
+| 8 | [08-admin-filtro-stat](tareas/08-admin-filtro-stat/08-admin-filtro-stat.md) | 1 | Admin | ✅ |
+| 9 | [09-verificacion-end-to-end](tareas/09-verificacion-end-to-end/09-verificacion-end-to-end.md) | 5, 6, 7, 8 | — | ✅ |
 
 ## Hallazgos de la exploración (no estaban resueltos en `analisis.md`)
 

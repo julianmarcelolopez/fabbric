@@ -1,6 +1,6 @@
 # Tarea 2 — Backend: alta de cliente sin Google
 
-**Estado:** ⬜ Pendiente.
+**Estado:** ✅ Hecha (2026-09-18).
 
 **Depende de:** Tarea 1.
 
@@ -33,12 +33,28 @@ la tienda online queda **duplicado** (`resolveCustomer` empareja por
 `googleSub`, que en la fila walk-in es `null`) — documentado en
 `plan.md`, Hallazgo 3 y "Fuera de alcance". No es parte de esta tarea.
 
+## Resultado real
+
+`createCustomerSchema` agregado a `packages/shared/src/schemas/customer.ts`
+(junto a `customerSchema`, ya corregido en la Tarea 1). `POST
+/admin/customers` agregado en `customers/routes.ts`, al final del archivo.
+
+**Gotcha de verificación**: el primer intento de probar con `curl` usando
+`SEED_ADMIN_EMAIL`/`SEED_ADMIN_PASSWORD` de `.env.local` falló con
+`invalid_credentials` — esa contraseña quedó desactualizada (la memoria del
+proyecto ya registraba que se cambió a mano durante T15). Se resolvió con
+el patrón real ya establecido en el repo (`backend/t23-04-alta-rapida.mjs`):
+crear una org + admin user **temporales** vía `supa.auth.admin.createUser`
++ insert directo en `admin_users`, loguearse con esas credenciales
+descartables, y borrar todo al final — no depender de la cuenta real
+seedeada para este tipo de prueba.
+
 ## Criterio de aceptación
 
-`npx tsc --noEmit` limpio. Probado con `curl` contra el backend real en
-Docker (mismo patrón que T11/T12/T16): crear un cliente con solo nombre
-(sin teléfono, sin email) y confirmar que aparece en
-`GET /admin/customers`.
+✅ `npx tsc --noEmit` limpio. Verificado con un script `.mjs` descartable
+(org temporal, borrada al final): alta con nombre+teléfono aparece en
+`GET /admin/customers?search=` con `email: null`; alta sin teléfono
+funciona (opcional); nombre vacío rechaza con 400. 7/7 checks OK.
 
 ## Dependencias
 

@@ -1,24 +1,27 @@
-import type { InvoiceStatus, MedioPago } from "@fabbric/shared";
+import type { InvoiceStatus, VentaLocalMedioPago } from "@fabbric/shared";
 import { useState } from "react";
 import { apiDownload, ApiError } from "../lib/api";
-import { colors, fonts, radius } from "../lib/theme";
+import { colors, FOOTER_HEIGHT, fonts, HEADER_HEIGHT, radius } from "../lib/theme";
 import { formatPrice } from "../lib/money";
 
-const MEDIO_LABELS: Record<MedioPago, string> = {
+const MEDIO_LABELS: Record<VentaLocalMedioPago, string> = {
   efectivo: "Efectivo",
   transferencia: "Transferencia",
   tarjeta: "Tarjeta",
   mercadopago: "Mercado Pago",
+  anticipo: "Anticipo",
 };
 
 type Props = {
   total: number;
-  medioPago: MedioPago;
+  medioPago: VentaLocalMedioPago;
+  // T34 — solo no-null cuando medioPago === "anticipo".
+  montoPagado: number | null;
   factura: InvoiceStatus | null;
   onDone: () => void;
 };
 
-export function ConfirmarScreen({ total, medioPago, factura, onDone }: Props) {
+export function ConfirmarScreen({ total, medioPago, montoPagado, factura, onDone }: Props) {
   const [descargando, setDescargando] = useState(false);
   const [descargaError, setDescargaError] = useState<string | null>(null);
 
@@ -43,7 +46,8 @@ export function ConfirmarScreen({ total, medioPago, factura, onDone }: Props) {
         flexDirection: "column",
         alignItems: "center",
         justifyContent: "center",
-        minHeight: "calc(100vh - 56px)",
+        // T34 — mismo fix que VentaAgregadaOkScreen (ver ese comentario).
+        minHeight: `calc(100vh - ${HEADER_HEIGHT + FOOTER_HEIGHT}px)`,
         gap: 10,
       }}
     >
@@ -65,9 +69,19 @@ export function ConfirmarScreen({ total, medioPago, factura, onDone }: Props) {
       <p style={{ fontFamily: fonts.display, fontSize: 20, fontWeight: 600, color: colors.navy, marginTop: 6 }}>
         Venta registrada
       </p>
-      <p style={{ fontSize: 13, color: colors.muted }}>
-        Total {formatPrice(total)} · {MEDIO_LABELS[medioPago]}
-      </p>
+      {/* T34 — anticipo muestra lo cobrado ahora + el saldo, no el total a
+          secas (el vendedor necesita ver de un vistazo cuánto quedó pendiente). */}
+      {medioPago === "anticipo" && montoPagado != null ? (
+        <p style={{ fontSize: 13, color: colors.muted, textAlign: "center" }}>
+          Anticipo {formatPrice(montoPagado)} de {formatPrice(total)}
+          <br />
+          Saldo pendiente: {formatPrice(total - montoPagado)}
+        </p>
+      ) : (
+        <p style={{ fontSize: 13, color: colors.muted }}>
+          Total {formatPrice(total)} · {MEDIO_LABELS[medioPago]}
+        </p>
+      )}
 
       {/* T25 — sin toggle activado, factura es null y esta sección no aparece:
           la pantalla queda idéntica a la de T23. */}

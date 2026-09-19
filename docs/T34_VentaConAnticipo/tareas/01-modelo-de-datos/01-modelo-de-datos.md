@@ -1,6 +1,6 @@
 # Tarea 1 — Modelo de datos y schemas compartidos
 
-**Estado:** ⬜ Pendiente.
+**Estado:** ✅ Hecha (2026-09-18).
 
 **Depende de:** nada.
 
@@ -43,11 +43,40 @@ tenga dónde pararse.
   - `AdminOrderDetail` (línea 224-245) suma `balanceDueDate: string | null`,
     `pagado: number`, `saldoPendiente: number`.
 
+## Resultado real
+
+Implementado tal cual el alcance. Dos gaps encontrados recién al correr
+`tsc` (no estaban anticipados en `plan.md`, típico de ensanchar un tipo
+nullable):
+- `backend/src/modules/portal/routes.ts:62` — `publicProfile(row)` esperaba
+  `email: string`; `row.email` ahora es `string | null` tras la migración.
+  Arreglado con una aserción explicada (esta ruta solo la alcanza un
+  customer ya autenticado por Google vía `requireCustomerAuth`, nunca un
+  walk-in — mismo razonamiento que `auth.ts`).
+- `packages/shared/src/schemas/customer.ts` (`customerSchema`) declaraba
+  `googleSub`/`email` no-nulos — desactualizado contra el schema real, y
+  además **no lo importa nadie** en todo el repo (confirmado por grep) —
+  se corrigió igual por prolijidad, sin romper nada al ser código muerto.
+- `frontend/src/features/admin/types.ts` — de paso se ensancharon
+  `AdminCustomerRow.email` y `AdminCustomerDetail.email` a `string | null`
+  (no estaban en el alcance original del plan, pero son el mismo tipo de
+  gap) — verificado que `CustomersPage.tsx`/`CustomerDetailPage.tsx` ya
+  renderizan `null` sin problema (JSX plano, sin `.toLowerCase()` ni nada
+  que asuma no-nulo).
+
+Migración `0027_t34_venta_anticipo.sql` generada y **aplicada contra la
+base real** (vía el workaround ya documentado en la memoria del proyecto:
+`DIRECT_URL` es IPv6-only desde Docker, se usó el pooler de sesión en
+puerto 5432 en su lugar, sin tocar `.env.local`). Verificado con un script
+`.mjs` descartable contra la DB real (borrado después): el enum trae
+`partial`, `orders.balance_due_date` es `date` nullable, y
+`customers.google_sub`/`email` ya son nullable.
+
 ## Criterio de aceptación
 
-`npx tsc --noEmit` limpio en los 3 workspaces. A esta altura no hay lógica
-nueva, así que cualquier error acá es de sintaxis/tipos, no de negocio —
-vale la pena resolverlo del todo antes de pasar a la Tarea 2.
+✅ `npx tsc --noEmit` limpio en los 3 workspaces (con la única excepción
+esperada: `orders/routes.ts:470`, `LOCAL_SALE_WALLETS[medioPago]` — es
+justo lo que resuelve la Tarea 3, no un error de esta tarea).
 
 ## Dependencias
 

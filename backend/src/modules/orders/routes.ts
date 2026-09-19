@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import {
   canTransition,
+  cobrarSaldoSchema,
   createManualOrderSchema,
   deriveOrderType,
   markPaidSchema,
@@ -20,6 +21,7 @@ import { z } from "zod";
 import { db } from "../../db/client.js";
 import {
   customers,
+  financialMovements,
   invoices,
   orderItems,
   orders,
@@ -33,7 +35,7 @@ import { orderStatusEmail, sendEmail } from "../../lib/email.js";
 import { AppError, isUniqueViolation } from "../../lib/errors.js";
 import { requireOrgId } from "../../lib/tenant.js";
 import { ensureConfig } from "../catalogConfig/service.js";
-import { ensureWallet, MP_WALLET_NAME, recordOrderCharge, requireActiveWallet } from "../finance/service.js";
+import { ensureWallet, MP_WALLET_NAME, recordOrderCharge, requireActiveWallet, todayAr } from "../finance/service.js";
 import { intentarEmision } from "../invoices/service.js";
 
 const idParam = z.object({ id: z.string().uuid() });
@@ -87,6 +89,19 @@ async function notifyCustomer(
   await sendEmail({ to: customer.email, subject, html }, log);
 }
 
+// T34 — total efectivamente cobrado de un pedido, sumando TODOS sus
+// movimientos financieros de tipo income (el anticipo de venta-local +
+// cualquier cobro de /cobrar-saldo) — reusado por el detalle del pedido y
+// por /cobrar-saldo para validar que no se cobre de más. Mismo patrón
+// coalesce(sum(...),0) que ya usa finance/service.ts (monthSummary).
+async function pagadoDePedido(orderId: string): Promise<number> {
+  const [{ total }] = await db
+    .select({ total: rawSql<number>`coalesce(sum(${financialMovements.amount}), 0)::int` })
+    .from(financialMovements)
+    .where(and(eq(financialMovements.orderId, orderId), eq(financialMovements.type, "income")));
+  return total;
+}
+
 export async function ordersRoutes(fastify: FastifyInstance) {
   const app = fastify.withTypeProvider<ZodTypeProvider>();
   const auth = { preHandler: fastify.requireAdminAuth };
@@ -128,14 +143,32 @@ export async function ordersRoutes(fastify: FastifyInstance) {
             .from(orderItems)
             .where(inArray(orderItems.orderId, orderIds))
         : [];
+      // T34 — pagado por pedido, en una sola query agrupada (no N llamadas a
+      // pagadoDePedido) — la usa SaldosPendientesScreen de la PWA para
+      // mostrar el saldo de cada pedido `partial` sin pedir el detalle uno
+      // por uno.
+      const pagos = orderIds.length
+        ? await db
+            .select({
+              orderId: financialMovements.orderId,
+              pagado: rawSql<number>`coalesce(sum(${financialMovements.amount}), 0)::int`,
+            })
+            .from(financialMovements)
+            .where(and(inArray(financialMovements.orderId, orderIds), eq(financialMovements.type, "income")))
+            .groupBy(financialMovements.orderId)
+        : [];
 
       const result = rows.map(({ order, customerName, customerEmail }) => {
         const orderItemsOf = items.filter((i) => i.orderId === order.id);
+        const pagado = pagos.find((p) => p.orderId === order.id)?.pagado ?? 0;
         return {
           id: order.id,
           orderNumber: order.orderNumber,
           status: order.status,
           total: order.total,
+          balanceDueDate: order.balanceDueDate,
+          pagado,
+          saldoPendiente: order.total - pagado,
           createdAt: order.createdAt,
           customerName,
           customerEmail,
@@ -176,8 +209,14 @@ export async function ordersRoutes(fastify: FastifyInstance) {
       if (!row) throw new AppError(404, "not_found", "Pedido no encontrado");
 
       const items = await db.select().from(orderItems).where(eq(orderItems.orderId, id));
+      // T34 — pagado/saldoPendiente: derivados de financialMovements, no
+      // columnas propias (mismo criterio que deriveOrderType). pagado ===
+      // total en cualquier pedido que no sea "partial".
+      const pagado = await pagadoDePedido(id);
       return {
         ...row.order,
+        pagado,
+        saldoPendiente: row.order.total - pagado,
         customerName: row.customerName,
         customerEmail: row.customerEmail,
         customerPhone: row.customerPhone,
@@ -429,7 +468,8 @@ export async function ordersRoutes(fastify: FastifyInstance) {
     },
     async (request, reply) => {
       const orgId = requireOrgId(request);
-      const { items, medioPago, factura } = request.body;
+      const { items, medioPago, factura, montoPagado, customerId, balanceDueDate } = request.body;
+      const esAnticipo = medioPago === "anticipo";
 
       const variantIds = items.map((i) => i.variantId);
       const rows = await db
@@ -467,7 +507,12 @@ export async function ordersRoutes(fastify: FastifyInstance) {
         };
       });
       const subtotal = lines.reduce((acc, l) => acc + l.total, 0);
-      const wallet = LOCAL_SALE_WALLETS[medioPago];
+      // T34 — "anticipo" no es una clave de LOCAL_SALE_WALLETS (no ensancha
+      // MedioPago a propósito, ver ventaLocalMedioPagoSchema en
+      // @fabbric/shared) — sin selector de cartera para el anticipo en esta
+      // versión, va siempre a Efectivo (decisión de negocio, ver
+      // docs/T34_VentaConAnticipo/plan.md).
+      const wallet = esAnticipo ? LOCAL_SALE_WALLETS.efectivo : LOCAL_SALE_WALLETS[medioPago];
 
       async function attempt() {
         return db.transaction(async (tx) => {
@@ -500,7 +545,12 @@ export async function ordersRoutes(fastify: FastifyInstance) {
             .values({
               orgId,
               orderNumber: (maxNumber ?? 0) + 1,
-              status: "paid",
+              // T34 — anticipo: nace "partial", con cliente y fecha límite;
+              // el refine de ventaLocalSchema ya garantiza que los tres
+              // campos vienen juntos cuando medioPago === "anticipo".
+              status: esAnticipo ? "partial" : "paid",
+              customerId: esAnticipo ? customerId : undefined,
+              balanceDueDate: esAnticipo ? balanceDueDate : undefined,
               subtotal,
               total: subtotal,
             })
@@ -527,7 +577,10 @@ export async function ordersRoutes(fastify: FastifyInstance) {
             walletId: walletRow.id,
             orderId: order.id,
             orderNumber: order.orderNumber,
-            amount: order.total,
+            // T34 — anticipo: se cobra solo lo que efectivamente pagó ahora,
+            // no el total. El resto se registra más adelante vía
+            // /cobrar-saldo (insert directo, no este helper — ver esa ruta).
+            amount: esAnticipo ? montoPagado! : order.total,
           });
 
           // T25 — si se pidió factura, la fila nace `pendiente` DENTRO de esta
@@ -597,6 +650,88 @@ export async function ordersRoutes(fastify: FastifyInstance) {
 
       reply.status(201);
       return { ...order, allowedTransitions: ORDER_TRANSITIONS[order.status], factura: facturaStatus };
+    }
+  );
+
+  // T34 — registrar un cobro sobre el saldo pendiente de un pedido
+  // "partial". Mismo endpoint para PWA y admin (decisión de negocio, ver
+  // docs/T34_VentaConAnticipo/analisis.md) — ninguno de los dos duplica esta
+  // lógica. Todo en una transacción propia (insert del movimiento + posible
+  // pase a "paid"): no queremos un movimiento cobrado sin que el pedido
+  // refleje el estado nuevo, ni viceversa.
+  app.post(
+    "/admin/orders/:id/cobrar-saldo",
+    {
+      ...auth,
+      schema: {
+        ...tag,
+        summary:
+          'Registrar un cobro sobre el saldo pendiente de un pedido "partial" (venta con anticipo) — pasa a "paid" solo si se completa el total.',
+        params: idParam,
+        body: cobrarSaldoSchema,
+      },
+    },
+    async (request) => {
+      const orgId = requireOrgId(request);
+      const { id } = request.params;
+      const { monto, medioPago } = request.body;
+
+      const [order] = await db
+        .select()
+        .from(orders)
+        .where(and(eq(orders.id, id), eq(orders.orgId, orgId)));
+      if (!order) throw new AppError(404, "not_found", "Pedido no encontrado");
+      if (order.status !== "partial") {
+        throw new AppError(
+          409,
+          "invalid_status",
+          `Solo se puede cobrar saldo de un pedido "partial" (este pedido está "${order.status}")`
+        );
+      }
+
+      const pagadoHastaAhora = await pagadoDePedido(id);
+      if (pagadoHastaAhora + monto > order.total) {
+        throw new AppError(
+          400,
+          "overpayment",
+          `El saldo pendiente es ${order.total - pagadoHastaAhora}, no se puede cobrar ${monto}`
+        );
+      }
+
+      const wallet = LOCAL_SALE_WALLETS[medioPago];
+      const pagado = pagadoHastaAhora + monto;
+      const nuevoStatus = pagado >= order.total ? "paid" : order.status;
+
+      const updatedOrder = await db.transaction(async (tx) => {
+        const walletRow = await ensureWallet(tx, orgId, wallet.name, wallet);
+        // Insert DIRECTO, no recordOrderCharge: esa función es idempotente
+        // POR PEDIDO (si ya existe cualquier income para este orderId, no
+        // hace nada) — pensada para que un replay del webhook de MP no
+        // duplique el cobro. Acá el pedido YA tiene un income (el anticipo
+        // de venta-local); reusarla se comería este segundo cobro en
+        // silencio, sin plata registrada. Ver docs/T34_VentaConAnticipo/plan.md.
+        await tx.insert(financialMovements).values({
+          orgId,
+          walletId: walletRow.id,
+          type: "income",
+          amount: monto,
+          category: "Venta",
+          description: `Cobro de saldo pedido #${order.orderNumber}`,
+          date: todayAr(),
+          orderId: order.id,
+        });
+
+        if (nuevoStatus === order.status) return order;
+        const [updated] = await tx.update(orders).set({ status: nuevoStatus }).where(eq(orders.id, id)).returning();
+        return updated;
+      });
+
+      return {
+        ...updatedOrder,
+        pagado,
+        saldoPendiente: updatedOrder.total - pagado,
+        allowedTransitions: ORDER_TRANSITIONS[updatedOrder.status],
+      };
     }
   );
 

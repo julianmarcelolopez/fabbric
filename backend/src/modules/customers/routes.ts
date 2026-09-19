@@ -1,4 +1,4 @@
-import { deriveOrderType } from "@fabbric/shared";
+import { createCustomerSchema, deriveOrderType } from "@fabbric/shared";
 import { and, asc, desc, eq, ilike, inArray, or, sql } from "drizzle-orm";
 import type { FastifyInstance } from "fastify";
 import type { ZodTypeProvider } from "fastify-type-provider-zod";
@@ -114,6 +114,34 @@ export async function customersRoutes(fastify: FastifyInstance) {
           type: deriveOrderType(items.filter((i) => i.orderId === order.id)),
         })),
       };
+    }
+  );
+
+  // T34 — alta manual (venta puerta a puerta): sin login de Google, así que
+  // sin googleSub/email (ambos nullable, ver customers en db/schema.ts) — no
+  // reemplaza a resolveCustomer (auth.ts), es un segundo camino de alta para
+  // clientes que nunca usaron la tienda online. No hay dedup automático acá
+  // (buscar primero es responsabilidad de quien llama, ej. la PWA busca
+  // antes de ofrecer este alta) — mismo criterio liviano que el resto del
+  // proyecto, sin agregar validación que nadie pidió.
+  app.post(
+    "/admin/customers",
+    {
+      ...auth,
+      schema: {
+        ...tag,
+        summary: "Alta manual de cliente (venta puerta a puerta, sin login de Google) — nombre + teléfono opcional",
+        body: createCustomerSchema,
+      },
+    },
+    async (request) => {
+      const orgId = requireOrgId(request);
+      const { name, phone } = request.body;
+      const [customer] = await db
+        .insert(customers)
+        .values({ orgId, name, phone: phone ?? null, googleSub: null, email: null })
+        .returning({ id: customers.id, name: customers.name, phone: customers.phone });
+      return customer;
     }
   );
 }

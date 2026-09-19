@@ -1,4 +1,4 @@
-import { colors, fonts, radius } from "../lib/theme";
+import { colors, FOOTER_HEIGHT, fonts, HEADER_HEIGHT, radius } from "../lib/theme";
 
 // T27, Fase 1: confirmación visible tras "Agregar a la venta" (hoy la app
 // vuelve a Escanear sin ninguna señal — la única pista era el badge chico del
@@ -23,7 +23,10 @@ export function VentaAgregadaOkScreen({ nombre, countCarrito, onDone, onIrCarrit
         flexDirection: "column",
         alignItems: "center",
         justifyContent: "center",
-        minHeight: "calc(100vh - 56px)",
+        // T34 — antes "calc(100vh - 56px)" (solo el footer), de cuando el
+        // header todavía no era fijo (T33/09) — quedaba corto y generaba un
+        // scroll de sobra, sin contenido real que lo justifique.
+        minHeight: `calc(100vh - ${HEADER_HEIGHT + FOOTER_HEIGHT}px)`,
         gap: 10,
       }}
     >

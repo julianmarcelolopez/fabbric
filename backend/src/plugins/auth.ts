@@ -124,8 +124,14 @@ async function resolveCustomer(request: FastifyRequest): Promise<void> {
   request.customer = {
     id: row.id,
     orgId: row.orgId,
-    googleSub: row.googleSub,
-    email: row.email,
+    // T34: googleSub/email pasaron a nullable en el schema (alta puerta a
+    // puerta sin Google, ver customers en db/schema.ts) — pero esta fila en
+    // particular siempre viene de acá arriba, encontrada o creada por
+    // `eq(customers.googleSub, identity.sub)` con un `identity.sub` real, o
+    // insertada con `email: identity.email ?? ""` — nunca null en este
+    // camino, a diferencia del alta manual de POST /admin/customers.
+    googleSub: row.googleSub!,
+    email: row.email!,
     name: row.name,
     phone: row.phone,
     address: row.address,

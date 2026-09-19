@@ -1,6 +1,6 @@
 # Tarea 5 — PWA: Carrito con anticipo
 
-**Estado:** ⬜ Pendiente.
+**Estado:** ✅ Hecha (2026-09-18) — verificada en vivo por el usuario (búsqueda/alta de cliente, monto/saldo en vivo, confirmación con resumen de anticipo, thumbnail de producto agregado y confirmado).
 
 **Depende de:** Tarea 2, Tarea 3 (no necesita `cobrar-saldo`, solo crear
 la venta).
@@ -41,13 +41,54 @@ de pago ya vive como pestaña segmentada dentro del tab "Forma de pago",
   $X de $Y — saldo $Z" en vez de solo el total (dato ya disponible en el
   response de `venta-local`, sin fetch extra).
 
+## Resultado real
+
+Implementado tal cual el alcance. Detalles de diseño resueltos al
+implementar (no estaban 100% cerrados en el plan):
+
+- `montoPagado`/`balanceDueDate`/`customerId`/`customerName` se levantaron
+  a `App.tsx` como estado controlado (mismo patrón que `facturar`/
+  `facturaForm`), porque `confirmVenta()` los necesita para armar el body.
+  El texto de búsqueda de cliente y los resultados quedaron **locales** a
+  `CarritoScreen` — solo el cliente ya elegido sube.
+- El buscador desaparece y se reemplaza por una fila "seleccionado, con
+  botón Cambiar" una vez que hay `customerId` — evita que el vendedor siga
+  viendo el buscador con un cliente ya elegido.
+- "Crear cliente nuevo" es un link que despliega un mini-formulario
+  (nombre + teléfono) inline, no una pantalla aparte — `POST
+  /admin/customers` (Tarea 2) y al confirmar selecciona automáticamente al
+  cliente recién creado.
+- `montoPagado > total` se trata como parte de "incompleto" (bloquea
+  "Confirmar venta", con mensaje propio), no solo los 3 campos vacíos —
+  agregado al implementar, no estaba explícito en el plan.
+- `ConfirmarScreen` necesitó un campo nuevo (`montoPagado`) en el estado
+  `Screen["confirmar"]` de `App.tsx` para poder mostrar "Anticipo $X de $Y
+  — saldo $Z" — no alcanzaba con lo que ya viajaba en el response de
+  `venta-local` sin guardarlo aparte en el estado de navegación.
+- Reusa `pesosToCents`/`centsToPesosInput` (`pwa/src/lib/money.ts`), ya
+  existentes — no hizo falta un parser nuevo para el input de monto.
+
+`npx tsc --noEmit` y `npx vite build --mode production` limpios dentro del
+contenedor Docker.
+
+**Extra encontrado en la verificación visual (no estaba en el plan)**: el
+usuario notó que la fila de cada ítem del carrito no mostraba la foto del
+producto. Se agregó `imageUrl` a `CartItem` (ya viene en
+`VariantByBarcode` al escanear, `App.tsx` lo copia tal cual en
+`addToCart` — sin pedirlo de nuevo al backend) y un thumbnail de 52×52 a
+la izquierda de cada fila — mismo lenguaje visual que la foto grande de
+`FichaScreen` (fondo `colors.gray` placeholder, `objectFit: cover`,
+`borderRadius` del tema), solo que chico y a la izquierda en vez de grande
+y centrado, patrón estándar de carrito.
+
 ## Criterio de aceptación
 
-En Docker local (`docker compose up -d pwa`): venta con anticipo de punta
-a punta —cliente nuevo creado en el momento, monto parcial, fecha
-límite— y confirmar que la Ficha de "Venta registrada" refleja el saldo,
-no el total. El resto de los medios de pago (efectivo/transferencia/
-tarjeta/mercadopago) se comportan exactamente igual que antes.
+Pendiente de verificación visual — servidor dev ya corriendo
+(`http://localhost:5174`). En Docker local: venta con anticipo de punta a
+punta —cliente nuevo creado en el momento, monto parcial, fecha límite— y
+confirmar que la pantalla de "Venta registrada" refleja el saldo, no el
+total. El resto de los medios de pago (efectivo/transferencia/tarjeta/
+mercadopago) debería comportarse exactamente igual que antes.
 
 ## Dependencias
 
