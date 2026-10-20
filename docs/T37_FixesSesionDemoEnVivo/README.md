@@ -100,12 +100,83 @@ campo, y el filtro de `ProductsPage.tsx` ahora también matchea
 `p.barcodes.some(b => b.toLowerCase().includes(q))`. Placeholder del
 buscador actualizado a "Buscar por nombre o código de barras…".
 
+## 6. Limpieza de datos: borrado masivo del catálogo de Eliathi Modas
+
+**Pedido:** "me gustaría eliminar todos los productos para cargarlos desde
+0."
+
+No es un cambio de código — fue una operación directa sobre la base de
+producción (org `e40f82d5-2b75-49ce-a2e3-1bdf415d82b1`, slug
+`eliathi-modas`, única org con productos; la otra org existente tenía 0).
+Antes de borrar se confirmó con el usuario el alcance exacto: cascada sobre
+variantes/imágenes/vínculos de colección, categorías/marcas/colecciones
+intactas, historial de pedidos no se rompe (`order_items` ya guarda su
+propio snapshot de nombre/talle/color/precio, independiente del producto —
+ver `orderItems.productId`/`variantId` con `onDelete: "set null"` en
+`backend/src/db/schema.ts:380-381`).
+
+Se hizo con un script descartable (mismo patrón que T11/T12/T16/T34: `.mjs`
+temporal contra la DB real vía `DATABASE_URL`, borrado después de usarlo):
+1. Backup de productos+variantes+imágenes a un JSON en el scratchpad de la
+   sesión (no versionado, no forma parte del repo).
+2. `DELETE FROM products WHERE org_id = ...` (cascada).
+3. Limpieza de las imágenes correspondientes en Supabase Storage (bucket
+   `product-images`), mismo criterio que ya usa el `DELETE /admin/products/:id`
+   de la API, aplicado en una sola pasada para los 11 productos en vez de
+   uno por uno.
+
+**Resultado:** 11 productos borrados (Remera taverniti, Remera Oversize
+Negra, Remera Boxy Fit Roja, Zapatillas Deportivas, Campera de cuero, Jeans
+Recto, Jeans holgados, Jeans Chupin, Chomba Rallada, Sweter de algodón,
+Remera básica R), 15 imágenes limpiadas de Storage, catálogo en 0 productos
+listo para recargar desde el scanner.
+
+## 7. Admin → Pedido: desglose de pagos registrados
+
+**Pedido:** "me gustaría agregar los pagos que realiza ahí por pedido" (en
+la ficha de un pedido con saldo pendiente, T34).
+
+Los pagos individuales de un pedido ya existían como filas de
+`financial_movements` (`orderId` + `type: "income"` — el anticipo al crear
+la venta local, y cada cobro de `/cobrar-saldo` después) pero
+`GET /admin/orders/:id` solo devolvía el total agregado (`pagado`). Se
+agregó un array `payments` a esa respuesta (`backend/src/modules/orders/routes.ts`,
+join con `wallets` para el nombre del medio de pago, ordenado por fecha) y
+una tabla nueva en `SaldoPendienteCard`
+(`frontend/src/features/admin/pages/OrderAdminDetailPage.tsx`) que lista
+cada cobro (fecha, medio de pago, detalle, monto) arriba del formulario
+para registrar uno nuevo. Tipo `AdminOrderPayment` nuevo en
+`frontend/src/features/admin/types.ts`.
+
+## 8. PWA alta: elegir foto del carrete + recorte antes de subir
+
+**Pedido:** "quiero poder elegir la foto en mi carrete o si saco la foto
+poder editar una foto."
+
+Dos partes:
+- El input de foto de `AltaScreen.tsx` tenía `capture="environment"`, que
+  en la mayoría de los celulares fuerza a abrir la cámara directo sin
+  ofrecer la galería — sacado, así el picker nativo del celular ofrece
+  ambas opciones.
+- Nuevo paso de recorte entre elegir/sacar la foto y subirla: componente
+  `pwa/src/components/ImageCropper.tsx` (usa `react-easy-crop`, nueva
+  dependencia en `pwa/package.json`) — encuadre cuadrado (arrastrar +
+  zoom) con botones "Elegir otra"/"Usar foto". Confirmado con el usuario
+  que alcanzaba con recortar (no rotar/filtros) antes de construir esto.
+  `AltaScreen.tsx` ya no llama a `handlePhoto` directo al elegir el
+  archivo: guarda un object URL (`cropImageUrl`) y recién llama a
+  `handlePhoto` con el blob recortado cuando se confirma el recorte.
+
 ## Verificación
 
 - `tsc --noEmit` limpio en los 3 puntos tocados (`backend`, `frontend`,
-  `pwa`) en cada fix.
+  `pwa`) en cada fix de código; `vite build` también limpio para el fix 8
+  (nueva dependencia, se corrió el build completo para confirmar que
+  bundlea bien el CSS del paquete).
 - 1-4 verificados en vivo en producción por el usuario durante la demo con
   el cliente de Eliathi Modas.
-- 5 (admin Productos) verificado solo por tipos al momento de escribir
-  este doc — falta la verificación visual en navegador (criterio constante
-  del proyecto, ver `feedback_fabbric_confirm_before_coding`).
+- 5, 7 y 8 pendientes de verificación visual en navegador al momento de
+  escribir este doc (criterio constante del proyecto, ver
+  `feedback_fabbric_confirm_before_coding`) — solo confirmados por tipos/build.
+- 6 verificado directamente contra la base real (conteo de productos
+  restantes = 0 tras el borrado, backup confirmado en disco).
