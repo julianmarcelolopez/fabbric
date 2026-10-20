@@ -17,6 +17,7 @@ export function QtyStepper({
     <div style={{ marginBottom: 6 }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10 }}>
         <button
+          type="button"
           onClick={() => onChange(Math.max(1, qty - 1))}
           disabled={disabled || qty <= 1}
           style={{ width: 32, padding: 4 }}
@@ -24,7 +25,7 @@ export function QtyStepper({
           −
         </button>
         <span style={{ fontSize: 14, minWidth: 20, textAlign: "center" }}>{qty}</span>
-        <button onClick={() => onChange(qty + 1)} disabled={disabled} style={{ width: 32, padding: 4 }}>
+        <button type="button" onClick={() => onChange(qty + 1)} disabled={disabled} style={{ width: 32, padding: 4 }}>
           +
         </button>
       </div>

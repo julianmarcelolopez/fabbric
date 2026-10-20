@@ -71,6 +71,10 @@ export function AltaScreen({ barcode, onDone }: Props) {
   const [publicarOnline, setPublicarOnline] = useState(false);
   const [qtyOnline, setQtyOnline] = useState(1);
   const [publishing, setPublishing] = useState(false);
+  // Popup de confirmación al terminar el alta (con o sin foto) — se le avisa
+  // explícitamente al usuario antes de volver a Escanear, en vez de que la
+  // pantalla cambie en silencio.
+  const [showSuccess, setShowSuccess] = useState(false);
 
   useEffect(() => {
     apiJson<Category[]>("/admin/categories")
@@ -184,7 +188,7 @@ export function AltaScreen({ barcode, onDone }: Props) {
       }
       setPublishing(false);
     }
-    onDone();
+    setShowSuccess(true);
   }
 
   async function handlePhoto(file: File) {
@@ -199,6 +203,64 @@ export function AltaScreen({ barcode, onDone }: Props) {
     } finally {
       setUploadingPhoto(false);
     }
+  }
+
+  // ── Popup de confirmación final ──────────────────────────────────────────
+  if (showSuccess) {
+    return (
+      <div
+        style={{
+          position: "fixed",
+          inset: 0,
+          background: "rgba(0,0,0,0.4)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          padding: 24,
+          zIndex: 1000,
+        }}
+      >
+        <div
+          style={{
+            background: colors.white,
+            borderRadius: radius,
+            padding: "28px 20px",
+            textAlign: "center",
+            maxWidth: 320,
+            width: "100%",
+          }}
+        >
+          <p style={{ fontSize: 32, margin: 0 }}>✅</p>
+          <p
+            style={{
+              fontFamily: fonts.display,
+              fontSize: 16,
+              fontWeight: 600,
+              color: colors.navy,
+              margin: "10px 0 20px",
+            }}
+          >
+            Producto dado de alta correctamente
+          </p>
+          <button
+            onClick={onDone}
+            style={{
+              width: "100%",
+              minHeight: 44,
+              padding: "10px",
+              borderRadius: radius,
+              border: "none",
+              background: colors.accent,
+              color: colors.white,
+              fontSize: 14,
+              cursor: "pointer",
+            }}
+          >
+            Aceptar
+          </button>
+        </div>
+      </div>
+    );
   }
 
   // ── Paso 2: foto (el producto ya existe y es completo, esto es opcional) ──
