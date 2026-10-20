@@ -11,6 +11,7 @@ import { supabase } from "./lib/supabaseClient";
 export function LoginScreen() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -57,15 +58,36 @@ export function LoginScreen() {
           autoComplete="email"
           style={inputStyle}
         />
-        <input
-          type="password"
-          placeholder="Contraseña"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-          autoComplete="current-password"
-          style={inputStyle}
-        />
+        <div style={{ position: "relative" }}>
+          <input
+            type={showPassword ? "text" : "password"}
+            placeholder="Contraseña"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            autoComplete="current-password"
+            style={{ ...inputStyle, width: "100%", paddingRight: 40 }}
+          />
+          <button
+            type="button"
+            onClick={() => setShowPassword((v) => !v)}
+            aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+            style={{
+              position: "absolute",
+              right: 4,
+              top: "50%",
+              transform: "translateY(-50%)",
+              border: "none",
+              background: "none",
+              cursor: "pointer",
+              fontSize: 17,
+              padding: 8,
+              lineHeight: 1,
+            }}
+          >
+            {showPassword ? "🙈" : "👁️"}
+          </button>
+        </div>
         {error && (
           <p
             style={{

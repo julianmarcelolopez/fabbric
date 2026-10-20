@@ -68,7 +68,10 @@ export function AltaScreen({ barcode, onDone }: Props) {
   // sin asignarle nada de stockOnline deja el producto visible pero
   // imposible de comprar. qtyOnline (default 1, tope qty) es lo que de esas
   // unidades se separa para venta online — el resto queda solo en el local.
-  const [publicarOnline, setPublicarOnline] = useState(false);
+  // Default true: el producto nuevo debe verse en el catálogo sin que el
+  // usuario tenga que acordarse de tildar el checkbox — sigue editable por
+  // si algún producto puntual no se quiere publicar todavía.
+  const [publicarOnline, setPublicarOnline] = useState(true);
   const [qtyOnline, setQtyOnline] = useState(1);
   const [publishing, setPublishing] = useState(false);
   // Popup de confirmación al terminar el alta (con o sin foto) — se le avisa
