@@ -472,11 +472,11 @@ export function EscanearScreen({ modo, onModoChange, onFound, onNotFound }: Prop
       <form onSubmit={(e) => void handleManualSubmit(e)} style={{ display: "flex", gap: 8 }}>
         <input
           type="text"
-          // T37 — "numeric" no incluye el punto en el teclado de la mayoría
-          // de los celulares, y el código de barras real sí lo tiene
-          // (modelo+color.talle, ver docs/T36_AltaPorCodigoDeBarras) —
-          // "decimal" sí muestra la tecla ".".
-          inputMode="decimal"
+          // T37 — el talle (después del ".") puede ser texto, no solo
+          // dígitos (ej. "XL"/"S", ver docs/T36_AltaPorCodigoDeBarras) —
+          // ni "numeric" ni "decimal" muestran letras. Sin inputMode, el
+          // celular abre su teclado de texto completo (letras + números +
+          // signos, incluido el ".").
           placeholder="Código de barras"
           value={manualCode}
           onChange={(e) => setManualCode(e.target.value)}

@@ -288,6 +288,21 @@ pedidos reales encima) se fusionaron con el mismo script usado para
 "Remera básica R" — variante movida, imagen movida, producto duplicado
 borrado, pedidos intactos (apuntan a la variante por id, no al producto).
 
+## 13. Input manual de código de barras necesitaba teclado alfanumérico, no solo decimal
+
+**Pedido:** "en el campo 'código de barras' para ingresar manualmente...
+necesito poder tener un teclado alfanumérico... actualmente tengo
+solamente teclado numérico."
+
+**Causa:** el fix 9 (`EscanearScreen.tsx`) había cambiado `inputMode` de
+`"numeric"` a `"decimal"` para que apareciera la tecla "." — pero
+`"decimal"` sigue siendo un teclado solo de dígitos (+ "."), sin letras.
+Como ya se sabía (ítem de T36/analisis.md) que el talle puede ser texto
+("XL", "S"), hacía falta el teclado completo.
+
+**Fix:** se saca `inputMode` del todo — sin esa restricción, el celular
+abre su teclado de texto normal (letras, números, signos, "." incluido).
+
 ## Verificación
 
 - `tsc --noEmit` limpio en los 3 puntos tocados (`backend`, `frontend`,
