@@ -5,11 +5,12 @@ import type { ZodTypeProvider } from "fastify-type-provider-zod";
 import { z } from "zod";
 import { env } from "../../config/env.js";
 import { db } from "../../db/client.js";
-import { orderItems, orders, productVariants, stockMovements } from "../../db/schema.js";
+import { invoices, orderItems, orders, productVariants, stockMovements } from "../../db/schema.js";
 import { decrypt } from "../../lib/crypto.js";
 import { AppError } from "../../lib/errors.js";
 import { resolveStoreBySlug } from "../catalogConfig/service.js";
 import { ensureMpWallet, recordOrderCharge } from "../finance/service.js";
+import { intentarEmision } from "../invoices/service.js";
 import { getPayment } from "./service.js";
 
 // Webhook de Mercado Pago — paranoia por diseño (regla del plan):
@@ -111,9 +112,9 @@ async function processPaymentNotification(
       .select()
       .from(orders)
       .where(eq(orders.id, payment.externalReference!));
-    if (!order) return "order_not_found" as const;
+    if (!order) return { kind: "order_not_found" as const };
     // IDEMPOTENCIA: replays de MP no vuelven a procesar
-    if (order.status !== "pending") return "already_processed" as const;
+    if (order.status !== "pending") return { kind: "already_processed" as const };
 
     await tx
       .update(orders)
@@ -169,15 +170,27 @@ async function processPaymentNotification(
         });
       }
     }
-    return "processed" as const;
+    // T37 — factura AFIP del checkout web (si se pidió): la fila ya existe
+    // desde /public/:slug/checkout, `pendiente`. Recién acá, con el pago
+    // confirmado, tiene sentido intentar la emisión real (afuera de esta
+    // tx — es una llamada externa, mismo criterio que venta-local).
+    const [invoiceRow] = await tx
+      .select({ id: invoices.id })
+      .from(invoices)
+      .where(eq(invoices.orderId, order.id));
+
+    return { kind: "processed" as const, orgId: order.orgId, invoiceId: invoiceRow?.id ?? null };
   });
 
-  if (result === "order_not_found") {
+  if (result.kind === "order_not_found") {
     // Pago aprobado que no matchea ninguna orden: anomalía — 500 para que MP
     // reintente mientras se investiga (nunca 200 silencioso)
     throw new AppError(500, "webhook_error", `Orden no encontrada para el pago ${payment.id}`);
   }
-  return { ok: true, result };
+  if (result.kind === "processed" && result.invoiceId) {
+    await intentarEmision(result.orgId, result.invoiceId, request.log);
+  }
+  return { ok: true, result: result.kind };
 }
 
 /** MP manda cada pago en DOS formatos: el IPN legacy (sin firma, se ignora acá — su

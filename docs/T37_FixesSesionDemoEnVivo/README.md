@@ -303,6 +303,64 @@ Como ya se sabía (ítem de T36/analisis.md) que el talle puede ser texto
 **Fix:** se saca `inputMode` del todo — sin esa restricción, el celular
 abre su teclado de texto normal (letras, números, signos, "." incluido).
 
+## 14. Leyenda fija de "3 cuotas sin interés" sacada del checkout
+
+**Pedido:** tras preguntarle dónde estaba, "sacalo no tiene que estar."
+
+**Qué era:** `frontend/src/features/store/pages/CheckoutPage.tsx` tenía un
+texto hardcodeado — "Hasta 3 cuotas sin interés de $X con todas las
+tarjetas al pagar con Mercado Pago" — siempre visible en el resumen del
+checkout, sin relación con el campo `installmentsText` (ese sí editable
+por producto, se usa en la ficha del producto, no en el checkout). No
+reflejaba si la tienda tiene Mercado Pago configurado ni si esa promoción
+de 3 cuotas existe realmente.
+
+**Fix:** se borró el párrafo, el cálculo `installment` que solo se usaba
+ahí, y la regla CSS `.installments-note` (`catalog.css`) que quedaba sin
+uso.
+
+## 15. Factura opcional en el checkout web
+
+**Pregunta del usuario:** "¿la factura en una compra por la web es
+obligatoria? o podemos poner la opción de agregar o no agregar factura?"
+
+**Hallazgo:** ninguna de las dos — el checkout público (pago con Mercado
+Pago) no tenía NINGUNA lógica de factura, ni en el backend
+(`/public/:slug/checkout`) ni en la UI (`CheckoutPage.tsx`). La
+facturación AFIP (T25) solo estaba conectada en la venta local de la PWA y
+en el alta manual del admin.
+
+**Decisión:** agregarla, opcional y apagada por default — mismo criterio
+que ya usa `CarritoScreen.tsx` en la PWA.
+
+**Diferencia clave respecto a venta-local:** venta-local cobra en el
+momento, así que la factura se emite ahí mismo, en el mismo request.
+El checkout web crea la orden `pending` (se cobra recién cuando Mercado
+Pago confirma el pago vía webhook) — emitir la factura en el momento del
+checkout sería facturar algo que todavía no se cobró. Por eso quedó
+partido en dos momentos:
+
+- `packages/shared/src/schemas/order.ts`: `facturaAfipSchema` se movió
+  arriba del todo del archivo (antes estaba después de `checkoutSchema`,
+  que ahora la referencia — si se hubiera dejado abajo, se rompe en
+  runtime por TDZ de `const`, no solo por orden de lectura). `checkoutSchema`
+  suma `factura: facturaAfipSchema.optional()`.
+- `backend/src/modules/payments/routes.ts` (`POST /public/:slug/checkout`):
+  si viene `factura`, inserta la fila en `invoices` (estado `pendiente` por
+  default) **dentro de la misma transacción que crea la orden** — pero
+  NO intenta emitirla todavía.
+- `backend/src/modules/payments/webhook.ts`: cuando el webhook de MP
+  confirma el pago y la orden pasa a `paid` (único lugar donde eso pasa),
+  busca si existe una fila de `invoices` para esa orden y, si existe,
+  recién ahí llama a `intentarEmision` — afuera de la transacción del
+  webhook (llamada externa a AFIP, mismo criterio que venta-local: un
+  fallo de AFIP no debe revertir el pago ya confirmado).
+- `frontend/src/features/store/pages/CheckoutPage.tsx`: nueva sección "5.
+  Factura (opcional)" — checkbox "Quiero factura de esta compra" + los 3
+  campos (nombre/email/DNI) cuando se activa, con la misma validación
+  (`facturaFormCompleto`) que ya usa `CarritoScreen.tsx` en la PWA.
+  "Confirmar y pagar" se bloquea si la factura quedó a medio completar.
+
 ## Verificación
 
 - `tsc --noEmit` limpio en los 3 puntos tocados (`backend`, `frontend`,

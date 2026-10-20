@@ -1,5 +1,14 @@
 import { z } from "zod";
 
+// T25 — facturación AFIP opcional: declarado temprano en el archivo porque
+// checkoutSchema (más abajo) ya la referencia — moverla más abajo rompería
+// en runtime (TDZ de `const`, no solo un tema de orden de lectura).
+export const facturaAfipSchema = z.object({
+  nombre: z.string().min(1).max(200),
+  email: z.string().email(),
+  dni: z.string().min(1).max(20),
+});
+
 // T34 — "partial": venta con anticipo (puerta a puerta), nace directo así
 // en vez de "paid" cuando el cobro no fue completo. Igual que "paid", no se
 // alcanza por PATCH genérico (ver ORDER_TRANSITIONS más abajo) — solo por
@@ -65,6 +74,13 @@ export const checkoutSchema = z.object({
     .min(1),
   shippingZoneId: z.string().uuid(),
   note: z.string().max(500).nullable().optional(),
+  // T37 — facturación AFIP opcional en el checkout público, mismo criterio
+  // que venta-local (T25): si el comprador no la pide, se omite del todo y
+  // el checkout se comporta exactamente igual que antes. A diferencia de
+  // venta-local (que cobra en el momento), la orden nace `pending` acá —
+  // la emisión real recién se intenta cuando el webhook de MP confirma el
+  // pago, no en este endpoint.
+  factura: facturaAfipSchema.optional(),
 });
 
 export type OrderStatus = z.infer<typeof orderStatusSchema>;
@@ -165,15 +181,6 @@ export type VentaLocalMedioPago = z.infer<typeof ventaLocalMedioPagoSchema>;
 export const ventaLocalItemSchema = z.object({
   variantId: z.string().uuid(),
   qty: z.number().int().min(1).max(99),
-});
-
-// T25 — facturación AFIP opcional de la venta: si el vendedor activa el
-// toggle en la PWA, se manda este bloque; si no, se omite del todo (no un
-// objeto vacío) y la venta se comporta exactamente igual que en T23.
-export const facturaAfipSchema = z.object({
-  nombre: z.string().min(1).max(200),
-  email: z.string().email(),
-  dni: z.string().min(1).max(20),
 });
 
 // T34 — venta con anticipo: montoPagado/customerId/balanceDueDate solo se

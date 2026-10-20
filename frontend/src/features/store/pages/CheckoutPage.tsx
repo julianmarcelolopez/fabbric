@@ -1,3 +1,4 @@
+import type { FacturaAfipInput } from "@fabbric/shared";
 import { useEffect, useState } from "react";
 import { Link, useOutletContext } from "react-router-dom";
 import { ApiError, apiJson, publicJson } from "../../../lib/api";
@@ -8,6 +9,15 @@ import { Loading } from "../components/Loading";
 import type { StoreContext } from "../types";
 
 type Zone = { id: string; name: string; cost: number; freeShippingFrom: number | null };
+
+const FACTURA_FORM_VACIO: FacturaAfipInput = { nombre: "", email: "", dni: "" };
+
+// T37 — mismo criterio que CarritoScreen.tsx (PWA): los 3 campos son
+// obligatorios para el backend si se manda `factura` en absoluto (ver
+// facturaAfipSchema en @fabbric/shared), no alcanza con validar el email.
+function facturaFormCompleto(form: FacturaAfipInput): boolean {
+  return form.nombre.trim() !== "" && /\S+@\S+\.\S+/.test(form.email) && form.dni.trim() !== "";
+}
 
 // T20/07 — mismos 3 campos de siempre (nombre, teléfono, dirección — un solo
 // campo, no se parte en calle/CP/ciudad/provincia como el mockup: esos datos
@@ -28,6 +38,11 @@ export function CheckoutPage() {
   const [error, setError] = useState<string | null>(null);
   const [paying, setPaying] = useState(false);
   const [contactOpen, setContactOpen] = useState(false);
+  // T37 — factura AFIP opcional, apagada por default (igual que en la venta
+  // local de la PWA): no cambia nada del checkout hasta que el comprador la
+  // activa a propósito.
+  const [facturar, setFacturar] = useState(false);
+  const [facturaForm, setFacturaForm] = useState<FacturaAfipInput>(FACTURA_FORM_VACIO);
 
   useEffect(() => {
     publicJson<Zone[]>(`/public/${slug}/shipping-zones`)
@@ -54,8 +69,10 @@ export function CheckoutPage() {
         ? 0
         : zone.cost;
 
+  const facturaIncompleta = facturar && !facturaFormCompleto(facturaForm);
+
   async function pay() {
-    if (!zone) return;
+    if (!zone || facturaIncompleta) return;
     setError(null);
     setPaying(true);
     try {
@@ -70,6 +87,7 @@ export function CheckoutPage() {
         body: JSON.stringify({
           items: cart.items.map((i) => ({ variantId: i.variantId, qty: i.qty })),
           shippingZoneId: zone.id,
+          ...(facturar ? { factura: facturaForm } : {}),
           note: note.trim() || null,
         }),
       });
@@ -106,7 +124,6 @@ export function CheckoutPage() {
 
   const contactDone = !contactOpen && !!name && !!phone;
   const total = cart.subtotal + (shippingCost ?? 0);
-  const installment = Math.round(total / 3);
 
   return (
     <div className="checkout-layout">
@@ -266,6 +283,60 @@ export function CheckoutPage() {
           </div>
         </div>
 
+        <div className="form-section">
+          <div className="form-section-header">
+            <span className="form-section-num">5</span>
+            <span className="form-section-title">Factura (opcional)</span>
+          </div>
+          <div className="form-body">
+            <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 14, marginBottom: facturar ? 12 : 0 }}>
+              <input type="checkbox" checked={facturar} onChange={(e) => setFacturar(e.target.checked)} />
+              Quiero factura de esta compra
+            </label>
+            {facturar && (
+              <div className="form-row">
+                <div className="form-group">
+                  <label className="form-label" htmlFor="factura-nombre">
+                    Nombre y apellido *
+                  </label>
+                  <input
+                    id="factura-nombre"
+                    className="form-input"
+                    value={facturaForm.nombre}
+                    onChange={(e) => setFacturaForm({ ...facturaForm, nombre: e.target.value })}
+                    required={facturar}
+                  />
+                </div>
+                <div className="form-group">
+                  <label className="form-label" htmlFor="factura-email">
+                    Email *
+                  </label>
+                  <input
+                    id="factura-email"
+                    type="email"
+                    className="form-input"
+                    value={facturaForm.email}
+                    onChange={(e) => setFacturaForm({ ...facturaForm, email: e.target.value })}
+                    required={facturar}
+                  />
+                </div>
+                <div className="form-group">
+                  <label className="form-label" htmlFor="factura-dni">
+                    DNI *
+                  </label>
+                  <input
+                    id="factura-dni"
+                    className="form-input"
+                    value={facturaForm.dni}
+                    onChange={(e) => setFacturaForm({ ...facturaForm, dni: e.target.value })}
+                    required={facturar}
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
         <div className="form-group" style={{ marginBottom: 16 }}>
           <label className="form-label" htmlFor="checkout-note">
             Nota para la tienda (opcional)
@@ -318,17 +389,18 @@ export function CheckoutPage() {
             <span className="total-val">{formatPrice(total)}</span>
           </div>
         </div>
-        <p className="installments-note">
-          Hasta <strong>3 cuotas sin interés de {formatPrice(installment)}</strong> con todas las tarjetas al
-          pagar con Mercado Pago.
-        </p>
         <div className="summary-cta">
           {/* T21/08: type="submit" + form="checkout-form" (en vez de type="button"
               con onClick propio) — el botón vive fuera del <form> por el layout
               (sidebar aparte), pero así dispara su onSubmit igual, incluida la
               validación nativa de los required. Antes esto se saltaba entero:
               el onClick llamaba a pay() directo, sin pasar por el form. */}
-          <button className="btn-confirm" type="submit" form="checkout-form" disabled={paying || !zone}>
+          {facturaIncompleta && (
+            <p className="error" style={{ marginBottom: 8 }}>
+              Completá nombre, email y DNI para poder facturar.
+            </p>
+          )}
+          <button className="btn-confirm" type="submit" form="checkout-form" disabled={paying || !zone || facturaIncompleta}>
             {paying ? "Redirigiendo a Mercado Pago…" : "Confirmar y pagar →"}
           </button>
           <div className="security-note">🔒 Tu información está protegida</div>

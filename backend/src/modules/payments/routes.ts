@@ -5,6 +5,7 @@ import type { ZodTypeProvider } from "fastify-type-provider-zod";
 import { z } from "zod";
 import { db } from "../../db/client.js";
 import {
+  invoices,
   orderItems,
   orders,
   products,
@@ -37,7 +38,7 @@ export async function paymentsRoutes(fastify: FastifyInstance) {
     async (request, reply) => {
       const customer = request.customer!;
       const orgId = customer.orgId;
-      const { shippingZoneId, note } = request.body;
+      const { shippingZoneId, note, factura } = request.body;
 
       // Merge de ítems duplicados (misma variante dos veces en el body)
       const qtyByVariant = new Map<string, number>();
@@ -149,6 +150,21 @@ export async function paymentsRoutes(fastify: FastifyInstance) {
           await tx
             .insert(orderItems)
             .values(lineItems.map((item) => ({ ...item, orderId: order.id, orgId })));
+
+          // T37 — si se pidió factura, la fila nace `pendiente` ACÁ (misma
+          // transacción que la orden), pero a diferencia de venta-local NO
+          // se intenta la emisión en este endpoint: la orden recién nace
+          // `pending`, todavía no está cobrada. La emisión real se intenta
+          // en el webhook de MP, cuando el pago se confirma (ver webhook.ts).
+          if (factura) {
+            await tx.insert(invoices).values({
+              orgId,
+              orderId: order.id,
+              clienteNombre: factura.nombre,
+              clienteEmail: factura.email,
+              clienteDni: factura.dni,
+            });
+          }
           return order;
         });
       }
