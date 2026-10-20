@@ -167,6 +167,42 @@ Dos partes:
   archivo: guarda un object URL (`cropImageUrl`) y recién llama a
   `handlePhoto` con el blob recortado cuando se confirma el recorte.
 
+## 9. Teclado numérico no dejaba escribir el "." del código de barras
+
+**Síntoma reportado:** "cuando escribo el código de barras se abre el
+teclado numérico pero no me deja ingresar punto '.'"
+
+**Causa:** el input de "escribilo a mano" en `EscanearScreen.tsx:475`
+(fallback manual cuando no se puede escanear/fotografiar) tenía
+`inputMode="numeric"` — en la mayoría de los celulares ese modo muestra un
+teclado de solo dígitos, sin tecla de punto. Los códigos de barras reales
+sí llevan un "." (modelo+color`.`talle, ver `docs/T36_AltaPorCodigoDeBarras/analisis.md`),
+así que no se podían escribir completos a mano.
+
+**Fix:** `inputMode="decimal"` en vez de `"numeric"` — ese modo sí incluye
+la tecla "." en el teclado nativo.
+
+## 10. Tope de cantidad al stock disponible al vender
+
+**Pedido:** "cuando vendo un producto me permite elegir una cantidad mayor
+a la disponible y quiero que frene en la cantidad máxima."
+
+**Causa:** `QtyStepper` (`pwa/src/components/QtyStepper.tsx`) no tenía
+ningún tope superior — el botón "+" incrementaba sin límite. Dos lugares
+lo usan para vender: `FichaScreen.tsx` ("Cantidad a vender", sin tope
+contra `variant.stockLocal`, que ya se mostraba al lado como badge) y
+`CarritoScreen.tsx` (el +/- de cada ítem ya en el carrito, que sí
+consultaba el stock en vivo por variante pero solo lo usaba para mostrar
+"no alcanza" en texto, nunca para frenar el botón).
+
+**Fix:** `QtyStepper` suma una prop opcional `max` — el "+" se desactiva
+al llegar a `max` (mismo criterio que ya usaba el "−" contra el mínimo 1)
+y el label agrega "(máximo disponible)". `FichaScreen.tsx` le pasa
+`max={variant.stockLocal}`; `CarritoScreen.tsx` no usa el componente (es
+un +/- inline propio), así que el botón "+" ahí se deshabilita
+directamente cuando `item.qty >= stock` (stock en vivo ya calculado en esa
+pantalla, `liveStock[item.variantId]`).
+
 ## Verificación
 
 - `tsc --noEmit` limpio en los 3 puntos tocados (`backend`, `frontend`,

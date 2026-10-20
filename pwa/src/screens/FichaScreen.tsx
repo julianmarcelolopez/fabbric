@@ -170,7 +170,13 @@ export function FichaScreen({ variant, modo, onDone, onEntradaOk, onAddToCart }:
         </div>
       ) : (
         <div>
-          <QtyStepper qty={qty} onChange={setQty} disabled={false} label="Cantidad a vender" />
+          <QtyStepper
+            qty={qty}
+            onChange={setQty}
+            disabled={false}
+            label="Cantidad a vender"
+            max={variant.stockLocal}
+          />
           <button
             onClick={() => onAddToCart(variant, qty)}
             style={{

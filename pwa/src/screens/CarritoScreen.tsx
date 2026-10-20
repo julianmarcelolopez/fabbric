@@ -283,6 +283,7 @@ export function CarritoScreen({
                   <span style={{ fontSize: 13, minWidth: 16, textAlign: "center" }}>{item.qty}</span>
                   <button
                     onClick={() => onUpdateQty(item.variantId, item.qty + 1)}
+                    disabled={typeof stock === "number" && item.qty >= stock}
                     aria-label="Sumar unidad"
                     style={{ width: 26, height: 26, padding: 0 }}
                   >
