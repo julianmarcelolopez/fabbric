@@ -75,6 +75,9 @@ export type ProductListItem = ProductBase & {
   variantCount: number;
   collections: { id: string; name: string }[];
   firstImageUrl: string | null;
+  // T36 — códigos de barras de todas las variantes del producto, para poder
+  // buscarlo desde la lista sin abrir cada ficha.
+  barcodes: string[];
 };
 
 export type ProductDetail = ProductBase & {

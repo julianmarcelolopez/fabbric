@@ -17,7 +17,12 @@ Mismo formato que `docs/T35_FinanzasVistaDiaria/tareas/` (Objetivo/Alcance/Crite
 | # | Tarea | Depende de | Estado |
 |---|---|---|---|
 | 1 | [01-backend-parseo-sugerencias](tareas/01-backend-parseo-sugerencias/01-backend-parseo-sugerencias.md) | nada | ✅ |
-| 2 | [02-frontend-sugerencias-alta](tareas/02-frontend-sugerencias-alta/02-frontend-sugerencias-alta.md) | 1 | 🔶 en progreso |
+| 2 | [02-frontend-sugerencias-alta](tareas/02-frontend-sugerencias-alta/02-frontend-sugerencias-alta.md) | 1 | ✅ |
+
+T36 queda cerrado (ambas tareas hechas y verificadas en producción con un
+cliente real). Las correcciones y mejoras encontradas en la misma sesión de
+prueba en vivo, pero fuera del objetivo puntual de T36, están en
+`docs/T37_FixesSesionDemoEnVivo/`.
 
 ## Fase 1 — Backend: `parseBarcode` + endpoint
 

@@ -88,6 +88,14 @@ export async function productsRoutes(fastify: FastifyInstance) {
         .where(inArray(productImages.productId, ids))
         .orderBy(asc(productImages.sortOrder));
 
+      // T36 — para poder buscar un producto por código de barras desde la
+      // lista (misma lógica que el buscador por nombre, solo que contra los
+      // barcodes de sus variantes en vez de contra `name`).
+      const barcodeRows = await db
+        .select({ productId: productVariants.productId, barcode: productVariants.barcode })
+        .from(productVariants)
+        .where(and(inArray(productVariants.productId, ids), isNotNull(productVariants.barcode)));
+
       return rows.map(({ product, categoryName, brandName }) => ({
         ...product,
         categoryName,
@@ -97,6 +105,9 @@ export async function productsRoutes(fastify: FastifyInstance) {
           .filter((c) => c.productId === product.id)
           .map(({ id, name }) => ({ id, name })),
         firstImageUrl: firstImages.find((i) => i.productId === product.id)?.url ?? null,
+        barcodes: barcodeRows
+          .filter((b) => b.productId === product.id)
+          .map((b) => b.barcode as string),
       }));
     }
   );

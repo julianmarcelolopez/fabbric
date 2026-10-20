@@ -37,7 +37,7 @@ function ProductsList() {
   const [filterStatus, setFilterStatus] = useState<"" | ProductStatus>("");
   const [filterBrand, setFilterBrand] = useState("");
   const [filterVisible, setFilterVisible] = useState<"" | "true" | "false">("");
-  const [sortBy, setSortBy] = useState<SortOption>("name");
+  const [sortBy, setSortBy] = useState<SortOption>("recent");
   // T32/xx — paginación client-side (misma lista ya cargada de una, sin tocar
   // el backend — igual criterio que search/filterCategory/filterStatus arriba).
   const [page, setPage] = useState(1);
@@ -140,7 +140,9 @@ function ProductsList() {
     if (!products) return null;
     const q = search.trim().toLowerCase();
     const filtered = products.filter((p) => {
-      if (q && !p.name.toLowerCase().includes(q)) return false;
+      if (q && !p.name.toLowerCase().includes(q) && !p.barcodes.some((b) => b.toLowerCase().includes(q))) {
+        return false;
+      }
       if (filterCategory && p.categoryId !== filterCategory) return false;
       if (filterStatus && p.status !== filterStatus) return false;
       if (filterBrand && p.brandId !== filterBrand) return false;
@@ -219,7 +221,7 @@ function ProductsList() {
           <div className="row" style={{ marginBottom: 12, alignItems: "center" }}>
             <input
               style={{ flex: 1, minWidth: 200 }}
-              placeholder="Buscar producto…"
+              placeholder="Buscar por nombre o código de barras…"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />

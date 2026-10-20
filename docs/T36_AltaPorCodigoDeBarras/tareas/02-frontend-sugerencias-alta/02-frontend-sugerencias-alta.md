@@ -1,7 +1,8 @@
 # Tarea 2 — Frontend: precarga de sugerencias en `AltaScreen.tsx`
 
-**Estado:** 🔶 En progreso — fetch y precarga de estado ya hechos, falta el
-aviso visual en el JSX y la verificación en navegador.
+**Estado:** ✅ Hecha y verificada en vivo (2026-10-20) — deployada a
+producción (`fabbric.aivance.cloud/stock`) y probada por el usuario en una
+demo real con un cliente, no solo en Docker local.
 
 **Depende de:** Tarea 1.
 
@@ -28,20 +29,22 @@ blanco — sin bloquear ningún campo, todo sigue editable.
     `brands` (línea 82): si falla, el formulario sigue en blanco, no bloquea
     el alta.
 
-- **Pendiente en esta tarea:**
-  - Agregar en el JSX del paso 1 (formulario) un texto corto visible cuando
-    `modeloExistente` es `true`, cerca del input de "Modelo" (línea ~294 en
-    el JSX original) — ej. "Modelo ya cargado, se completó
-    automáticamente" — para que el usuario entienda por qué el campo ya
-    tiene texto.
-  - Verificación manual en Docker (`docker compose up -d backend frontend`)
-    con los tres barcodes reales de `analisis.md`
-    (`01800640.034`, `018005053.034`, `00476535.034`): cargar primero una
-    variante con uno de esos códigos, después simular el escaneo de otro
-    barcode que comparta `modeloCode`/`colorCode`/`talleCode` con el
-    primero y confirmar la precarga en pantalla.
-  - Confirmar que un barcode sin ninguna coincidencia dim deja el
-    formulario vacío, sin errores ni pantallas rotas.
+- **Completado luego de este borrador:**
+  - Aviso visual: texto "Modelo ya cargado — se completó automáticamente"
+    debajo del input de "Modelo", visible solo si `modeloExistente` es
+    `true` — se oculta de nuevo si el usuario edita el campo a mano
+    (`onChange` del input de modelo hace `setModeloExistente(false)`, para
+    no dejar un aviso mintiendo si el usuario lo corrigió).
+  - Verificación: no se hizo en Docker local sino directamente en
+    producción, en vivo con un cliente real de Eliathi Modas escaneando
+    prendas reales — ver `docs/T37_FixesSesionDemoEnVivo/README.md` para el
+    resto de lo encontrado/arreglado en esa misma sesión (bug de
+    `QtyStepper`, popup de confirmación, etc., todos en el mismo archivo).
+  - Mientras se probaba esta pantalla en vivo aparecieron 2 bugs no
+    relacionados con las sugerencias en sí (ver T37): el stepper de
+    cantidad enviaba el formulario antes de tiempo, y no había ninguna
+    confirmación visual al terminar el alta. Ambos arreglados en la misma
+    sesión, documentados aparte porque no son parte del objetivo de T36.
 
 ## Criterio de aceptación
 
