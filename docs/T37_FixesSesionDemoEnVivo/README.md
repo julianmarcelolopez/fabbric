@@ -203,6 +203,24 @@ un +/- inline propio), así que el botón "+" ahí se deshabilita
 directamente cuando `item.qty >= stock` (stock en vivo ya calculado en esa
 pantalla, `liveStock[item.variantId]`).
 
+## 11. "Confirmar venta" no obligaba a pasar por "Forma de pago"
+
+**Pedido:** "necesito que valides que cuando pongo 'confirmar venta' en el
+carrito me tiene que obligar a pasar por la sección 'formas de pago'. Hoy
+en día me confirma la venta sin haber pasado por 'formas de pago'."
+
+**Causa:** `medioPago` (estado levantado a `App.tsx`) siempre arranca con
+un valor por default (ej. "efectivo"), así que el botón "Confirmar venta"
+de `CarritoScreen.tsx` nunca lo veía como "incompleto" — se podía confirmar
+sin haber tocado nunca la pestaña "Forma de pago", usando el medio de pago
+por default sin que el vendedor lo haya elegido a propósito.
+
+**Fix:** nuevo estado local `visitedPago` (`CarritoScreen.tsx`), que pasa a
+`true` recién cuando se hace click en la pestaña "Forma de pago". Se suma
+a `confirmBlocked` (junto a `facturaIncompleta`/`anticipoIncompleto`, que
+ya bloqueaban el botón por otras razones) — con un aviso en rojo arriba
+del botón: `Revisá "Forma de pago" antes de confirmar.`
+
 ## Verificación
 
 - `tsc --noEmit` limpio en los 3 puntos tocados (`backend`, `frontend`,

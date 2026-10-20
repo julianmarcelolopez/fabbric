@@ -154,6 +154,12 @@ export function CarritoScreen({
   // venta" cuando se abría el formulario de facturación (ya no lo empuja
   // fuera de vista, así que se saca).
   const [tab, setTab] = useState<"productos" | "pago">("productos");
+  // T37 — "Confirmar venta" no obligaba a pasar por "Forma de pago": como
+  // medioPago siempre tiene un valor por default (ver App.tsx), se podía
+  // confirmar sin que el vendedor llegue a mirar/elegir el medio real.
+  const [visitedPago, setVisitedPago] = useState(false);
+  const confirmBlocked =
+    items.length === 0 || submitting || facturaIncompleta || anticipoIncompleto || !visitedPago;
 
   // Stock en vivo por ítem — se pide fresco cada vez que se entra/cambia el
   // carrito (no el que tenía la variante al momento de escanearla), así se ve
@@ -205,7 +211,10 @@ export function CarritoScreen({
         ).map((t) => (
           <button
             key={t.value}
-            onClick={() => setTab(t.value)}
+            onClick={() => {
+              setTab(t.value);
+              if (t.value === "pago") setVisitedPago(true);
+            }}
             style={{
               flex: 1,
               border: "none",
@@ -572,10 +581,15 @@ export function CarritoScreen({
           Elegí un cliente, un monto (no mayor al total) y una fecha límite para el saldo.
         </p>
       )}
+      {!visitedPago && items.length > 0 && (
+        <p style={{ color: colors.danger, fontSize: 12, margin: "0 0 8px", textAlign: "center" }}>
+          Revisá "Forma de pago" antes de confirmar.
+        </p>
+      )}
 
       <button
         onClick={onConfirm}
-        disabled={items.length === 0 || submitting || facturaIncompleta || anticipoIncompleto}
+        disabled={confirmBlocked}
         style={{
           width: "100%",
           minHeight: 44,
@@ -586,8 +600,8 @@ export function CarritoScreen({
           color: colors.white,
           fontSize: 14,
           fontWeight: 500,
-          cursor: items.length === 0 || submitting || facturaIncompleta || anticipoIncompleto ? "default" : "pointer",
-          opacity: items.length === 0 || submitting || facturaIncompleta || anticipoIncompleto ? 0.6 : 1,
+          cursor: confirmBlocked ? "default" : "pointer",
+          opacity: confirmBlocked ? 0.6 : 1,
         }}
       >
         {submitting ? "Confirmando..." : "Confirmar venta"}
