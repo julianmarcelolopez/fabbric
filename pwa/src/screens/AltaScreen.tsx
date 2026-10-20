@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
+import { ImageCropper } from "../components/ImageCropper";
 import { QtyStepper } from "../components/QtyStepper";
 import { apiJson, apiUpload, ApiError } from "../lib/api";
 import { pesosToCents } from "../lib/money";
@@ -62,6 +63,8 @@ export function AltaScreen({ barcode, onDone }: Props) {
   const [photoError, setPhotoError] = useState<string | null>(null);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  // T37 — object URL de la foto recién elegida/sacada, pendiente de recortar.
+  const [cropImageUrl, setCropImageUrl] = useState<string | null>(null);
   // El alta por escaneo carga todo en stockLocal (plata física en el local) —
   // stockOnline y stockLocal son contadores independientes (no un pool
   // compartido, ver stock-movements), así que "publicar en la tienda online"
@@ -208,6 +211,25 @@ export function AltaScreen({ barcode, onDone }: Props) {
     }
   }
 
+  // T37 — recorte antes de subir: elegir/sacar la foto no la sube directo,
+  // primero pasa por ImageCropper. `cropImageUrl` es un object URL local
+  // (nunca llega al backend tal cual, se revoca al cerrar el paso).
+  function cancelCrop() {
+    if (cropImageUrl) URL.revokeObjectURL(cropImageUrl);
+    setCropImageUrl(null);
+  }
+
+  async function confirmCrop(blob: Blob) {
+    if (cropImageUrl) URL.revokeObjectURL(cropImageUrl);
+    setCropImageUrl(null);
+    await handlePhoto(new File([blob], "foto.jpg", { type: "image/jpeg" }));
+  }
+
+  // ── Recorte de la foto (entre elegirla y subirla) ────────────────────────
+  if (cropImageUrl) {
+    return <ImageCropper imageSrc={cropImageUrl} onCancel={cancelCrop} onConfirm={(blob) => void confirmCrop(blob)} />;
+  }
+
   // ── Popup de confirmación final ──────────────────────────────────────────
   if (showSuccess) {
     return (
@@ -308,11 +330,10 @@ export function AltaScreen({ barcode, onDone }: Props) {
           ref={fileInputRef}
           type="file"
           accept="image/*"
-          capture="environment"
           onChange={(e) => {
             const file = e.target.files?.[0];
             e.target.value = "";
-            if (file) void handlePhoto(file);
+            if (file) setCropImageUrl(URL.createObjectURL(file));
           }}
           style={{ display: "none" }}
         />
@@ -332,7 +353,7 @@ export function AltaScreen({ barcode, onDone }: Props) {
             opacity: uploadingPhoto ? 0.7 : 1,
           }}
         >
-          {uploadingPhoto ? "Subiendo foto..." : "Sacar foto"}
+          {uploadingPhoto ? "Subiendo foto..." : "Agregar foto"}
         </button>
 
         {photoError && (
