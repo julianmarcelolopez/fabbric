@@ -4,7 +4,7 @@ import {
   setProductCollectionsSchema,
   updateProductSchema,
 } from "@fabbric/shared";
-import { and, asc, count, eq, inArray } from "drizzle-orm";
+import { and, asc, count, eq, inArray, isNotNull } from "drizzle-orm";
 import type { FastifyInstance } from "fastify";
 import type { ZodTypeProvider } from "fastify-type-provider-zod";
 import { z } from "zod";
@@ -18,6 +18,7 @@ import {
   products,
   productVariants,
 } from "../../db/schema.js";
+import { parseBarcode } from "../../lib/barcode.js";
 import { AppError, isUniqueViolation } from "../../lib/errors.js";
 import { supabaseAdmin } from "../../lib/supabaseAdmin.js";
 import { requireOrgId } from "../../lib/tenant.js";
@@ -162,6 +163,84 @@ export async function productsRoutes(fastify: FastifyInstance) {
       const [row] = await db.insert(products).values({ ...rest, orgId, brandId: resolvedBrandId }).returning();
       reply.status(201);
       return row;
+    }
+  );
+
+  // T36 — sugerencias de alta a partir del código de barras: separa
+  // modelo/color/talle (ver parseBarcode) y busca entre las variantes ya
+  // cargadas de la org si ese modelo (u otro con el mismo color/talle) ya
+  // existe, para precargar el formulario de AltaScreen en vez de que el
+  // usuario tipee "modelo" como texto libre cada vez.
+  app.get(
+    "/admin/products/suggest-by-barcode/:barcode",
+    {
+      ...auth,
+      schema: {
+        ...tag,
+        summary: "Sugerencias de alta (marca/modelo/color/talle) a partir del código de barras escaneado",
+        params: z.object({ barcode: z.string().min(1) }),
+      },
+    },
+    async (request) => {
+      const orgId = requireOrgId(request);
+      const parsed = parseBarcode(request.params.barcode);
+      if (!parsed) return { parsed: null, product: null, colorName: null, talleName: null };
+
+      const rows = await db
+        .select({
+          barcode: productVariants.barcode,
+          color: productVariants.color,
+          talle: productVariants.talle,
+          productId: productVariants.productId,
+          createdAt: productVariants.createdAt,
+        })
+        .from(productVariants)
+        .where(and(eq(productVariants.orgId, orgId), isNotNull(productVariants.barcode)));
+
+      let productMatch: { productId: string; createdAt: Date } | null = null;
+      let colorNameMatch: { color: string; createdAt: Date } | null = null;
+      let talleNameMatch: { talle: string; createdAt: Date } | null = null;
+
+      for (const row of rows) {
+        const p = parseBarcode(row.barcode!);
+        if (!p) continue;
+        if (p.modeloCode === parsed.modeloCode && (!productMatch || row.createdAt > productMatch.createdAt)) {
+          productMatch = { productId: row.productId, createdAt: row.createdAt };
+        }
+        if (p.colorCode === parsed.colorCode && (!colorNameMatch || row.createdAt > colorNameMatch.createdAt)) {
+          colorNameMatch = { color: row.color, createdAt: row.createdAt };
+        }
+        if (p.talleCode === parsed.talleCode && (!talleNameMatch || row.createdAt > talleNameMatch.createdAt)) {
+          talleNameMatch = { talle: row.talle, createdAt: row.createdAt };
+        }
+      }
+
+      let product = null;
+      if (productMatch) {
+        const [row] = await db
+          .select({ product: products, categoryName: categories.name, brandName: brands.name })
+          .from(products)
+          .innerJoin(categories, eq(products.categoryId, categories.id))
+          .leftJoin(brands, eq(products.brandId, brands.id))
+          .where(and(eq(products.id, productMatch.productId), eq(products.orgId, orgId)));
+        if (row) {
+          product = {
+            id: row.product.id,
+            name: row.product.name,
+            brandId: row.product.brandId,
+            brandName: row.brandName,
+            categoryId: row.product.categoryId,
+            categoryName: row.categoryName,
+          };
+        }
+      }
+
+      return {
+        parsed,
+        product,
+        colorName: colorNameMatch?.color ?? null,
+        talleName: talleNameMatch?.talle ?? null,
+      };
     }
   );
 

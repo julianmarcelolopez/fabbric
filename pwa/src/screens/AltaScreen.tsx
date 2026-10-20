@@ -12,6 +12,22 @@ type Props = {
 type Category = { id: string; name: string };
 type Brand = { id: string; name: string };
 
+// T36 — sugerencias a partir del código de barras (ver backend
+// /admin/products/suggest-by-barcode: modelo/color/talle codificados en el
+// propio código, ver parseBarcode).
+type SuggestByBarcodeResult = {
+  product: {
+    id: string;
+    name: string;
+    brandId: string | null;
+    brandName: string | null;
+    categoryId: string;
+    categoryName: string;
+  } | null;
+  colorName: string | null;
+  talleName: string | null;
+};
+
 // Alta atómica (producto + variante en una transacción, POST
 // /admin/products/alta-rapida — Tarea 1 de esta fase). La foto va DESPUÉS,
 // como paso aparte: no puede ser atómica con lo anterior (multipart, y
@@ -36,6 +52,9 @@ export function AltaScreen({ barcode, onDone }: Props) {
   const [qty, setQty] = useState(1);
   const [formError, setFormError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  // T36 — true cuando el modelo ya existía (precargado por código de barras),
+  // para avisarle al usuario que no hace falta escribirlo de nuevo.
+  const [modeloExistente, setModeloExistente] = useState(false);
 
   // Una vez creado el producto (paso 1 ok), pasamos al paso de la foto.
   const [productId, setProductId] = useState<string | null>(null);
@@ -62,6 +81,28 @@ export function AltaScreen({ barcode, onDone }: Props) {
     // input de más abajo) — sin catch propio, un fallo acá no bloquea el alta.
     apiJson<Brand[]>("/admin/brands").then(setBrands).catch(() => {});
   }, []);
+
+  // T36 — apenas se escanea un código nuevo, pedir sugerencias: si el modelo
+  // (prefijo del código) ya existe, precargar marca/modelo/categoría; si el
+  // color o el talle ya se usaron antes (con cualquier modelo), precargar
+  // sus nombres. Todo queda editable, son sugerencias, no valores fijos.
+  useEffect(() => {
+    apiJson<SuggestByBarcodeResult>(`/admin/products/suggest-by-barcode/${encodeURIComponent(barcode)}`)
+      .then((res) => {
+        if (res.product) {
+          setModeloExistente(true);
+          setCategoryId(res.product.categoryId);
+          setModelo(res.product.name);
+          if (res.product.brandId) {
+            setBrandSelectValue(res.product.brandId);
+            setMarca(res.product.brandName ?? "");
+          }
+        }
+        if (res.colorName) setColor(res.colorName);
+        if (res.talleName) setTalle(res.talleName);
+      })
+      .catch(() => {});
+  }, [barcode]);
 
   // T29 marca combo — <input list>+<datalist> nunca muestra sugerencias en
   // Safari/iOS (WebKit no soporta el popup de datalist), justo el navegador
@@ -295,9 +336,17 @@ export function AltaScreen({ barcode, onDone }: Props) {
           type="text"
           placeholder="Modelo"
           value={modelo}
-          onChange={(e) => setModelo(e.target.value)}
+          onChange={(e) => {
+            setModelo(e.target.value);
+            setModeloExistente(false);
+          }}
           style={inputStyle}
         />
+        {modeloExistente && (
+          <p style={{ fontSize: 12, color: colors.accent, margin: "-4px 0 0" }}>
+            Modelo ya cargado — se completó automáticamente
+          </p>
+        )}
         <select value={categoryId} onChange={(e) => setCategoryId(e.target.value)} style={inputStyle}>
           <option value="">Categoría...</option>
           {categories.map((c) => (
