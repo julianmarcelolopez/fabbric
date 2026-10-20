@@ -56,6 +56,12 @@ export function AltaScreen({ barcode, onDone }: Props) {
   // T36 — true cuando el modelo ya existía (precargado por código de barras),
   // para avisarle al usuario que no hace falta escribirlo de nuevo.
   const [modeloExistente, setModeloExistente] = useState(false);
+  // T37 — id del producto existente que matcheó por código de barras. Si
+  // está seteado (y el usuario no editó "Modelo"), el submit agrega una
+  // variante a ESE producto en vez de crear uno nuevo — antes T36 solo
+  // precargaba el formulario pero igual creaba un producto nuevo siempre,
+  // lo que terminaba duplicando el mismo modelo (ver docs/T36_.../analisis.md).
+  const [matchedProductId, setMatchedProductId] = useState<string | null>(null);
 
   // Una vez creado el producto (paso 1 ok), pasamos al paso de la foto.
   const [productId, setProductId] = useState<string | null>(null);
@@ -101,6 +107,7 @@ export function AltaScreen({ barcode, onDone }: Props) {
       .then((res) => {
         if (res.product) {
           setModeloExistente(true);
+          setMatchedProductId(res.product.id);
           setCategoryId(res.product.categoryId);
           setModelo(res.product.name);
           if (res.product.brandId) {
@@ -132,11 +139,34 @@ export function AltaScreen({ barcode, onDone }: Props) {
     e.preventDefault();
     setFormError(null);
 
-    const priceCents = pesosToCents(precio);
     if (!categoryId) return setFormError("Elegí una categoría.");
     if (!marca.trim() || !modelo.trim() || !talle.trim() || !color.trim()) {
       return setFormError("Completá marca, modelo, talle y color.");
     }
+
+    // T37 — modelo ya existente (sugerido por código de barras, T36) y el
+    // usuario no lo editó: agregar la variante a ESE producto en vez de
+    // crear uno nuevo. Precio no aplica acá — la variante usa el precio del
+    // producto existente (sin priceOverride).
+    if (modeloExistente && matchedProductId) {
+      setSubmitting(true);
+      try {
+        const variant = await apiJson<{ id: string }>(`/admin/products/${matchedProductId}/variants`, {
+          method: "POST",
+          body: JSON.stringify({ talle: talle.trim(), color: color.trim(), barcode, stockLocal: qty }),
+        });
+        setProductId(matchedProductId);
+        setVariantId(variant.id);
+        setQtyOnline(Math.min(qtyOnline, qty));
+      } catch (err) {
+        setFormError(err instanceof Error ? err.message : "Error al guardar la variante");
+      } finally {
+        setSubmitting(false);
+      }
+      return;
+    }
+
+    const priceCents = pesosToCents(precio);
     if (priceCents === null) return setFormError("Precio inválido.");
 
     setSubmitting(true);
@@ -425,6 +455,7 @@ export function AltaScreen({ barcode, onDone }: Props) {
           onChange={(e) => {
             setModelo(e.target.value);
             setModeloExistente(false);
+            setMatchedProductId(null);
           }}
           style={inputStyle}
         />
@@ -457,14 +488,20 @@ export function AltaScreen({ barcode, onDone }: Props) {
             style={{ ...inputStyle, flex: 1 }}
           />
         </div>
-        <input
-          type="text"
-          inputMode="decimal"
-          placeholder="Precio"
-          value={precio}
-          onChange={(e) => setPrecio(e.target.value)}
-          style={inputStyle}
-        />
+        {modeloExistente && matchedProductId ? (
+          <p style={{ fontSize: 12, color: colors.muted, margin: "0 0 4px" }}>
+            Se usa el precio del producto existente.
+          </p>
+        ) : (
+          <input
+            type="text"
+            inputMode="decimal"
+            placeholder="Precio"
+            value={precio}
+            onChange={(e) => setPrecio(e.target.value)}
+            style={inputStyle}
+          />
+        )}
         <QtyStepper qty={qty} onChange={setQty} disabled={submitting} label="Cantidad" />
 
         {formError && (

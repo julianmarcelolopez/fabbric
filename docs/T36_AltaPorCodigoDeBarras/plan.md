@@ -24,6 +24,16 @@ cliente real). Las correcciones y mejoras encontradas en la misma sesión de
 prueba en vivo, pero fuera del objetivo puntual de T36, están en
 `docs/T37_FixesSesionDemoEnVivo/`.
 
+**Corrección importante post-cierre (T37 ítem 12):** T36, tal como quedó
+descrito arriba, solo precargaba el formulario — pero `handleSubmit` en
+`AltaScreen.tsx` seguía llamando siempre a `alta-rapida`, que crea un
+producto nuevo sin importar la sugerencia. Esto significaba que T36 **no
+cumplía su objetivo real** (evitar productos duplicados del mismo modelo),
+solo evitaba el typo al tipear. Encontrado en vivo (dos "1800" separados en
+la tienda) y arreglado en `docs/T37_FixesSesionDemoEnVivo/README.md#12` —
+ahora si hay un modelo sugerido y no se editó, se agrega la variante al
+producto existente en vez de crear uno nuevo.
+
 ## Fase 1 — Backend: `parseBarcode` + endpoint
 
 - `backend/src/lib/barcode.ts`: función pura `parseBarcode`, tal cual el

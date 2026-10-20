@@ -103,12 +103,20 @@ export async function variantsRoutes(fastify: FastifyInstance) {
         throw new AppError(409, "conflict", `Ya existe la variante ${input.talle}/${input.color}`);
       }
 
-      const [row] = await db
-        .insert(productVariants)
-        .values({ ...input, productId, orgId })
-        .returning();
-      reply.status(201);
-      return row;
+      try {
+        const [row] = await db
+          .insert(productVariants)
+          .values({ ...input, productId, orgId })
+          .returning();
+        reply.status(201);
+        return row;
+      } catch (err) {
+        // T37 — mismo criterio que alta-rapida: barcode único por org.
+        if (isUniqueViolation(err) && input.barcode) {
+          throw new AppError(409, "conflict", `Ya existe una variante con el código de barras ${input.barcode}`);
+        }
+        throw err;
+      }
     }
   );
 

@@ -24,6 +24,10 @@ export const createVariantSchema = z.object({
   talle: z.string().min(1),
   color: z.string().min(1),
   sku: z.string().nullable().optional(),
+  // T37 — faltaba acá (sí estaba en updateVariantSchema): sin esto, una
+  // variante creada por este endpoint nunca podía usarse en las sugerencias
+  // de alta por código de barras (T36) ni encontrarse por by-barcode.
+  barcode: z.string().min(1).optional(),
   stockOnline: stock.default(0),
   stockLocal: stock.default(0),
   priceOverride: priceCents.nullable().optional(),
