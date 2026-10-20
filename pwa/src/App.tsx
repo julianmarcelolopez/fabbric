@@ -53,7 +53,10 @@ export default function App() {
   // Carrito: estado local de la app, no persistido hasta confirmar la venta
   // (Fase 5 — "Agregar a la venta" desde la Ficha lo alimenta).
   const [cart, setCart] = useState<CartItem[]>([]);
-  const [medioPago, setMedioPago] = useState<VentaLocalMedioPago>("efectivo");
+  // T37 — arranca sin elegir (antes "efectivo" por default, lo que dejaba
+  // confirmar una venta sin que el vendedor haya tocado "Forma de pago" a
+  // propósito). null obliga a una elección real antes de poder confirmar.
+  const [medioPago, setMedioPago] = useState<VentaLocalMedioPago | null>(null);
   // T34 — solo se usan/validan cuando medioPago === "anticipo" (ver
   // CarritoScreen). balanceDueDate vive como string de <input type="date">
   // (ISO yyyy-mm-dd), no como Date — se manda tal cual al backend.
@@ -123,6 +126,10 @@ export default function App() {
   }
 
   async function confirmVenta() {
+    // No debería poder dispararse sin medioPago elegido (el botón de
+    // CarritoScreen queda disabled hasta entonces) — guarda defensiva que
+    // además achica el tipo a VentaLocalMedioPago para el resto de la función.
+    if (!medioPago) return;
     setConfirmError(null);
     setConfirmSubmitting(true);
     const esAnticipo = medioPago === "anticipo";
@@ -153,9 +160,9 @@ export default function App() {
       // facturaForm arriba: la próxima venta arranca en blanco. Bug real
       // encontrado en vivo: faltaba resetear medioPago en sí — sin esto,
       // una venta con anticipo dejaba "Anticipo" pegado como default para
-      // la siguiente venta (el valor inicial del useState es "efectivo",
-      // pero eso solo corre una vez, al montar la app).
-      setMedioPago("efectivo");
+      // la siguiente venta. T37: vuelve a `null`, no a "efectivo" — cada
+      // venta nueva vuelve a obligar a elegir medio de pago.
+      setMedioPago(null);
       setMontoPagado(null);
       setBalanceDueDate("");
       setCustomerId(null);

@@ -21,7 +21,9 @@ export type CartItem = {
 
 type Props = {
   items: CartItem[];
-  medioPago: VentaLocalMedioPago;
+  // T37 — null hasta que el vendedor elige un medio a propósito (antes
+  // tenía "efectivo" como default, ver App.tsx).
+  medioPago: VentaLocalMedioPago | null;
   onMedioPagoChange: (medioPago: VentaLocalMedioPago) => void;
   onRemove: (variantId: string) => void;
   onUpdateQty: (variantId: string, qty: number) => void;
@@ -154,12 +156,14 @@ export function CarritoScreen({
   // venta" cuando se abría el formulario de facturación (ya no lo empuja
   // fuera de vista, así que se saca).
   const [tab, setTab] = useState<"productos" | "pago">("productos");
-  // T37 — "Confirmar venta" no obligaba a pasar por "Forma de pago": como
-  // medioPago siempre tiene un valor por default (ver App.tsx), se podía
-  // confirmar sin que el vendedor llegue a mirar/elegir el medio real.
-  const [visitedPago, setVisitedPago] = useState(false);
+  // T37 — "Confirmar venta" no obligaba a elegir una forma de pago: como
+  // medioPago tenía "efectivo" como default (ver App.tsx), quedaba
+  // "elegido" sin que el vendedor lo haya tocado. Ahora medioPago arranca
+  // en null y el botón queda bloqueado hasta que sea una de las opciones
+  // reales — no alcanza con solo abrir la pestaña (intento anterior,
+  // insuficiente: el usuario lo señaló en vivo).
   const confirmBlocked =
-    items.length === 0 || submitting || facturaIncompleta || anticipoIncompleto || !visitedPago;
+    items.length === 0 || submitting || facturaIncompleta || anticipoIncompleto || medioPago == null;
 
   // Stock en vivo por ítem — se pide fresco cada vez que se entra/cambia el
   // carrito (no el que tenía la variante al momento de escanearla), así se ve
@@ -206,15 +210,12 @@ export function CarritoScreen({
         {(
           [
             { value: "productos", label: items.length > 0 ? `Productos (${items.length})` : "Productos" },
-            { value: "pago", label: "Forma de pago" },
+            { value: "pago", label: medioPago ? "Forma de pago" : "Forma de pago ⚠" },
           ] as const
         ).map((t) => (
           <button
             key={t.value}
-            onClick={() => {
-              setTab(t.value);
-              if (t.value === "pago") setVisitedPago(true);
-            }}
+            onClick={() => setTab(t.value)}
             style={{
               flex: 1,
               border: "none",
@@ -581,9 +582,9 @@ export function CarritoScreen({
           Elegí un cliente, un monto (no mayor al total) y una fecha límite para el saldo.
         </p>
       )}
-      {!visitedPago && items.length > 0 && (
+      {medioPago == null && items.length > 0 && (
         <p style={{ color: colors.danger, fontSize: 12, margin: "0 0 8px", textAlign: "center" }}>
-          Revisá "Forma de pago" antes de confirmar.
+          Elegí una forma de pago antes de confirmar.
         </p>
       )}
 

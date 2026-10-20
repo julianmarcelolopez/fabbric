@@ -221,6 +221,73 @@ a `confirmBlocked` (junto a `facturaIncompleta`/`anticipoIncompleto`, que
 ya bloqueaban el botón por otras razones) — con un aviso en rojo arriba
 del botón: `Revisá "Forma de pago" antes de confirmar.`
 
+## 11b. El fix de "Forma de pago" (11) no alcanzaba — corregido
+
+**Reporte del usuario:** "la venta se confirma igual sin obligarte a pasar
+por formas de pago... quiero que más allá de la leyenda 'recordá
+confirmar forma de pago' quiero que obligue a seleccionar una forma de
+pago... no quiero que pueda confirmar la venta sin esto."
+
+**Causa real del fix anterior (11) insuficiente:** ese fix solo exigía
+haber *abierto* la pestaña "Forma de pago" (`visitedPago`), pero
+`medioPago` (`App.tsx:56`) arrancaba con el valor por default
+`"efectivo"` — ya "elegido" sin que el vendedor lo haya tocado, así que
+abrir la pestaña no forzaba ninguna decisión real. Peor: tras cada venta
+se reseteaba a `"efectivo"` de nuevo (línea ~158), no a un estado vacío,
+así que el problema se repetía en cada venta nueva, no solo en la primera.
+
+**Fix correcto:** `medioPago` pasa a `VentaLocalMedioPago | null`, arranca
+en `null` y se resetea a `null` (no a `"efectivo"`) después de cada venta.
+`confirmVenta()` (`App.tsx`) tiene una guarda `if (!medioPago) return;` al
+principio. `CarritoScreen.tsx`: se saca el `visitedPago` del fix anterior
+(quedó redundante) y `confirmBlocked` ahora chequea directamente
+`medioPago == null` — con los botones de medio de pago sin ninguno
+resaltado hasta que se elija uno de verdad, el tab "Forma de pago" muestra
+un "⚠" mientras no se eligió, y el aviso pasa a "Elegí una forma de pago
+antes de confirmar."
+
+## 12. T36 seguía duplicando productos — la sugerencia nunca evitaba crear uno nuevo
+
+**Reporte del usuario:** en la tienda pública, dos productos "1800"
+(Taverniti) distintos para lo que debería ser un solo modelo con 2
+variantes de color — "son variantes distintas, se entiende?"
+
+**Causa real (bug de diseño de T36, no un detalle menor):** el endpoint
+`suggest-by-barcode` sí detectaba correctamente que el segundo código
+(`01800640.034`) compartía `modeloCode` (`01800`) con un producto ya
+cargado (`01800505.034`) — y `AltaScreen.tsx` sí precargaba marca/modelo/
+categoría en el formulario. **Pero el botón "Guardar producto" seguía
+llamando siempre a `POST /admin/products/alta-rapida`**, que *siempre*
+inserta un producto nuevo — la sugerencia nunca se traducía en "agregar la
+variante al producto existente". O sea, T36 solo resolvía el problema de
+tipeo/normalización, no el de duplicados — que era el motivo original del
+pedido.
+
+**Fix:**
+- `createVariantSchema` (`packages/shared/src/schemas/variant.ts`) suma un
+  campo `barcode` opcional — faltaba (solo estaba en `updateVariantSchema`),
+  así que una variante creada por `POST /admin/products/:id/variants`
+  nunca podía participar de las sugerencias ni encontrarse por
+  `by-barcode`.
+- Ese mismo endpoint (`backend/src/modules/variants/routes.ts`) ahora
+  atrapa el conflicto de barcode duplicado (409), mismo criterio que
+  `alta-rapida`.
+- `AltaScreen.tsx`: nuevo estado `matchedProductId` (el id del producto
+  sugerido). `handleSubmit` ahora tiene dos caminos: si
+  `modeloExistente && matchedProductId` (el usuario no editó "Modelo"
+  después de la sugerencia) → `POST /admin/products/:id/variants` sobre
+  ESE producto; si no, el camino de siempre (`alta-rapida`, producto
+  nuevo). Si el usuario edita "Modelo" a mano, `matchedProductId` se
+  limpia y vuelve a crear un producto nuevo (es, a propósito, una
+  decisión consciente de que es un modelo distinto). El campo "Precio" se
+  oculta en el camino de variante-existente (usa el precio del producto,
+  sin `priceOverride`) en vez de pedir un dato que no se usaría.
+
+**Limpieza de datos:** las dos "1800" ya creadas en producción (con 3
+pedidos reales encima) se fusionaron con el mismo script usado para
+"Remera básica R" — variante movida, imagen movida, producto duplicado
+borrado, pedidos intactos (apuntan a la variante por id, no al producto).
+
 ## Verificación
 
 - `tsc --noEmit` limpio en los 3 puntos tocados (`backend`, `frontend`,
