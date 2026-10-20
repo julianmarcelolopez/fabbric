@@ -78,6 +78,28 @@ function SaldoPendienteCard({ order, onCobrado }: { order: AdminOrderDetail; onC
           {new Date(`${order.balanceDueDate}T00:00:00`).toLocaleDateString("es-AR")}
         </p>
       )}
+      {order.payments.length > 0 && (
+        <table className="grid" style={{ marginBottom: 12 }}>
+          <thead>
+            <tr>
+              <th>Fecha</th>
+              <th>Medio de pago</th>
+              <th>Detalle</th>
+              <th>Monto</th>
+            </tr>
+          </thead>
+          <tbody>
+            {order.payments.map((p) => (
+              <tr key={p.id}>
+                <td>{new Date(`${p.date}T00:00:00`).toLocaleDateString("es-AR")}</td>
+                <td>{p.walletName}</td>
+                <td className="muted">{p.description}</td>
+                <td>{formatPrice(p.amount)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
       <div className="row" style={{ alignItems: "flex-end" }}>
         <label className="field">
           Monto a cobrar

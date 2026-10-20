@@ -257,6 +257,18 @@ export type AdminOrderDetail = {
   type: AdminOrderType;
   allowedTransitions: AdminOrderStatus[];
   invoice: AdminInvoiceStatus | null;
+  // T37 — cada cobro individual del pedido (anticipo + cobros de saldo
+  // posteriores), en orden cronológico.
+  payments: AdminOrderPayment[];
+};
+
+export type AdminOrderPayment = {
+  id: string;
+  amount: number;
+  date: string;
+  createdAt: string;
+  description: string | null;
+  walletName: string;
 };
 
 export type AdminCustomerRow = {

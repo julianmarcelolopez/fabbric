@@ -14,7 +14,7 @@ import {
   type ManualBespokeItem,
   type ManualCatalogItem,
 } from "@fabbric/shared";
-import { and, desc, eq, gte, inArray, lte, max, sql as rawSql } from "drizzle-orm";
+import { and, asc, desc, eq, gte, inArray, lte, max, sql as rawSql } from "drizzle-orm";
 import type { FastifyBaseLogger, FastifyInstance } from "fastify";
 import type { ZodTypeProvider } from "fastify-type-provider-zod";
 import { z } from "zod";
@@ -29,6 +29,7 @@ import {
   productVariants,
   shippingZones,
   stockMovements,
+  wallets,
 } from "../../db/schema.js";
 import { supabaseAdmin } from "../../lib/supabaseAdmin.js";
 import { orderStatusEmail, sendEmail } from "../../lib/email.js";
@@ -213,10 +214,27 @@ export async function ordersRoutes(fastify: FastifyInstance) {
       // columnas propias (mismo criterio que deriveOrderType). pagado ===
       // total en cualquier pedido que no sea "partial".
       const pagado = await pagadoDePedido(id);
+      // T37 — detalle de cada cobro del pedido (anticipo + cobros de saldo
+      // posteriores), no solo el total agregado — para mostrarlos en la
+      // ficha del pedido.
+      const payments = await db
+        .select({
+          id: financialMovements.id,
+          amount: financialMovements.amount,
+          date: financialMovements.date,
+          createdAt: financialMovements.createdAt,
+          description: financialMovements.description,
+          walletName: wallets.name,
+        })
+        .from(financialMovements)
+        .innerJoin(wallets, eq(financialMovements.walletId, wallets.id))
+        .where(and(eq(financialMovements.orderId, id), eq(financialMovements.type, "income")))
+        .orderBy(asc(financialMovements.date), asc(financialMovements.createdAt));
       return {
         ...row.order,
         pagado,
         saldoPendiente: row.order.total - pagado,
+        payments,
         customerName: row.customerName,
         customerEmail: row.customerEmail,
         customerPhone: row.customerPhone,
