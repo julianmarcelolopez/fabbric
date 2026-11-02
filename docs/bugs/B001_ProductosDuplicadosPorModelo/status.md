@@ -64,6 +64,46 @@ el usuario confirme si corresponde unificarlo a "Azul".
 contesta caso por caso; recién ahí se fusiona lo que confirme que es un
 duplicado real.
 
+## Nuevo caso encontrado y resuelto vía la columna de código de barras (2026-11-02)
+
+Con la columna "Código de barras" agregada a `/admin/products` (T39),
+aparecieron 4 productos "Liso" (Cintos, Taverniti, $35.000) con barcodes
+`07020-601-095/100/110/115` — formato con **guiones** en vez de punto
+(otra variante del mismo problema de fondo del Grupo C: el parser solo
+reconoce el "."). Modelo+color idénticos (`07020-601`), solo cambia la
+medida del cinto — confirmado por el usuario como la misma prenda.
+
+**Fusionado**: canónico `5f08d019…` (095, era el único visible en
+catálogo — uno de los 4 duplicados, `775437ed…` 100, había quedado oculto).
+Resultado: 1 producto, 4 variantes (095/100/110/115), visible. Backup
+antes de fusionar, mismo procedimiento de siempre.
+
+## Segundo caso "Liso" (Cintos) — resuelto, más complejo de lo que parecía (2026-11-02)
+
+El usuario notó, mirando la columna de código de barras, que un "Liso"
+(Cintos) tenía códigos con el segmento de color distinto (601/602/620) —
+no solo la medida. Investigado: en realidad eran **3 productos "Liso"
+distintos**, no 1:
+
+| Producto | Modelo | Variantes |
+|---|---|---|
+| `da30bda8…` | `07020` | 6 — Negro×3 (602), Gris claro×1 (620), Blanca×2 (601) |
+| `5f08d019…` | `07020` | 4 — Blanca×4 (601) — el fusionado en la vuelta anterior |
+| `1a41e2d0…` | `29680` | 1 — Negro (105) — modelo distinto, mismo nombre por coincidencia |
+
+`da30bda8` y `5f08d019` comparten modelo (`07020`) — 601/602/620 son los
+3 colores reales de este cinto (Blanco/Negro/Gris claro), igual criterio
+que "Remera Básica R" con decenas de colores bajo un solo producto. El
+problema: habían quedado partidos en dos productos, **y 2 variantes
+(Blanca/100cm, Blanca/110cm) existían duplicadas exactas en ambos**, cada
+copia con su propio stock.
+
+**Resuelto**: fusionados en `5f08d019` (8 variantes finales). Para los 2
+pares duplicados, se **sumó el stock** de las dos copias en vez de
+descartar una (ninguna tenía pedidos asociados, verificado antes de
+tocar nada). El tercer "Liso" (modelo `29680`) queda sin tocar — mismo
+caso que el Grupo D, nombre genérico compartido por un producto distinto.
+
 ## Grupo D — Cerrado, no era este bug (2026-11-02)
 
 Al pedir la columna "Código de barras" en `/admin/products`

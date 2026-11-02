@@ -29,6 +29,9 @@ function ProductsList() {
   const [categories, setCategories] = useState<Taxonomy[]>([]);
   const [brands, setBrands] = useState<Taxonomy[]>([]);
   const [error, setError] = useState<string | null>(null);
+  // T40 — "Nuevo producto" pasa de tarjeta siempre abierta a modal: antes
+  // competía por atención con el buscador (ver docs/T40_BuscadorProductosAdmin).
+  const [showNewProduct, setShowNewProduct] = useState(false);
   const [name, setName] = useState("");
   const [categoryId, setCategoryId] = useState("");
   const [price, setPrice] = useState("");
@@ -180,34 +183,10 @@ function ProductsList() {
 
   return (
     <>
-      <div className="card">
-        <h2>Nuevo producto</h2>
-        {categories.length === 0 ? (
-          <p className="muted">
-            Primero creá al menos una <Link to="/admin/products?tab=categorias">categoría</Link>.
-          </p>
-        ) : (
-          <form onSubmit={create} className="row">
-            <label className="field">
-              Nombre
-              <input value={name} onChange={(e) => setName(e.target.value)} required />
-            </label>
-            <label className="field">
-              Categoría
-              <select value={categoryId} onChange={(e) => setCategoryId(e.target.value)} required>
-                <option value="">Elegir…</option>
-                {categories.map((c) => (
-                  <option key={c.id} value={c.id}>{c.name}</option>
-                ))}
-              </select>
-            </label>
-            <label className="field">
-              Precio ($)
-              <input value={price} onChange={(e) => setPrice(e.target.value)} required inputMode="decimal" />
-            </label>
-            <button className="btn primary" type="submit">Crear y editar</button>
-          </form>
-        )}
+      <div className="row" style={{ justifyContent: "flex-end", marginBottom: 16 }}>
+        <button className="btn primary" onClick={() => setShowNewProduct(true)}>
+          + Nuevo producto
+        </button>
       </div>
 
       {error && <p className="error">{error}</p>}
@@ -218,13 +197,31 @@ function ProductsList() {
         <p className="muted">Todavía no hay productos.</p>
       ) : (
         <>
-          <div className="row" style={{ marginBottom: 12, alignItems: "center" }}>
+          {/* T40 — el buscador pasa a ser lo primero y más visible del
+              cuerpo de la página, en vez de competir con los filtros
+              dentro de la misma fila (ver docs/T40_BuscadorProductosAdmin). */}
+          <div style={{ position: "relative", marginBottom: 10 }}>
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", color: "#8A8278", pointerEvents: "none" }}
+            >
+              <circle cx="11" cy="11" r="7" />
+              <path d="m21 21-4.3-4.3" />
+            </svg>
             <input
-              style={{ flex: 1, minWidth: 200 }}
+              style={{ width: "100%", padding: "12px 12px 12px 36px", fontSize: 15 }}
               placeholder="Buscar por nombre o código de barras…"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
+          </div>
+
+          <div className="row" style={{ marginBottom: 12, alignItems: "center", fontSize: 13 }}>
             <select value={filterCategory} onChange={(e) => setFilterCategory(e.target.value)}>
               <option value="">Todas las categorías</option>
               {categories.map((c) => (
@@ -375,6 +372,61 @@ function ProductsList() {
             </div>
           )}
         </>
+      )}
+
+      {showNewProduct && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(0,0,0,0.4)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 50,
+            padding: 20,
+          }}
+          onClick={() => setShowNewProduct(false)}
+        >
+          <div
+            className="card"
+            style={{ width: "100%", maxWidth: 420 }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2>Nuevo producto</h2>
+            {categories.length === 0 ? (
+              <p className="muted">
+                Primero creá al menos una <Link to="/admin/products?tab=categorias">categoría</Link>.
+              </p>
+            ) : (
+              <form onSubmit={create} style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                <label className="field">
+                  Nombre
+                  <input value={name} onChange={(e) => setName(e.target.value)} required />
+                </label>
+                <label className="field">
+                  Categoría
+                  <select value={categoryId} onChange={(e) => setCategoryId(e.target.value)} required>
+                    <option value="">Elegir…</option>
+                    {categories.map((c) => (
+                      <option key={c.id} value={c.id}>{c.name}</option>
+                    ))}
+                  </select>
+                </label>
+                <label className="field">
+                  Precio ($)
+                  <input value={price} onChange={(e) => setPrice(e.target.value)} required inputMode="decimal" />
+                </label>
+                <div className="row" style={{ justifyContent: "flex-end", gap: 8 }}>
+                  <button type="button" className="btn" onClick={() => setShowNewProduct(false)}>
+                    Cancelar
+                  </button>
+                  <button className="btn primary" type="submit">Crear y editar</button>
+                </div>
+              </form>
+            )}
+          </div>
+        </div>
       )}
     </>
   );
