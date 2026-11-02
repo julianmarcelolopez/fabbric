@@ -1,0 +1,1 @@
+ALTER TABLE "categories" ADD COLUMN "split_barcode_color" boolean DEFAULT true NOT NULL;

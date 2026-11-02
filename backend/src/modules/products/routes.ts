@@ -197,6 +197,11 @@ export async function productsRoutes(fastify: FastifyInstance) {
       const parsed = parseBarcode(request.params.barcode);
       if (!parsed) return { parsed: null, product: null, colorName: null, talleName: null };
 
+      // B001 — algunas categorías (ej. Cintos) no separan color del modelo:
+      // el bloque completo antes del "." es la identidad del producto, no
+      // solo los dígitos antes del color. Se trae `splitBarcodeColor` de la
+      // categoría de cada variante candidata para decidir, por fila, si
+      // además del modelo hace falta que el color coincida exacto.
       const rows = await db
         .select({
           barcode: productVariants.barcode,
@@ -204,8 +209,11 @@ export async function productsRoutes(fastify: FastifyInstance) {
           talle: productVariants.talle,
           productId: productVariants.productId,
           createdAt: productVariants.createdAt,
+          splitBarcodeColor: categories.splitBarcodeColor,
         })
         .from(productVariants)
+        .innerJoin(products, eq(productVariants.productId, products.id))
+        .innerJoin(categories, eq(products.categoryId, categories.id))
         .where(and(eq(productVariants.orgId, orgId), isNotNull(productVariants.barcode)));
 
       let productMatch: { productId: string; createdAt: Date } | null = null;
@@ -215,7 +223,11 @@ export async function productsRoutes(fastify: FastifyInstance) {
       for (const row of rows) {
         const p = parseBarcode(row.barcode!);
         if (!p) continue;
-        if (p.modeloCode === parsed.modeloCode && (!productMatch || row.createdAt > productMatch.createdAt)) {
+        const sameModelo = p.modeloCode === parsed.modeloCode;
+        // Si la categoría de este candidato no separa color del modelo, el
+        // modelo solo no alcanza — también tiene que coincidir el color.
+        const countsAsSameProduct = sameModelo && (row.splitBarcodeColor ? true : p.colorCode === parsed.colorCode);
+        if (countsAsSameProduct && (!productMatch || row.createdAt > productMatch.createdAt)) {
           productMatch = { productId: row.productId, createdAt: row.createdAt };
         }
         if (p.colorCode === parsed.colorCode && (!colorNameMatch || row.createdAt > colorNameMatch.createdAt)) {

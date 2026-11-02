@@ -79,6 +79,14 @@ export const categories = pgTable(
     imageUrl: text("image_url"),
     sortOrder: integer("sort_order").notNull().default(0),
     active: boolean("active").notNull().default(true),
+    // T36/B001 — por default el "modelo" de un código de barras es todo
+    // menos los últimos 3 dígitos antes del "." (esos son el color; mismo
+    // modelo + distinto color = mismo producto, ver parseBarcode). Para
+    // algunas categorías (ej. Cintos) esa regla no vale: el bloque COMPLETO
+    // antes del "." es la identidad del producto — mismo modelo de 5
+    // dígitos pero bloque completo distinto = productos distintos. false =
+    // no separar color del modelo al sugerir/matchear en el alta.
+    splitBarcodeColor: boolean("split_barcode_color").notNull().default(true),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true })
       .notNull()

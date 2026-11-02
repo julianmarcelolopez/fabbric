@@ -104,6 +104,85 @@ descartar una (ninguna tenía pedidos asociados, verificado antes de
 tocar nada). El tercer "Liso" (modelo `29680`) queda sin tocar — mismo
 caso que el Grupo D, nombre genérico compartido por un producto distinto.
 
+## Regla de agrupado distinta para Cintos — corregido (2026-11-02)
+
+El usuario corrigió un supuesto de fondo que veníamos usando en toda esta
+sesión: para Remeras/Jeans, "modelo" son los primeros 5 dígitos y el
+color son los 3 siguientes — mismo modelo + distinto color = mismo
+producto (confirmado una y otra vez con "Remera Básica R", ~130
+variantes, decenas de colores). **Para Cintos esa regla no aplica**: el
+bloque COMPLETO antes del "." (sin separar en modelo+color) es la
+identidad del producto — dos cintos con el mismo "modelo" de 5 dígitos
+pero bloque completo distinto (ej. `07020601` vs `07020602`) son
+**productos distintos**, no colores del mismo producto. El usuario
+confirmó explícitamente que esto es **solo para Cintos**, no para
+Remeras/Jeans.
+
+Esto invalidaba la fusión de "Liso" hecha un rato antes en esta misma
+sesión (ver más arriba) — se deshizo y se volvió a separar:
+
+| Producto | Bloque completo | Variantes |
+|---|---|---|
+| "Liso" (queda igual) | `07020601` | 4 — Blanca |
+| "Liso 2" (nuevo) | `07020602` | 3 — Negro |
+| "Liso 3" (nuevo) | `07020620` | 1 — Gris claro |
+| "Costura" (queda igual) | `29686602` | 2 — Negro |
+| "Costura 2" (nuevo) | `29686620` | 2 — Gris claro |
+
+Sin pedidos asociados a ninguna de estas variantes — separar fue seguro,
+sin stock que reconciliar.
+
+**De paso**, a pedido del usuario, se sacaron los guiones de los barcodes
+de "Liso" (`07020-601-095` → `07020601.095`, etc.) para unificar el
+formato con el resto (modelo+color pegados, "." antes del talle).
+
+**Error propio durante este arreglo, corregido en el momento**: el primer
+intento de sacar los guiones hizo un `replace(/-/g, "")` ciego, que
+también borró el "." (dejó `07020601095` en vez de `07020601.095`,
+rompiendo el barcode). Detectado y corregido antes de seguir — valores
+reconstruidos a partir de los originales con guion, no hubo pérdida de
+datos real (nunca se commiteó ni se dejó así).
+
+## Fix de fondo: matching por categoría (2026-11-02) — ✅ Hecho
+
+Implementado para que esto no vuelva a pasar en altas futuras:
+
+- Migración `0029_split_barcode_color.sql`: `categories` suma
+  `split_barcode_color` (boolean, default `true` — mantiene el
+  comportamiento de siempre para todas las categorías existentes salvo
+  que se apague explícitamente). Seteado a `false` para "Cintos" (SQL
+  directo, mismo criterio manual que `custom_domain` en T38 — no hay UI
+  para esto todavía).
+- `backend/src/modules/products/routes.ts`, endpoint
+  `GET /admin/products/suggest-by-barcode/:barcode`: la query ahora trae
+  `categories.splitBarcodeColor` de cada variante candidata (join
+  `product_variants → products → categories`). Al decidir si una
+  variante existente cuenta como "mismo producto" que el código
+  escaneado: si la categoría del candidato tiene `splitBarcodeColor =
+  true` (default), alcanza con que coincida el modelo, igual que
+  siempre; si es `false` (Cintos), **además** tiene que coincidir el
+  color exacto — si no, no se considera el mismo producto aunque el
+  modelo de 5 dígitos sea igual.
+- La regla se evalúa por la categoría del **candidato existente**, no
+  por una categoría todavía elegida en el alta (en ese momento no se
+  sabe la categoría del código escaneado) — tiene sentido: la pregunta
+  real es "¿esto es lo mismo que ESE producto ya cargado?", y esa
+  categoría ya se sabe.
+
+**Verificado contra la base real** (simulando la lógica exacta, sin pasar
+por HTTP — no hay credenciales de admin válidas en `.env.local` para
+probar con `curl`, ver nota en T39):
+- Escanear un "Liso" color 601 (Blanca) nuevo → sugiere "Liso" (no "Liso 2"/"Liso 3"). ✅
+- Escanear un "Liso" color 602 (Negro) nuevo → sugiere "Liso 2" (no "Liso"). ✅
+- Escanear un "Liso" con un color nunca visto (699), mismo modelo → no sugiere ningún producto (correcto, no se puede asumir que es alguno de los existentes). ✅
+- Escanear una "Remera Básica R" con un color nunca visto, mismo modelo → sigue sugiriendo "Remera Básica R" (Remeras no cambió de comportamiento). ✅
+
+**Pendiente, fuera de esta vuelta**: no hay UI en el admin para marcar
+`splitBarcodeColor` por categoría — se setea a mano por SQL cuando haga
+falta (como con los dominios propios). Si se agregan más categorías con
+esta misma necesidad, agregar un toggle en el admin de Categorías sería
+lo próximo.
+
 ## Grupo D — Cerrado, no era este bug (2026-11-02)
 
 Al pedir la columna "Código de barras" en `/admin/products`
