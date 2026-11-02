@@ -1,4 +1,5 @@
 import { createBrowserRouter, Navigate } from "react-router-dom";
+import { isCustomDomainMode } from "./lib/storeLinks";
 import { AdminLayout } from "./features/admin/AdminLayout";
 import { RequireAuth } from "./features/admin/RequireAuth";
 import { CustomerDetailPage } from "./features/admin/pages/CustomerDetailPage";
@@ -26,58 +27,69 @@ import { StoreProductPage } from "./features/store/pages/StoreProductPage";
 
 // El portal del comprador vive dentro de cada tienda (/store/:slug/portal/*) — T6 tarea 8
 
-export const router = createBrowserRouter([
-  // Redirect relativo (no hardcodea dominio): funciona igual en local y en cualquier
-  // deploy. Para la demo de Eliathi Modas, la raíz cae directo en su tienda.
-  { path: "/", element: <Navigate to="/store/eliathi-modas" replace /> },
-  { path: "/admin/login", element: <LoginPage /> },
-  {
-    path: "/admin",
-    element: (
-      <RequireAuth>
-        <AdminLayout />
-      </RequireAuth>
-    ),
-    children: [
-      { index: true, element: <DashboardPage /> },
-      // Redirects (T19/02): Categorías, Colecciones y Stock ahora son tabs de Productos —
-      // estas rutas quedan solo para no romper links/favoritos ya guardados.
-      { path: "categories", element: <Navigate to="/admin/products?tab=categorias" replace /> },
-      { path: "collections", element: <Navigate to="/admin/products?tab=colecciones" replace /> },
-      { path: "stock", element: <Navigate to="/admin/products?tab=stock" replace /> },
-      { path: "products", element: <ProductsPage /> },
-      { path: "products/:id", element: <ProductEditPage /> },
-      { path: "orders", element: <OrdersPage /> },
-      { path: "orders/new", element: <OrderNewPage /> },
-      { path: "orders/:id", element: <OrderAdminDetailPage /> },
-      { path: "customers", element: <CustomersPage /> },
-      { path: "customers/:id", element: <CustomerDetailPage /> },
-      { path: "finance", element: <FinanzasPage /> },
-      // Redirects (T19/07): Home y Configuración de tienda se unificaron en "Mi tienda".
-      { path: "home", element: <Navigate to="/admin/store" replace /> },
-      { path: "config", element: <Navigate to="/admin/store" replace /> },
-      { path: "shipping", element: <ShippingZonesPage /> },
-      { path: "store", element: <MyStorePage /> },
-      { path: "settings", element: <SettingsPage /> },
-    ],
-  },
-  {
-    path: "/store/:slug",
-    element: <StoreLayout />,
-    children: [
-      { index: true, element: <CatalogHomePage /> },
-      { path: "categorias", element: <CategoriesIndexPage /> },
-      { path: "c/:categorySlug", element: <CategoryPage /> },
-      { path: "col/:collectionSlug", element: <CategoryPage mode="collection" /> },
-      { path: "m/:brandSlug", element: <CategoryPage mode="brand" /> },
-      { path: "novedades", element: <CategoryPage mode="novedades" /> },
-      { path: "ofertas", element: <CategoryPage mode="ofertas" /> },
-      { path: "buscar", element: <CategoryPage mode="search" /> },
-      { path: "p/:productId", element: <StoreProductPage /> },
-      { path: "checkout", element: <CheckoutPage /> },
-      { path: "checkout/result", element: <CheckoutResultPage /> },
-      { path: "portal/orders", element: <MyOrdersPage /> },
-      { path: "portal/orders/:orderId", element: <OrderDetailPage /> },
-    ],
-  },
-]);
+// T38 — mismas rutas hijas en los dos modos (dominio principal bajo
+// /store/:slug, dominio propio bajo "/"), para no duplicar la lista — ver
+// docs/T38_DominiosPropios/analisis.md.
+const storeChildRoutes = [
+  { index: true, element: <CatalogHomePage /> },
+  { path: "categorias", element: <CategoriesIndexPage /> },
+  { path: "c/:categorySlug", element: <CategoryPage /> },
+  { path: "col/:collectionSlug", element: <CategoryPage mode="collection" /> },
+  { path: "m/:brandSlug", element: <CategoryPage mode="brand" /> },
+  { path: "novedades", element: <CategoryPage mode="novedades" /> },
+  { path: "ofertas", element: <CategoryPage mode="ofertas" /> },
+  { path: "buscar", element: <CategoryPage mode="search" /> },
+  { path: "p/:productId", element: <StoreProductPage /> },
+  { path: "checkout", element: <CheckoutPage /> },
+  { path: "checkout/result", element: <CheckoutResultPage /> },
+  { path: "portal/orders", element: <MyOrdersPage /> },
+  { path: "portal/orders/:orderId", element: <OrderDetailPage /> },
+];
+
+// T38 — en un dominio propio (ej. eliathimodas.com) solo existe la tienda,
+// montada en "/" (StoreLayout resuelve el slug por hostname, ver
+// StoreLayout.tsx) — sin admin ni el redirect de demo, que no tienen
+// sentido en el dominio de un cliente. El dominio principal
+// (fabbric.aivance.cloud, o localhost en dev) sigue exactamente igual que
+// antes de T38.
+export const router = createBrowserRouter(
+  isCustomDomainMode()
+    ? [{ path: "/", element: <StoreLayout />, children: storeChildRoutes }]
+    : [
+        // Redirect relativo (no hardcodea dominio): funciona igual en local y en cualquier
+        // deploy. Para la demo de Eliathi Modas, la raíz cae directo en su tienda.
+        { path: "/", element: <Navigate to="/store/eliathi-modas" replace /> },
+        { path: "/admin/login", element: <LoginPage /> },
+        {
+          path: "/admin",
+          element: (
+            <RequireAuth>
+              <AdminLayout />
+            </RequireAuth>
+          ),
+          children: [
+            { index: true, element: <DashboardPage /> },
+            // Redirects (T19/02): Categorías, Colecciones y Stock ahora son tabs de Productos —
+            // estas rutas quedan solo para no romper links/favoritos ya guardados.
+            { path: "categories", element: <Navigate to="/admin/products?tab=categorias" replace /> },
+            { path: "collections", element: <Navigate to="/admin/products?tab=colecciones" replace /> },
+            { path: "stock", element: <Navigate to="/admin/products?tab=stock" replace /> },
+            { path: "products", element: <ProductsPage /> },
+            { path: "products/:id", element: <ProductEditPage /> },
+            { path: "orders", element: <OrdersPage /> },
+            { path: "orders/new", element: <OrderNewPage /> },
+            { path: "orders/:id", element: <OrderAdminDetailPage /> },
+            { path: "customers", element: <CustomersPage /> },
+            { path: "customers/:id", element: <CustomerDetailPage /> },
+            { path: "finance", element: <FinanzasPage /> },
+            // Redirects (T19/07): Home y Configuración de tienda se unificaron en "Mi tienda".
+            { path: "home", element: <Navigate to="/admin/store" replace /> },
+            { path: "config", element: <Navigate to="/admin/store" replace /> },
+            { path: "shipping", element: <ShippingZonesPage /> },
+            { path: "store", element: <MyStorePage /> },
+            { path: "settings", element: <SettingsPage /> },
+          ],
+        },
+        { path: "/store/:slug", element: <StoreLayout />, children: storeChildRoutes },
+      ]
+);

@@ -1,5 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { formatPrice } from "../../lib/money";
+import { storePath } from "../../lib/storeLinks";
 import { useCart } from "./CartContext";
 
 // T20/07 — rediseño del drawer. Sin código de descuento (decisión del
@@ -98,7 +99,7 @@ export function CartDrawer({ slug }: { slug: string }) {
                 className="cart-cta"
                 onClick={() => {
                   cart.close();
-                  navigate(`/store/${slug}/checkout`);
+                  navigate(storePath(slug, "/checkout"));
                 }}
               >
                 Continuar con el pago →

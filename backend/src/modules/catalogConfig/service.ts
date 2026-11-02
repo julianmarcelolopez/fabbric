@@ -21,6 +21,24 @@ export async function resolveStoreBySlug(slug: string) {
   return row.config;
 }
 
+// T38 — mismo contrato que resolveStoreBySlug (404 indistinguible si no
+// existe/está apagada/org inactiva), pero buscando por dominio propio en vez
+// de slug. "www.<dominio>" se normaliza sacándole el prefijo antes de
+// comparar: se guarda un solo valor canónico en customDomain (sin "www."),
+// no las dos variantes.
+export async function resolveStoreByDomain(host: string) {
+  const normalized = host.trim().toLowerCase().replace(/^www\./, "");
+  const [row] = await db
+    .select({ config: catalogConfigs, orgActive: organizations.active })
+    .from(catalogConfigs)
+    .innerJoin(organizations, eq(catalogConfigs.orgId, organizations.id))
+    .where(eq(catalogConfigs.customDomain, normalized));
+  if (!row || !row.config.active || !row.orgActive) {
+    throw new AppError(404, "not_found", "Tienda no encontrada");
+  }
+  return row.config;
+}
+
 /** Devuelve la config de la org, creándola con defaults si no existe (lazy). */
 export async function ensureConfig(orgId: string) {
   const [existing] = await db.select().from(catalogConfigs).where(eq(catalogConfigs.orgId, orgId));

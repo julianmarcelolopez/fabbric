@@ -15,7 +15,7 @@ import {
   shippingZones,
 } from "../../db/schema.js";
 import { AppError } from "../../lib/errors.js";
-import { resolveStoreBySlug as resolveStore } from "../catalogConfig/service.js";
+import { resolveStoreByDomain, resolveStoreBySlug as resolveStore } from "../catalogConfig/service.js";
 
 // Endpoints PÚBLICOS (sin auth): el tenant se resuelve por el slug de la tienda.
 // Contrato de seguridad: SOLO campos public-safe — jamás costPrice, jamás
@@ -113,8 +113,30 @@ function resolveSort(sort?: ProductListQuery["sort"]) {
   return [asc(products.sortOrder), asc(products.name)];
 }
 
+const byDomainQuery = z.object({ host: z.string().min(1) });
+
 export async function publicRoutes(fastify: FastifyInstance) {
   const app = fastify.withTypeProvider<ZodTypeProvider>();
+
+  // T38 — resuelve qué tienda corresponde a un dominio propio (ej.
+  // "eliathimodas.com"). El frontend lo usa SOLO para obtener el `slug` al
+  // arrancar en un dominio que no es el principal de la plataforma — todas
+  // las demás llamadas (config/home/productos/checkout) siguen yendo por
+  // slug, como siempre. No se duplica el shape de /public/:slug/config acá.
+  app.get(
+    "/public/stores/by-domain",
+    {
+      schema: {
+        ...tag,
+        summary: "Resuelve el slug de la tienda a partir de un dominio propio (ej. eliathimodas.com)",
+        querystring: byDomainQuery,
+      },
+    },
+    async (request) => {
+      const config = await resolveStoreByDomain(request.query.host);
+      return { slug: config.slug };
+    }
+  );
 
   app.get(
     "/public/:slug/config",

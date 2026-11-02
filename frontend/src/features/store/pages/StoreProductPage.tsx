@@ -4,6 +4,7 @@ import { ApiError, publicJson } from "../../../lib/api";
 import { formatPrice } from "../../../lib/money";
 import { useCart } from "../../cart/CartContext";
 import { ProductDetailView, type RelatedProduct } from "../../catalog/ProductDetailView";
+import { storePath } from "../../../lib/storeLinks";
 import { Loading } from "../components/Loading";
 import type { PublicCategoryProducts, PublicProductDetail, StoreContext } from "../types";
 
@@ -70,7 +71,7 @@ export function StoreProductPage() {
       <div className="store-message">
         <h1>Producto no encontrado</h1>
         <p>
-          <Link to={`/store/${slug}`}>← Volver a la tienda</Link>
+          <Link to={storePath(slug)}>← Volver a la tienda</Link>
         </p>
       </div>
     );
@@ -108,9 +109,9 @@ export function StoreProductPage() {
     <div className="pdv-page">
       <div className="breadcrumb-bar">
         <div className="breadcrumb">
-          <Link to={`/store/${slug}`}>Inicio</Link>
+          <Link to={storePath(slug)}>Inicio</Link>
           <span className="breadcrumb-sep">›</span>
-          <Link to={`/store/${slug}/c/${product.categorySlug}`}>{product.categoryName}</Link>
+          <Link to={storePath(slug, `/c/${product.categorySlug}`)}>{product.categoryName}</Link>
           <span className="breadcrumb-sep">›</span>
           <span className="breadcrumb-current">{product.name}</span>
         </div>
@@ -128,7 +129,7 @@ export function StoreProductPage() {
         onAddToCart={addToCart}
         onBuyNow={(variant, qty) => {
           addToCart(variant, qty);
-          navigate(`/store/${slug}/checkout`);
+          navigate(storePath(slug, "/checkout"));
         }}
         whatsappHref={whatsappHref}
         shippingSummary={shippingSummary}
@@ -137,7 +138,7 @@ export function StoreProductPage() {
         returnPolicy={config.returnPolicy}
         related={related}
         relatedCategoryName={product.categoryName}
-        onRelatedClick={(id) => navigate(`/store/${slug}/p/${id}`)}
+        onRelatedClick={(id) => navigate(storePath(slug, `/p/${id}`))}
       />
     </div>
   );

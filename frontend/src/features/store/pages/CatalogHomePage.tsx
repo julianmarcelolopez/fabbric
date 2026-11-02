@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate, useOutletContext } from "react-router-dom";
 import { ApiError, publicJson } from "../../../lib/api";
 import { HomeSectionsRenderer } from "../../catalog/HomeSectionsRenderer";
+import { storePath } from "../../../lib/storeLinks";
 import { Loading } from "../components/Loading";
 import type { PublicBrandRef, PublicHomeSection, StoreContext } from "../types";
 
@@ -62,7 +63,7 @@ function Hero({
       <div className="home-hero-content">
         <h1 className="home-hero-title">{storeName}</h1>
         {businessDescription && <p className="home-hero-sub">{businessDescription}</p>}
-        <Link className="home-hero-cta" to={`/store/${slug}/categorias`}>
+        <Link className="home-hero-cta" to={storePath(slug, "/categorias")}>
           Ver catálogo <span className="home-hero-cta-arrow">→</span>
         </Link>
       </div>
@@ -83,7 +84,7 @@ function CategoriesGrid({ sections, slug }: { sections: PublicHomeSection[]; slu
       </div>
       <div className="home-categories-grid">
         {categories.map((c) => (
-          <Link key={c.id} to={`/store/${slug}/c/${c.refSlug}`} className="home-cat-card">
+          <Link key={c.id} to={storePath(slug, `/c/${c.refSlug}`)} className="home-cat-card">
             {/* T21/01: si la categoría tiene imagen real, se usa; si no, el
                placeholder de color de T20/03 sigue funcionando igual. */}
             {c.refImageUrl ? (
@@ -118,7 +119,7 @@ function MidBanner({
   if (title) {
     return (
       <Link
-        to={`/store/${slug}/categorias`}
+        to={storePath(slug, "/categorias")}
         className="home-mid-banner has-text"
         style={bannerUrl ? { backgroundImage: `url(${bannerUrl})` } : undefined}
       >
@@ -135,7 +136,7 @@ function MidBanner({
     // cual, sin overlay ni texto — ver Resultado de la tarea 04 (T21).
     return (
       <Link
-        to={`/store/${slug}/categorias`}
+        to={storePath(slug, "/categorias")}
         className="home-mid-banner"
         style={{ backgroundImage: `url(${bannerUrl})` }}
         aria-label="Ver catálogo completo"
@@ -147,7 +148,7 @@ function MidBanner({
     <section className="home-mid-banner">
       <div className="home-mid-banner-inner">
         <h2 className="home-mid-banner-title">Descubrí la colección completa</h2>
-        <Link className="home-mid-banner-btn" to={`/store/${slug}/categorias`}>
+        <Link className="home-mid-banner-btn" to={storePath(slug, "/categorias")}>
           Ver catálogo →
         </Link>
       </div>
@@ -187,7 +188,7 @@ export function CatalogHomePage() {
       <div className="home-section">
         <HomeSectionsRenderer
           sections={sections}
-          onProductClick={(productId) => navigate(`/store/${slug}/p/${productId}`)}
+          onProductClick={(productId) => navigate(storePath(slug, `/p/${productId}`))}
           storeSlug={slug}
         />
       </div>

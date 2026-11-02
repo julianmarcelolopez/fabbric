@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useOutletContext } from "react-router-dom";
 import { ApiError, apiJson } from "../../../lib/api";
 import { formatPrice } from "../../../lib/money";
+import { storePath } from "../../../lib/storeLinks";
 import { useCustomerAuth } from "../CustomerAuthContext";
 import { Loading } from "../components/Loading";
 import type { StoreContext } from "../types";
@@ -59,7 +60,7 @@ export function MyOrdersPage() {
 
   return (
     <div className="portal">
-      <p className="store-back"><Link to={`/store/${slug}`}>← Volver a la tienda</Link></p>
+      <p className="store-back"><Link to={storePath(slug)}>← Volver a la tienda</Link></p>
       <h1>Mis pedidos</h1>
       {error && <p className="error">{error}</p>}
       {ordersList === null ? (
@@ -71,7 +72,7 @@ export function MyOrdersPage() {
           {ordersList.map((order) => {
             const st = ORDER_STATUS_LABELS[order.status];
             return (
-              <Link key={order.id} to={`/store/${slug}/portal/orders/${order.id}`} className="portal-order">
+              <Link key={order.id} to={storePath(slug, `/portal/orders/${order.id}`)} className="portal-order">
                 <span className="portal-order-num">#{order.orderNumber}</span>
                 <span className="muted">{new Date(order.createdAt).toLocaleDateString("es-AR")}</span>
                 <span className="muted">{order.itemCount} ítem{order.itemCount === 1 ? "" : "s"}</span>

@@ -197,6 +197,13 @@
       "when": 1789753276836,
       "tag": "0027_t34_venta_anticipo",
       "breakpoints": true
+    },
+    {
+      "idx": 28,
+      "version": "7",
+      "when": 1792535144951,
+      "tag": "0028_t38_custom_domain",
+      "breakpoints": true
     }
   ]
 }

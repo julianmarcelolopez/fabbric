@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { Link, useOutletContext } from "react-router-dom";
 import { ApiError, apiJson, publicJson } from "../../../lib/api";
 import { formatPrice } from "../../../lib/money";
+import { storePath } from "../../../lib/storeLinks";
 import { useCart } from "../../cart/CartContext";
 import { useCustomerAuth } from "../CustomerAuthContext";
 import { Loading } from "../components/Loading";
@@ -104,7 +105,7 @@ export function CheckoutPage() {
       <div className="store-message">
         <h1>Tu carrito está vacío</h1>
         <p>
-          <Link to={`/store/${slug}`}>← Volver a la tienda</Link>
+          <Link to={storePath(slug)}>← Volver a la tienda</Link>
         </p>
       </div>
     );

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { ApiError, publicJson } from "../../../lib/api";
 import { formatPrice } from "../../../lib/money";
+import { storePath } from "../../../lib/storeLinks";
 import { SearchIcon } from "../icons";
 import type { PublicSearchResults } from "../types";
 
@@ -139,7 +140,7 @@ export function SearchBar({ slug, open, onOpenChange, suggestedCategories }: Pro
               {suggestedCategories.length > 0 && (
                 <div className="search-dropdown-suggested">
                   {suggestedCategories.slice(0, 3).map((c) => (
-                    <Link key={c.refSlug} to={`/store/${slug}/c/${c.refSlug}`} onClick={close}>
+                    <Link key={c.refSlug} to={storePath(slug, `/c/${c.refSlug}`)} onClick={close}>
                       {c.refName}
                     </Link>
                   ))}
@@ -149,7 +150,7 @@ export function SearchBar({ slug, open, onOpenChange, suggestedCategories }: Pro
           ) : (
             <>
               {items.map((p) => (
-                <Link key={p.id} to={`/store/${slug}/p/${p.id}`} className="search-result-item" onClick={close}>
+                <Link key={p.id} to={storePath(slug, `/p/${p.id}`)} className="search-result-item" onClick={close}>
                   {p.imageUrl ? (
                     <img className="search-result-img" src={p.imageUrl} alt="" />
                   ) : (
@@ -161,7 +162,7 @@ export function SearchBar({ slug, open, onOpenChange, suggestedCategories }: Pro
                   <span className="search-result-price">{formatPrice(p.price)}</span>
                 </Link>
               ))}
-              <Link to={`/store/${slug}/buscar?q=${encodeURIComponent(q.trim())}`} className="search-viewall" onClick={close}>
+              <Link to={`${storePath(slug, "/buscar")}?q=${encodeURIComponent(q.trim())}`} className="search-viewall" onClick={close}>
                 Ver todos los resultados para «{q.trim()}»
               </Link>
             </>

@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { storePath } from "../../lib/storeLinks";
 import { ProductCard } from "./ProductCard";
 import "./catalog.css";
 
@@ -61,7 +62,7 @@ export function HomeSectionsRenderer({ sections, onProductClick, storeSlug }: Pr
             <div className="hsr-section-head">
               <h2 className="hsr-title">{section.refName}</h2>
               {showViewAll && (
-                <Link className="hsr-viewall" to={`/store/${storeSlug}/c/${section.refSlug}`}>
+                <Link className="hsr-viewall" to={storePath(storeSlug, `/c/${section.refSlug}`)}>
                   Ver todos →
                 </Link>
               )}

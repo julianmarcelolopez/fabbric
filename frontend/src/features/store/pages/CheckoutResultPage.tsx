@@ -3,6 +3,7 @@ import { Link, useOutletContext, useSearchParams } from "react-router-dom";
 import { apiJson } from "../../../lib/api";
 import { formatPrice } from "../../../lib/money";
 import { useCart } from "../../cart/CartContext";
+import { storePath } from "../../../lib/storeLinks";
 import { useCustomerAuth } from "../CustomerAuthContext";
 import type { StoreContext } from "../types";
 import type { OrderDetail } from "./OrderDetailPage";
@@ -52,7 +53,7 @@ export function CheckoutResultPage() {
         <h1 className="confirm-title">El pago no se completó</h1>
         <p className="confirm-sub">Podés intentar de nuevo desde tu carrito — no se te cobró nada.</p>
         <div className="confirm-actions">
-          <Link className="btn-orders" to={`/store/${slug}`}>
+          <Link className="btn-orders" to={storePath(slug)}>
             Volver a la tienda
           </Link>
         </div>
@@ -144,10 +145,10 @@ export function CheckoutResultPage() {
       </div>
 
       <div className="confirm-actions">
-        <Link className="btn-orders" to={`/store/${slug}/portal/orders`}>
+        <Link className="btn-orders" to={storePath(slug, "/portal/orders")}>
           Ver mis pedidos
         </Link>
-        <Link className="btn-continue" to={`/store/${slug}`}>
+        <Link className="btn-continue" to={storePath(slug)}>
           Seguir comprando
         </Link>
         {whatsappHref && (

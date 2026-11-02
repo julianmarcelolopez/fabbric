@@ -3,6 +3,7 @@ import { Link, useOutletContext, useParams } from "react-router-dom";
 import { ApiError, apiJson } from "../../../lib/api";
 import { formatPrice } from "../../../lib/money";
 import { useCustomerAuth } from "../CustomerAuthContext";
+import { storePath } from "../../../lib/storeLinks";
 import { Loading } from "../components/Loading";
 import type { StoreContext } from "../types";
 import { ORDER_STATUS_LABELS, type OrderStatusPublic } from "./MyOrdersPage";
@@ -54,7 +55,7 @@ export function OrderDetailPage() {
   if (!loading && !me) {
     return (
       <div className="store-message">
-        <p><Link to={`/store/${slug}/portal/orders`}>← Mis pedidos</Link></p>
+        <p><Link to={storePath(slug, "/portal/orders")}>← Mis pedidos</Link></p>
         <p>Ingresá para ver este pedido.</p>
       </div>
     );
@@ -63,7 +64,7 @@ export function OrderDetailPage() {
     return (
       <div className="store-message">
         <h1>{error}</h1>
-        <p><Link to={`/store/${slug}/portal/orders`}>← Mis pedidos</Link></p>
+        <p><Link to={storePath(slug, "/portal/orders")}>← Mis pedidos</Link></p>
       </div>
     );
   }
@@ -72,7 +73,7 @@ export function OrderDetailPage() {
   const st = ORDER_STATUS_LABELS[order.status];
   return (
     <div className="portal">
-      <p className="store-back"><Link to={`/store/${slug}/portal/orders`}>← Mis pedidos</Link></p>
+      <p className="store-back"><Link to={storePath(slug, "/portal/orders")}>← Mis pedidos</Link></p>
       <h1>
         Pedido #{order.orderNumber}{" "}
         <span className="portal-badge" style={{ color: st.color, borderColor: st.color }}>{st.label}</span>

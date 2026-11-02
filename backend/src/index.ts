@@ -11,6 +11,7 @@ import {
 } from "fastify-type-provider-zod";
 import { ZodError } from "zod";
 import { env } from "./config/env.js";
+import { isRegisteredCustomDomain } from "./lib/customDomainsCache.js";
 import { AppError } from "./lib/errors.js";
 import { adminRoutes } from "./modules/admin/routes.js";
 import { brandsRoutes } from "./modules/brands/routes.js";
@@ -97,7 +98,22 @@ await app.register(cors, {
   // se reinicia el túnel, así que no se puede poner como string exacto. Solo
   // importa en dev: en producción el dominio real (FRONTEND_URL/PWA_URL) ya
   // cubre todo, ningún tráfico real pasa por trycloudflare.com.
-  origin: [env.FRONTEND_URL, env.PWA_URL, /\.trycloudflare\.com$/],
+  // T38 — además de la lista fija de siempre, cualquier dominio propio
+  // registrado (catalog_configs.custom_domain) también puede pegarle a la
+  // API — sin esto, el checkout/portal de un dominio propio rompería por
+  // CORS. Nunca un wildcard: se valida contra la DB (cacheada, ver
+  // lib/customDomainsCache.ts), no "cualquier origin".
+  origin: async (origin: string | undefined) => {
+    if (!origin) return true; // same-origin / clientes no-browser (curl, server-to-server)
+    if (origin === env.FRONTEND_URL || origin === env.PWA_URL || /\.trycloudflare\.com$/.test(origin)) {
+      return true;
+    }
+    try {
+      return await isRegisteredCustomDomain(new URL(origin).hostname);
+    } catch {
+      return false; // origin malformado — no matchea nada
+    }
+  },
   // El default de @fastify/cors solo permite GET/HEAD/POST en el preflight —
   // sin esto, PATCH/PUT/DELETE fallan desde el navegador (no desde tests Node)
   methods: ["GET", "HEAD", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],

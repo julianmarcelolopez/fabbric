@@ -458,6 +458,12 @@ export const catalogConfigs = pgTable("catalog_configs", {
     .references(() => organizations.id),
   // URL pública de la tienda (/store/<slug>) — único GLOBAL, entre todas las orgs
   slug: text("slug").notNull().unique(),
+  // T38 — dominio propio opcional (ej. "eliathimodas.com", SIN "www.",
+  // SIN protocolo). Único GLOBAL como slug. Se guarda un solo valor
+  // canónico; "www.<dominio>" se resuelve sacándole el prefijo antes de
+  // comparar (ver catalogConfig/service.ts), no se guardan las dos
+  // variantes. Alta manual (SQL) — no hay UI de autoservicio en T38.
+  customDomain: text("custom_domain").unique(),
   storeName: text("store_name").notNull(),
   logoUrl: text("logo_url"),
   accentColor: text("accent_color").notNull().default("#111827"),

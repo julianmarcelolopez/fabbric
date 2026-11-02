@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useOutletContext, useSearchParams } from "react-router-dom";
 import { ApiError, publicJson } from "../../../lib/api";
 import { Loading } from "../components/Loading";
+import { storePath } from "../../../lib/storeLinks";
 import type { PublicBrandSummary, StoreContext } from "../types";
 import { normalizeHomeSections, type PublicHomeSectionRaw } from "./CatalogHomePage";
 
@@ -54,7 +55,7 @@ export function CategoriesIndexPage() {
       <div className="cat-banner">
         <div className="cat-banner-content">
           <div className="breadcrumb">
-            <Link to={`/store/${slug}`}>Inicio</Link>
+            <Link to={storePath(slug)}>Inicio</Link>
             <span className="breadcrumb-sep">›</span>
             <span className="breadcrumb-current">
               {tab === "categories" ? "Categorías" : tab === "collections" ? "Colecciones" : "Marcas"}
@@ -102,7 +103,7 @@ export function CategoriesIndexPage() {
                 {categories.map((c, i) => (
                   <Link
                     key={c.id}
-                    to={`/store/${slug}/c/${c.refSlug}`}
+                    to={storePath(slug, `/c/${c.refSlug}`)}
                     className={
                       (i === 0 && categories.length > 1 ? "cat-hero-card wide" : "cat-hero-card") +
                       (c.refImageUrl ? " has-photo" : "")
@@ -140,7 +141,7 @@ export function CategoriesIndexPage() {
                 // T21/02: ahora sí clickeable — existe /store/:slug/col/:slug.
                 <Link
                   key={c.id}
-                  to={`/store/${slug}/col/${c.refSlug}`}
+                  to={storePath(slug, `/col/${c.refSlug}`)}
                   className={c.refImageUrl ? "col-card has-photo" : "col-card"}
                 >
                   {c.refImageUrl && (
@@ -171,7 +172,7 @@ export function CategoriesIndexPage() {
               {brands.map((b) => (
                 <Link
                   key={b.id}
-                  to={`/store/${slug}/m/${b.slug}`}
+                  to={storePath(slug, `/m/${b.slug}`)}
                   className={b.imageUrl ? "col-card brand-card brand-logo-card" : "col-card brand-card"}
                 >
                   {b.imageUrl ? (

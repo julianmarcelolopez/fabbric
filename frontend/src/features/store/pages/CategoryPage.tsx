@@ -4,6 +4,7 @@ import { ApiError, publicJson } from "../../../lib/api";
 import { pesosToCents } from "../../../lib/money";
 import { colorSwatchStyle } from "../../catalog/colorSwatch";
 import { ProductCard } from "../../catalog/ProductCard";
+import { storePath } from "../../../lib/storeLinks";
 import { Loading } from "../components/Loading";
 import type {
   PublicBrandProducts,
@@ -224,7 +225,7 @@ export function CategoryPage({ mode = "category" }: Props) {
       <div className="store-message">
         <h1>No encontramos {MODE_TEXT[mode].notFound}</h1>
         <p>
-          <Link to={`/store/${slug}`}>← Volver a la tienda</Link>
+          <Link to={storePath(slug)}>← Volver a la tienda</Link>
         </p>
       </div>
     );
@@ -268,7 +269,7 @@ export function CategoryPage({ mode = "category" }: Props) {
       <div className="cat-banner">
         <div className="cat-banner-content">
           <div className="breadcrumb">
-            <Link to={`/store/${slug}`}>Inicio</Link>
+            <Link to={storePath(slug)}>Inicio</Link>
             <span className="breadcrumb-sep">›</span>
             {/* T30/02 — Novedades/Ofertas no tienen un índice del que cuelguen
                 (son ítems de nav de primer nivel, ver StoreLayout.tsx) — el
@@ -278,8 +279,8 @@ export function CategoryPage({ mode = "category" }: Props) {
                 <Link
                   to={
                     mode === "brand"
-                      ? `/store/${slug}/categorias?tab=marcas`
-                      : `/store/${slug}/categorias`
+                      ? `${storePath(slug, "/categorias")}?tab=marcas`
+                      : storePath(slug, "/categorias")
                   }
                 >
                   {MODE_TEXT[mode].indexLabel}
@@ -427,7 +428,7 @@ export function CategoryPage({ mode = "category" }: Props) {
                     compareAtPrice={p.compareAtPrice}
                     brand={p.brand?.name ?? null}
                     imageUrl={p.imageUrl}
-                    onClick={() => navigate(`/store/${slug}/p/${p.id}`)}
+                    onClick={() => navigate(storePath(slug, `/p/${p.id}`))}
                   />
                 ))}
               </div>

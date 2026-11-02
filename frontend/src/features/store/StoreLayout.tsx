@@ -2,6 +2,7 @@ import { useEffect, useState, type CSSProperties } from "react";
 import { Link, NavLink, Outlet, useLocation, useParams } from "react-router-dom";
 import { ApiError, publicJson } from "../../lib/api";
 import { formatPrice } from "../../lib/money";
+import { storePath } from "../../lib/storeLinks";
 import { CartDrawer } from "../cart/CartDrawer";
 import { CartProvider, useCart } from "../cart/CartContext";
 import "../catalog/catalog.css";
@@ -127,7 +128,7 @@ function AccountButton({ slug }: { slug: string }) {
       {menuOpen && (
         <div className="account-dropdown" onMouseLeave={() => setMenuOpen(false)}>
           <span className="account-dropdown-name">Hola, {me.name.split(" ")[0]}</span>
-          <Link to={`/store/${slug}/portal/orders`} onClick={() => setMenuOpen(false)}>
+          <Link to={storePath(slug, "/portal/orders")} onClick={() => setMenuOpen(false)}>
             Mis pedidos
           </Link>
           <button onClick={() => void signOut()}>Salir</button>
@@ -170,7 +171,14 @@ type State =
   | { status: "error"; message: string };
 
 export function StoreLayout() {
-  const { slug } = useParams<{ slug: string }>();
+  // T38 — en el dominio principal el slug viene del param de la URL
+  // (/store/:slug, como siempre). En un dominio propio la ruta es "/" sin
+  // param: se resuelve el slug a partir del hostname (ver más abajo), antes
+  // de poder pedir nada más — por eso `slug` empieza en `null`, no en el
+  // slug todavía.
+  const { slug: slugFromParam } = useParams<{ slug: string }>();
+  const [slug, setSlug] = useState<string | null>(slugFromParam ?? null);
+  const [domainNotFound, setDomainNotFound] = useState(false);
   const location = useLocation();
   const isCheckout = location.pathname.includes("/checkout");
   const checkoutDone = location.pathname.includes("/checkout/result");
@@ -180,7 +188,7 @@ export function StoreLayout() {
   // footer (pensado como aire para el resto de las páginas, con contenido
   // normal antes) rompe ese efecto acá, dejando una franja del fondo de
   // .store visible entre el banner y el footer. Se cancela solo en el home.
-  const isHome = location.pathname === `/store/${slug}` || location.pathname === `/store/${slug}/`;
+  const isHome = slug !== null && (location.pathname === storePath(slug) || location.pathname === `${storePath(slug)}/`);
   const [state, setState] = useState<State>({ status: "loading" });
   const [shippingZones, setShippingZones] = useState<ShippingZone[] | null>(null);
   const [navCategories, setNavCategories] = useState<{ refName: string; refSlug: string }[] | null>(null);
@@ -197,7 +205,25 @@ export function StoreLayout() {
     setMobileNavOpen(false);
   }, [location.pathname]);
 
+  // T38 — resolución por dominio propio: solo corre cuando NO hay slug en
+  // la URL (modo dominio principal ya tiene todo lo que necesita).
   useEffect(() => {
+    if (slugFromParam) return;
+    let cancelled = false;
+    publicJson<{ slug: string }>(`/public/stores/by-domain?host=${encodeURIComponent(window.location.hostname)}`)
+      .then((res) => {
+        if (!cancelled) setSlug(res.slug);
+      })
+      .catch(() => {
+        if (!cancelled) setDomainNotFound(true);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [slugFromParam]);
+
+  useEffect(() => {
+    if (!slug) return;
     let cancelled = false;
     publicJson<PublicStoreConfig>(`/public/${slug}/config`)
       .then((config) => {
@@ -214,6 +240,7 @@ export function StoreLayout() {
   }, [slug]);
 
   useEffect(() => {
+    if (!slug) return;
     // Announcement bar: sin campo de texto libre en catalog_configs (T20/analisis
     // sección 6), se arma solo con la zona real de envío gratis más accesible.
     publicJson<ShippingZone[]>(`/public/${slug}/shipping-zones`)
@@ -222,6 +249,7 @@ export function StoreLayout() {
   }, [slug]);
 
   useEffect(() => {
+    if (!slug) return;
     // Nav del header: categorías reales que ya están en el home (home_sections),
     // no un campo dedicado de "featured en header" — ver T20/02, decisión tomada.
     publicJson<PublicHomeSection[]>(`/public/${slug}/home`)
@@ -235,7 +263,15 @@ export function StoreLayout() {
       .catch(() => {});
   }, [slug]);
 
-  if (state.status === "loading") {
+  if (domainNotFound) {
+    return (
+      <div className="store-message">
+        <h1>Dominio no configurado</h1>
+        <p>Este dominio no está conectado a ninguna tienda todavía.</p>
+      </div>
+    );
+  }
+  if (!slug || state.status === "loading") {
     return (
       <div className="store-message">
         <Loading label="Cargando tienda…" />
@@ -289,7 +325,7 @@ export function StoreLayout() {
           <header className={isCheckout ? "store-header checkout-header" : "store-header"}>
             {isCheckout ? (
               <div className="checkout-header-inner">
-                <Link to={`/store/${slug}`} className="store-logo-wrap">
+                <Link to={storePath(slug)} className="store-logo-wrap">
                   {config.logoUrl ? (
                     <img src={config.logoUrl} alt={config.storeName} />
                   ) : (
@@ -297,7 +333,7 @@ export function StoreLayout() {
                   )}
                 </Link>
                 <CheckoutSteps done={checkoutDone} />
-                <Link to={`/store/${slug}`} className="back-link">
+                <Link to={storePath(slug)} className="back-link">
                   ← Volver a la tienda
                 </Link>
               </div>
@@ -317,7 +353,7 @@ export function StoreLayout() {
                     {mobileNavOpen ? <CloseIcon /> : <MenuIcon />}
                   </button>
                 )}
-                <Link to={`/store/${slug}`} className="store-logo-wrap">
+                <Link to={storePath(slug)} className="store-logo-wrap">
                   {config.logoUrl ? (
                     <img src={config.logoUrl} alt={config.storeName} />
                   ) : (
@@ -341,12 +377,12 @@ export function StoreLayout() {
                     inline en mobile sin afectar ese preview de admin. */}
                 {!searchOpen && (
                   <nav className="store-nav store-nav--public">
-                    <NavLink to={`/store/${slug}`} end>
+                    <NavLink to={storePath(slug)} end>
                       Inicio
                     </NavLink>
-                    <NavLink to={`/store/${slug}/categorias`}>Explorar</NavLink>
-                    <NavLink to={`/store/${slug}/novedades`}>Novedades</NavLink>
-                    <NavLink to={`/store/${slug}/ofertas`}>Ofertas</NavLink>
+                    <NavLink to={storePath(slug, "/categorias")}>Explorar</NavLink>
+                    <NavLink to={storePath(slug, "/novedades")}>Novedades</NavLink>
+                    <NavLink to={storePath(slug, "/ofertas")}>Ofertas</NavLink>
                   </nav>
                 )}
                 <SearchBar
@@ -374,12 +410,12 @@ export function StoreLayout() {
                 catalog.css (oculto por defecto, display:flex solo <=768px). */}
             {!isCheckout && mobileNavOpen && !searchOpen && (
               <nav className="mobile-nav-drawer">
-                <NavLink to={`/store/${slug}`} end>
+                <NavLink to={storePath(slug)} end>
                   Inicio
                 </NavLink>
-                <NavLink to={`/store/${slug}/categorias`}>Explorar</NavLink>
-                <NavLink to={`/store/${slug}/novedades`}>Novedades</NavLink>
-                <NavLink to={`/store/${slug}/ofertas`}>Ofertas</NavLink>
+                <NavLink to={storePath(slug, "/categorias")}>Explorar</NavLink>
+                <NavLink to={storePath(slug, "/novedades")}>Novedades</NavLink>
+                <NavLink to={storePath(slug, "/ofertas")}>Ofertas</NavLink>
               </nav>
             )}
           </header>
@@ -401,7 +437,7 @@ export function StoreLayout() {
             <div className="footer-inner">
               <div className="footer-top">
                 <div className="footer-brand">
-                  <Link to={`/store/${slug}`} className="footer-logo-link">
+                  <Link to={storePath(slug)} className="footer-logo-link">
                     {config.logoUrl ? (
                       <img src={config.logoUrl} alt={config.storeName} className="footer-logo-img" />
                     ) : (
@@ -434,7 +470,7 @@ export function StoreLayout() {
                     <ul>
                       {navCategories.map((c) => (
                         <li key={c.refSlug}>
-                          <Link to={`/store/${slug}/c/${c.refSlug}`}>{c.refName}</Link>
+                          <Link to={storePath(slug, `/c/${c.refSlug}`)}>{c.refName}</Link>
                         </li>
                       ))}
                     </ul>
