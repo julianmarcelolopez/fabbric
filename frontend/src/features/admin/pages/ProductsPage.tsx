@@ -276,11 +276,13 @@ function ProductsList() {
                 {pageProducts?.map((p) => (
                   <tr key={p.id}>
                     <td>
-                      {p.firstImageUrl ? (
-                        <img className="thumb" src={p.firstImageUrl} alt="" />
-                      ) : (
-                        <span className="thumb" />
-                      )}
+                      <Link to={`/admin/products/${p.id}?step=3`} title="Fotos del producto">
+                        {p.firstImageUrl ? (
+                          <img className="thumb" src={p.firstImageUrl} alt="" />
+                        ) : (
+                          <span className="thumb" />
+                        )}
+                      </Link>
                     </td>
                     <td>
                       <Link to={`/admin/products/${p.id}`}>{p.name}</Link>

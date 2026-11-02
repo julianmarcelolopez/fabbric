@@ -1,5 +1,5 @@
 import { Fragment, useCallback, useEffect, useState, type FormEvent } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useParams, useSearchParams } from "react-router-dom";
 import { ApiError, apiJson } from "../../../lib/api";
 import { centsToPesosInput, formatPrice, pesosToCents } from "../../../lib/money";
 import { ProductDetailView } from "../../catalog/ProductDetailView";
@@ -94,7 +94,12 @@ export function ProductEditPage() {
   const [config, setConfig] = useState<CatalogConfig | null>(null);
   const [shippingZones, setShippingZones] = useState<ShippingZoneRow[]>([]);
   const [form, setForm] = useState<Form | null>(null);
-  const [step, setStep] = useState<Step>(1);
+  // `?step=3` (miniatura de la lista de productos) abre directo en Fotos; solo estado inicial
+  const [searchParams] = useSearchParams();
+  const [step, setStep] = useState<Step>(() => {
+    const n = Number(searchParams.get("step"));
+    return n === 2 || n === 3 ? n : 1;
+  });
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
   const [saving, setSaving] = useState(false);
