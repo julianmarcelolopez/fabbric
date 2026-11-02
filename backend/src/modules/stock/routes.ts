@@ -2,12 +2,12 @@ import {
   createStockMovementSchema,
   updateLowStockThresholdSchema,
 } from "@fabbric/shared";
-import { and, asc, desc, eq, sql } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, sql } from "drizzle-orm";
 import type { FastifyInstance } from "fastify";
 import type { ZodTypeProvider } from "fastify-type-provider-zod";
 import { z } from "zod";
 import { db } from "../../db/client.js";
-import { catalogConfigs, products, productVariants, stockMovements } from "../../db/schema.js";
+import { brands, catalogConfigs, productImages, products, productVariants, stockMovements } from "../../db/schema.js";
 import { AppError } from "../../lib/errors.js";
 import { requireOrgId } from "../../lib/tenant.js";
 import { ensureConfig, toAdminConfig } from "../catalogConfig/service.js";
@@ -22,6 +22,8 @@ async function stockOverview(orgId: string) {
       variantId: productVariants.id,
       productId: products.id,
       productName: products.name,
+      brandName: brands.name,
+      barcode: productVariants.barcode,
       talle: productVariants.talle,
       color: productVariants.color,
       sku: productVariants.sku,
@@ -30,13 +32,27 @@ async function stockOverview(orgId: string) {
     })
     .from(productVariants)
     .innerJoin(products, eq(productVariants.productId, products.id))
+    .leftJoin(brands, eq(products.brandId, brands.id))
     .where(eq(productVariants.orgId, orgId))
     .orderBy(asc(products.name), asc(productVariants.talle), asc(productVariants.color));
+
+  // T39 — foto de cada producto (la primera por sortOrder), traída aparte
+  // (no en el join principal, para no duplicar filas de variante por
+  // producto con varias imágenes) — mismo patrón que GET /admin/products.
+  const productIds = [...new Set(rows.map((r) => r.productId))];
+  const firstImages = productIds.length
+    ? await db
+        .select({ productId: productImages.productId, url: productImages.url, sortOrder: productImages.sortOrder })
+        .from(productImages)
+        .where(inArray(productImages.productId, productIds))
+        .orderBy(asc(productImages.sortOrder))
+    : [];
 
   return {
     lowStockThreshold: config.lowStockThreshold,
     items: rows.map((r) => ({
       ...r,
+      firstImageUrl: firstImages.find((i) => i.productId === r.productId)?.url ?? null,
       total: r.stockOnline + r.stockLocal,
       critical: r.stockOnline + r.stockLocal <= config.lowStockThreshold,
     })),

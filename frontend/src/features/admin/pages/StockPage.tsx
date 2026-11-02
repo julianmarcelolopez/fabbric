@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
 import { ApiError, apiJson } from "../../../lib/api";
 import { Loading } from "../components/Loading";
 import {
@@ -128,6 +128,12 @@ export function StockPage({ embedded }: Props = {}) {
   const [onlyCritical, setOnlyCritical] = useState(false);
   const [expanded, setExpanded] = useState<Expanded>(null);
   const [threshold, setThreshold] = useState("");
+  // T39 — buscador (nombre/marca/código de barras) + paginación, mismo
+  // patrón que ProductsPage.tsx: antes las 763 variantes se renderizaban
+  // todas juntas, sin forma de encontrar una puntual.
+  const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
   const load = useCallback(async () => {
     try {
@@ -162,8 +168,31 @@ export function StockPage({ embedded }: Props = {}) {
     }
   }
 
-  const items = data?.items.filter((i) => !onlyCritical || i.critical) ?? [];
   const criticalCount = data?.items.filter((i) => i.critical).length ?? 0;
+  const filteredItems = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    return (data?.items ?? []).filter((i) => {
+      if (onlyCritical && !i.critical) return false;
+      if (!q) return true;
+      return (
+        i.productName.toLowerCase().includes(q) ||
+        (i.brandName?.toLowerCase().includes(q) ?? false) ||
+        (i.barcode?.toLowerCase().includes(q) ?? false)
+      );
+    });
+  }, [data, onlyCritical, search]);
+
+  useEffect(() => {
+    setPage(1);
+    setExpanded(null);
+  }, [search, onlyCritical, pageSize]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredItems.length / pageSize));
+  const safePage = Math.min(page, totalPages);
+  const items = useMemo(
+    () => filteredItems.slice((safePage - 1) * pageSize, safePage * pageSize),
+    [filteredItems, safePage, pageSize]
+  );
 
   return (
     <>
@@ -189,16 +218,33 @@ export function StockPage({ embedded }: Props = {}) {
 
       {error && <p className="error">{error}</p>}
 
+      {data !== null && data.items.length > 0 && (
+        <input
+          style={{ marginBottom: 12, maxWidth: 360 }}
+          placeholder="Buscar por nombre, marca o código de barras…"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
+      )}
+
       {data === null ? (
         <Loading />
       ) : items.length === 0 ? (
-        <p className="muted">{onlyCritical ? "Sin variantes críticas 🎉" : "No hay variantes — creá productos con variantes primero."}</p>
+        <p className="muted">
+          {search.trim()
+            ? "Sin resultados para esa búsqueda."
+            : onlyCritical
+              ? "Sin variantes críticas 🎉"
+              : "No hay variantes — creá productos con variantes primero."}
+        </p>
       ) : (
         <div className="table-scroll">
         <table className="grid">
           <thead>
             <tr>
+              <th></th>
               <th>Producto</th>
+              <th>Marca</th>
               <th>Variante</th>
               <th>Online</th>
               <th>Local</th>
@@ -211,8 +257,20 @@ export function StockPage({ embedded }: Props = {}) {
             {items.map((item) => (
               <>
                 <tr key={item.variantId} className={item.critical ? "critical-row" : ""}>
+                  <td>
+                    {item.firstImageUrl ? (
+                      <img className="thumb" src={item.firstImageUrl} alt="" />
+                    ) : (
+                      <span className="thumb" />
+                    )}
+                  </td>
                   <td>{item.productName}</td>
-                  <td>{item.talle} / {item.color}{item.sku ? <span className="muted"> · {item.sku}</span> : null}</td>
+                  <td className="muted">{item.brandName ?? "—"}</td>
+                  <td>
+                    {item.talle} / {item.color}
+                    {item.sku ? <span className="muted"> · {item.sku}</span> : null}
+                    {item.barcode ? <span className="muted"> · {item.barcode}</span> : null}
+                  </td>
                   <td>{item.stockOnline}</td>
                   <td>{item.stockLocal}</td>
                   <td><strong>{item.total}</strong></td>
@@ -246,7 +304,7 @@ export function StockPage({ embedded }: Props = {}) {
                 </tr>
                 {expanded?.variantId === item.variantId && (
                   <tr key={`${item.variantId}-panel`}>
-                    <td colSpan={7} style={{ background: "#F8F7F5" }}>
+                    <td colSpan={9} style={{ background: "#F8F7F5" }}>
                       {expanded.mode === "move" ? (
                         <MoveForm
                           item={item}
@@ -266,6 +324,41 @@ export function StockPage({ embedded }: Props = {}) {
             ))}
           </tbody>
         </table>
+        </div>
+      )}
+
+      {data !== null && filteredItems.length > 0 && (
+        <div className="row" style={{ marginTop: 12, alignItems: "center", justifyContent: "space-between" }}>
+          <label className="field" style={{ display: "flex", flexDirection: "row", alignItems: "center", gap: 6 }}>
+            Por página
+            <select value={pageSize} onChange={(e) => setPageSize(Number(e.target.value))}>
+              <option value={10}>10</option>
+              <option value={20}>20</option>
+              <option value={30}>30</option>
+              <option value={50}>50</option>
+            </select>
+          </label>
+          <div className="row" style={{ alignItems: "center", gap: 8 }}>
+            <button
+              type="button"
+              className="btn small"
+              disabled={safePage <= 1}
+              onClick={() => setPage(safePage - 1)}
+            >
+              ← Anterior
+            </button>
+            <span className="muted">
+              Página {safePage} de {totalPages}
+            </span>
+            <button
+              type="button"
+              className="btn small"
+              disabled={safePage >= totalPages}
+              onClick={() => setPage(safePage + 1)}
+            >
+              Siguiente →
+            </button>
+          </div>
         </div>
       )}
     </>

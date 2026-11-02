@@ -137,6 +137,10 @@ export type StockItem = {
   variantId: string;
   productId: string;
   productName: string;
+  // T39 — para poder identificar la fila sin abrir el producto aparte.
+  brandName: string | null;
+  barcode: string | null;
+  firstImageUrl: string | null;
   talle: string;
   color: string;
   sku: string | null;

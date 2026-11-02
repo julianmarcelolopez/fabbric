@@ -266,6 +266,7 @@ function ProductsList() {
                   <th>Nombre</th>
                   <th>Marca</th>
                   <th>Categoría</th>
+                  <th>Código de barras</th>
                   <th>Precio</th>
                   <th>Estado</th>
                   <th>Visible</th>
@@ -289,6 +290,9 @@ function ProductsList() {
                     </td>
                     <td className="muted">{p.brandName ?? "—"}</td>
                     <td>{p.categoryName}</td>
+                    <td className="muted" style={{ fontSize: 12 }}>
+                      {p.barcodes.length === 0 ? "—" : p.barcodes.join(", ")}
+                    </td>
                     <td>{formatPrice(p.price)}</td>
                     <td>
                       <input
