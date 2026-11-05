@@ -369,7 +369,7 @@ export function CheckoutPage() {
               <div className="summary-item-info">
                 <div className="summary-item-name">{item.name}</div>
                 <div className="summary-item-variant">
-                  {item.talle} · {item.color}
+                  {item.talle}{item.color ? ` · ${item.color}` : ""}
                 </div>
               </div>
               <span className="summary-item-price">{formatPrice(item.unitPrice * item.qty)}</span>

@@ -267,7 +267,7 @@ export function StockPage({ embedded }: Props = {}) {
                   <td>{item.productName}</td>
                   <td className="muted">{item.brandName ?? "—"}</td>
                   <td>
-                    {item.talle} / {item.color}
+                    {item.talle}{item.color ? ` / ${item.color}` : ""}
                     {item.sku ? <span className="muted"> · {item.sku}</span> : null}
                     {item.barcode ? <span className="muted"> · {item.barcode}</span> : null}
                   </td>

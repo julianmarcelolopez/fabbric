@@ -85,7 +85,7 @@ export function OrderDetailPage() {
           <div key={item.id} className="checkout-line">
             <span>
               {item.qty}× {item.name}
-              {item.talle && <span className="muted"> ({item.talle}/{item.color})</span>}
+              {item.talle && <span className="muted"> ({item.talle}{item.color ? `/${item.color}` : ""})</span>}
             </span>
             <span>{formatPrice(item.total)}</span>
           </div>

@@ -204,7 +204,9 @@ export const productVariants = pgTable(
     // interno, sin unicidad). Nullable: las variantes viejas no lo tienen.
     barcode: text("barcode"),
     talle: text("talle").notNull(),
-    color: text("color").notNull(),
+    // T43 — nullable: productos sin eje de color real (ej. perfumes, donde
+    // "talle" se reusa para el volumen en ML) no deben forzar un valor.
+    color: text("color"),
     // Stock omnicanal = split manual (decisión del plan): online y local por separado
     stockOnline: integer("stock_online").notNull().default(0),
     stockLocal: integer("stock_local").notNull().default(0),

@@ -11,7 +11,8 @@ export type CartItem = {
   name: string;
   brand: string | null;
   talle: string;
-  color: string;
+  // T43 — nullable: productos sin eje de color real (ej. perfumes).
+  color: string | null;
   unitPrice: number;
   qty: number;
   // Ya viene en VariantByBarcode al escanear — no hace falta pedirlo de
@@ -280,7 +281,7 @@ export function CarritoScreen({
               <div style={{ flex: 1 }}>
                 <p style={{ fontSize: 13 }}>
                   {item.brand ? `${item.brand} — ` : ""}
-                  {item.name} ({item.talle}/{item.color})
+                  {item.name} ({item.talle}{item.color ? `/${item.color}` : ""})
                 </p>
                 <div style={{ display: "flex", alignItems: "center", gap: 8, margin: "6px 0" }}>
                   <button

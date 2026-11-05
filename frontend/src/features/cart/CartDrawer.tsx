@@ -46,7 +46,7 @@ export function CartDrawer({ slug }: { slug: string }) {
                     {item.brand && <div className="cart-item-brand">{item.brand}</div>}
                     <div className="cart-item-name">{item.name}</div>
                     <div className="cart-item-variant">
-                      Talle {item.talle} · {item.color}
+                      Talle {item.talle}{item.color ? ` · ${item.color}` : ""}
                     </div>
                     <div className="cart-item-qty">
                       <button

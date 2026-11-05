@@ -87,7 +87,7 @@ export function StoreProductPage() {
       : `Envío a ${cheapestZone.name} desde ${formatPrice(cheapestZone.cost)}`
     : null;
 
-  function addToCart(variant: { id?: string; talle: string; color: string; priceOverride: number | null; stockOnline: number }, qty: number) {
+  function addToCart(variant: { id?: string; talle: string; color: string | null; priceOverride: number | null; stockOnline: number }, qty: number) {
     if (!variant.id) return;
     cart.add(
       {

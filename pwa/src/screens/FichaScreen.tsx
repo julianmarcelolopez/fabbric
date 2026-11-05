@@ -116,7 +116,7 @@ export function FichaScreen({ variant, modo, onDone, onEntradaOk, onAddToCart }:
         {variant.product.name}
       </p>
       <p style={{ fontSize: 13, color: colors.muted, margin: "3px 0 8px" }}>
-        Talle {variant.talle} · {variant.color}
+        Talle {variant.talle}{variant.color ? ` · ${variant.color}` : ""}
       </p>
       <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
         <span style={{ fontFamily: fonts.display, fontSize: 19, fontWeight: 600, color: colors.accent }}>

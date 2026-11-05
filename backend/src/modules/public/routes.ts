@@ -359,7 +359,9 @@ export async function publicRoutes(fastify: FastifyInstance) {
           .selectDistinct({ color: productVariants.color })
           .from(productVariants)
           .innerJoin(products, eq(productVariants.productId, products.id))
-          .where(and(scopeFilter, gt(productVariants.stockOnline, 0))),
+          // T43 — productos sin eje de color (ej. perfumes) no deben
+          // aparecer como un filtro de color "null" en la tienda.
+          .where(and(scopeFilter, gt(productVariants.stockOnline, 0), isNotNull(productVariants.color))),
         db
           .selectDistinct({ name: brands.name, slug: brands.slug })
           .from(products)
@@ -465,7 +467,9 @@ export async function publicRoutes(fastify: FastifyInstance) {
           .from(productVariants)
           .innerJoin(products, eq(productVariants.productId, products.id))
           .innerJoin(productCollections, eq(productCollections.productId, products.id))
-          .where(and(scopeFilter, gt(productVariants.stockOnline, 0))),
+          // T43 — productos sin eje de color (ej. perfumes) no deben
+          // aparecer como un filtro de color "null" en la tienda.
+          .where(and(scopeFilter, gt(productVariants.stockOnline, 0), isNotNull(productVariants.color))),
         db
           .selectDistinct({ name: brands.name, slug: brands.slug })
           .from(products)
@@ -566,7 +570,9 @@ export async function publicRoutes(fastify: FastifyInstance) {
           .selectDistinct({ color: productVariants.color })
           .from(productVariants)
           .innerJoin(products, eq(productVariants.productId, products.id))
-          .where(and(scopeFilter, gt(productVariants.stockOnline, 0))),
+          // T43 — productos sin eje de color (ej. perfumes) no deben
+          // aparecer como un filtro de color "null" en la tienda.
+          .where(and(scopeFilter, gt(productVariants.stockOnline, 0), isNotNull(productVariants.color))),
         db
           .selectDistinct({ name: brands.name, slug: brands.slug })
           .from(products)
@@ -660,7 +666,9 @@ export async function publicRoutes(fastify: FastifyInstance) {
           .selectDistinct({ color: productVariants.color })
           .from(productVariants)
           .innerJoin(products, eq(productVariants.productId, products.id))
-          .where(and(scopeFilter, gt(productVariants.stockOnline, 0))),
+          // T43 — productos sin eje de color (ej. perfumes) no deben
+          // aparecer como un filtro de color "null" en la tienda.
+          .where(and(scopeFilter, gt(productVariants.stockOnline, 0), isNotNull(productVariants.color))),
         db
           .selectDistinct({ name: brands.name, slug: brands.slug })
           .from(products)
@@ -762,7 +770,9 @@ export async function publicRoutes(fastify: FastifyInstance) {
           .selectDistinct({ color: productVariants.color })
           .from(productVariants)
           .innerJoin(products, eq(productVariants.productId, products.id))
-          .where(and(scopeFilter, gt(productVariants.stockOnline, 0))),
+          // T43 — productos sin eje de color (ej. perfumes) no deben
+          // aparecer como un filtro de color "null" en la tienda.
+          .where(and(scopeFilter, gt(productVariants.stockOnline, 0), isNotNull(productVariants.color))),
       ]);
 
       const productIds = rows.map((p) => p.id);

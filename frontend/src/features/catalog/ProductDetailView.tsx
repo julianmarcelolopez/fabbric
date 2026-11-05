@@ -18,7 +18,8 @@ export type PdvVariant = {
   /** presente cuando el consumidor necesita identificar la variante (ej. carrito) */
   id?: string;
   talle: string;
-  color: string;
+  // T43 — nullable: productos sin eje de color real (ej. perfumes).
+  color: string | null;
   stockOnline: number;
   priceOverride: number | null;
 };
@@ -158,7 +159,8 @@ export function ProductDetailView({
   // nunca se mostraba porque dependía de `selected`. Con 0 stock en todas
   // las variantes ya se sabe la respuesta sin necesitar la selección.
   const hasAnyStock = variants.some((v) => v.stockOnline > 0);
-  const colores = [...new Set(variants.filter((v) => talle === null || v.talle === talle).map((v) => v.color))];
+  // T43 — productos sin eje de color (ej. perfumes) no muestran el selector.
+  const colores = [...new Set(variants.filter((v) => talle === null || v.talle === talle).map((v) => v.color).filter((c): c is string => !!c))];
   const selected = variants.find((v) => v.talle === talle && v.color === color) ?? null;
 
   const effectivePrice = selected?.priceOverride ?? price;
@@ -249,7 +251,7 @@ export function ProductDetailView({
             {selected.stockOnline === 0
               ? "Sin stock online"
               : selected.stockOnline <= 3
-                ? `Quedan solo ${selected.stockOnline} unidades en talle ${talle} · ${color}`
+                ? `Quedan solo ${selected.stockOnline} unidades en talle ${talle}${color ? ` · ${color}` : ""}`
                 : `Stock disponible (${selected.stockOnline})`}
           </p>
         ) : (
@@ -288,7 +290,9 @@ export function ProductDetailView({
               {variants.length === 0
                 ? "Sin variantes disponibles"
                 : !selected
-                  ? "Elegí talle y color"
+                  ? colores.length > 0
+                    ? "Elegí talle y color"
+                    : "Elegí talle"
                   : selected.stockOnline === 0
                     ? "Sin stock"
                     : "Agregar al carrito"}

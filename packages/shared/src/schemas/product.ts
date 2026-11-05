@@ -83,7 +83,10 @@ export const altaRapidaSchema = z.object({
   newBrandName: newBrandName.optional(),
   price: priceCents,
   talle: z.string().min(1),
-  color: z.string().min(1),
+  // T43 — opcional: productos sin eje de color real (ej. perfumes, donde
+  // "talle" se reusa para el volumen en ML). String vacío se normaliza a
+  // null en la ruta.
+  color: z.string().nullable().optional(),
   barcode: z.string().min(1),
   qty: z.number().int().min(1).optional(),
 });

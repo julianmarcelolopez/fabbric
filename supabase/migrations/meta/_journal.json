@@ -211,6 +211,13 @@
       "when": 1793653487094,
       "tag": "0029_split_barcode_color",
       "breakpoints": true
+    },
+    {
+      "idx": 30,
+      "version": "7",
+      "when": 1793893665435,
+      "tag": "0030_t43_color_opcional",
+      "breakpoints": true
     }
   ]
 }

@@ -1,5 +1,5 @@
 import { createVariantSchema, updateVariantSchema } from "@fabbric/shared";
-import { and, asc, eq, ne } from "drizzle-orm";
+import { and, asc, eq, isNull, ne } from "drizzle-orm";
 import type { FastifyInstance } from "fastify";
 import type { ZodTypeProvider } from "fastify-type-provider-zod";
 import { z } from "zod";
@@ -11,6 +11,12 @@ import { requireOrgId } from "../../lib/tenant.js";
 const idParam = z.object({ id: z.string().uuid() });
 const barcodeParam = z.object({ code: z.string().min(1) });
 const tag = { tags: ["variantes"], security: [{ bearerAuth: [] }] };
+
+// T43 — color opcional: string vacío (o solo espacios) cuenta como ausente.
+function emptyToNull(value: string | null | undefined): string | null {
+  const trimmed = value?.trim();
+  return trimmed ? trimmed : null;
+}
 
 export async function variantsRoutes(fastify: FastifyInstance) {
   const app = fastify.withTypeProvider<ZodTypeProvider>();
@@ -81,7 +87,9 @@ export async function variantsRoutes(fastify: FastifyInstance) {
     async (request, reply) => {
       const orgId = requireOrgId(request);
       const { id: productId } = request.params;
-      const input = request.body;
+      // T43 — string vacío/ausente (ej. perfumes, sin eje de color) queda null.
+      const color = emptyToNull(request.body.color);
+      const input = { ...request.body, color };
 
       const [prod] = await db
         .select({ id: products.id })
@@ -96,11 +104,11 @@ export async function variantsRoutes(fastify: FastifyInstance) {
           and(
             eq(productVariants.productId, productId),
             eq(productVariants.talle, input.talle),
-            eq(productVariants.color, input.color)
+            color === null ? isNull(productVariants.color) : eq(productVariants.color, color)
           )
         );
       if (dup) {
-        throw new AppError(409, "conflict", `Ya existe la variante ${input.talle}/${input.color}`);
+        throw new AppError(409, "conflict", `Ya existe la variante ${input.talle}/${color ?? "sin color"}`);
       }
 
       try {
@@ -129,10 +137,11 @@ export async function variantsRoutes(fastify: FastifyInstance) {
     async (request) => {
       const orgId = requireOrgId(request);
       const { id } = request.params;
-      const input = request.body;
-      if (Object.keys(input).length === 0) {
+      if (Object.keys(request.body).length === 0) {
         throw new AppError(400, "validation", "Nada para actualizar");
       }
+      // T43 — string vacío (ej. vaciar el color de un perfume) queda null.
+      const input = "color" in request.body ? { ...request.body, color: emptyToNull(request.body.color) } : request.body;
 
       const [current] = await db
         .select()
@@ -142,7 +151,7 @@ export async function variantsRoutes(fastify: FastifyInstance) {
 
       // Si cambia talle/color, validar que no choque con otra variante del producto
       const talle = input.talle ?? current.talle;
-      const color = input.color ?? current.color;
+      const color: string | null = "color" in input ? (input.color ?? null) : current.color;
       if (talle !== current.talle || color !== current.color) {
         const [dup] = await db
           .select({ id: productVariants.id })
@@ -151,11 +160,11 @@ export async function variantsRoutes(fastify: FastifyInstance) {
             and(
               eq(productVariants.productId, current.productId),
               eq(productVariants.talle, talle),
-              eq(productVariants.color, color),
+              color === null ? isNull(productVariants.color) : eq(productVariants.color, color),
               ne(productVariants.id, id)
             )
           );
-        if (dup) throw new AppError(409, "conflict", `Ya existe la variante ${talle}/${color}`);
+        if (dup) throw new AppError(409, "conflict", `Ya existe la variante ${talle}/${color ?? "sin color"}`);
       }
 
       // Stock: fuera del PATCH desde T4 — updateVariantSchema ya no acepta

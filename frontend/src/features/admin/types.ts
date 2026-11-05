@@ -37,7 +37,8 @@ export type Variant = {
   productId: string;
   sku: string | null;
   talle: string;
-  color: string;
+  // T43 — nullable: productos sin eje de color real (ej. perfumes).
+  color: string | null;
   barcode: string | null;
   stockOnline: number;
   stockLocal: number;
@@ -142,7 +143,8 @@ export type StockItem = {
   barcode: string | null;
   firstImageUrl: string | null;
   talle: string;
-  color: string;
+  // T43 — nullable: productos sin eje de color real (ej. perfumes).
+  color: string | null;
   sku: string | null;
   stockOnline: number;
   stockLocal: number;

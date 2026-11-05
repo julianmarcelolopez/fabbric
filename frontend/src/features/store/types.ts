@@ -50,7 +50,8 @@ export type PublicProductDetail = {
   variants: {
     id: string;
     talle: string;
-    color: string;
+    // T43 — nullable: productos sin eje de color real (ej. perfumes).
+    color: string | null;
     priceOverride: number | null;
     stockOnline: number;
   }[];

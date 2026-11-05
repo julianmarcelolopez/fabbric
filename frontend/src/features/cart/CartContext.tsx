@@ -19,7 +19,8 @@ export type CartItem = {
   /** T20/07 — para mostrarla en el drawer/checkout, mismo criterio del resto de T20 */
   brand: string | null;
   talle: string;
-  color: string;
+  // T43 — nullable: productos sin eje de color real (ej. perfumes).
+  color: string | null;
   /** centavos — informativo, el server recalcula */
   unitPrice: number;
   qty: number;

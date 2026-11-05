@@ -12,14 +12,14 @@ type Props = {
 
 function VariantRow({ variant, onChange, onError }: { variant: Variant; onChange: () => void; onError: (m: string) => void }) {
   const [talle, setTalle] = useState(variant.talle);
-  const [color, setColor] = useState(variant.color);
+  const [color, setColor] = useState(variant.color ?? "");
   const [sku, setSku] = useState(variant.sku ?? "");
   const [barcode, setBarcode] = useState(variant.barcode ?? "");
   const [priceOverride, setPriceOverride] = useState(centsToPesosInput(variant.priceOverride));
 
   const dirty =
     talle !== variant.talle ||
-    color !== variant.color ||
+    color !== (variant.color ?? "") ||
     sku !== (variant.sku ?? "") ||
     barcode !== (variant.barcode ?? "") ||
     priceOverride !== centsToPesosInput(variant.priceOverride);
@@ -36,7 +36,7 @@ function VariantRow({ variant, onChange, onError }: { variant: Variant; onChange
         method: "PATCH",
         body: JSON.stringify({
           talle,
-          color,
+          color: color.trim() === "" ? null : color.trim(),
           sku: sku.trim() === "" ? null : sku,
           // T27: código de barras corregible a mano (ej. lectura errónea del
           // escaneo por foto) — antes solo se cargaba al escanear en la PWA.
@@ -51,7 +51,7 @@ function VariantRow({ variant, onChange, onError }: { variant: Variant; onChange
   }
 
   async function remove() {
-    if (!confirm(`¿Borrar la variante ${variant.talle}/${variant.color}?`)) return;
+    if (!confirm(`¿Borrar la variante ${variant.talle}${variant.color ? `/${variant.color}` : ""}?`)) return;
     try {
       await apiJson(`/admin/variants/${variant.id}`, { method: "DELETE" });
       onChange();
@@ -63,7 +63,7 @@ function VariantRow({ variant, onChange, onError }: { variant: Variant; onChange
   return (
     <tr>
       <td><input style={{ width: 64 }} value={talle} onChange={(e) => setTalle(e.target.value)} /></td>
-      <td><input style={{ width: 96 }} value={color} onChange={(e) => setColor(e.target.value)} /></td>
+      <td><input style={{ width: 96 }} value={color} onChange={(e) => setColor(e.target.value)} placeholder="(opcional)" /></td>
       <td><input style={{ width: 96 }} value={sku} onChange={(e) => setSku(e.target.value)} placeholder="—" /></td>
       <td>
         <input
@@ -100,7 +100,7 @@ export function VariantEditor({ productId, variants, onChange }: Props) {
         method: "POST",
         body: JSON.stringify({
           talle,
-          color,
+          color: color.trim() === "" ? null : color.trim(),
           stockOnline: Number(stockOnline) || 0,
           stockLocal: Number(stockLocal) || 0,
         }),
@@ -152,8 +152,8 @@ export function VariantEditor({ productId, variants, onChange }: Props) {
           <input style={{ width: 64 }} value={talle} onChange={(e) => setTalle(e.target.value)} required />
         </label>
         <label className="field">
-          Color
-          <input style={{ width: 96 }} value={color} onChange={(e) => setColor(e.target.value)} required />
+          Color (opcional)
+          <input style={{ width: 96 }} value={color} onChange={(e) => setColor(e.target.value)} placeholder="(opcional)" />
         </label>
         <label className="field">
           Stock online

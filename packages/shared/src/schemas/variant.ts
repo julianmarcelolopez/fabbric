@@ -12,7 +12,8 @@ export const productVariantSchema = z.object({
   // el admin (T27) para corregir lecturas erróneas del escaneo por foto.
   barcode: z.string().nullable(),
   talle: z.string().min(1),
-  color: z.string().min(1),
+  // T43 — nullable: productos sin eje de color real (ej. perfumes).
+  color: z.string().nullable(),
   stockOnline: stock,
   stockLocal: stock,
   priceOverride: priceCents.nullable(),
@@ -22,7 +23,8 @@ export const productVariantSchema = z.object({
 
 export const createVariantSchema = z.object({
   talle: z.string().min(1),
-  color: z.string().min(1),
+  // T43 — opcional: string vacío se normaliza a null en la ruta.
+  color: z.string().nullable().optional(),
   sku: z.string().nullable().optional(),
   // T37 — faltaba acá (sí estaba en updateVariantSchema): sin esto, una
   // variante creada por este endpoint nunca podía usarse en las sugerencias
@@ -39,7 +41,8 @@ export const createVariantSchema = z.object({
 export const updateVariantSchema = z
   .object({
     talle: z.string().min(1),
-    color: z.string().min(1),
+    // T43 — opcional/nullable: string vacío se normaliza a null en la ruta.
+    color: z.string().nullable(),
     sku: z.string().nullable(),
     // T27: corregir un código mal cargado (ej. lectura errónea del escaneo
     // por foto) — antes solo se podía fijar al crear la variante.

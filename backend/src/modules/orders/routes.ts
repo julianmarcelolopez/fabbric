@@ -337,7 +337,7 @@ export async function ordersRoutes(fastify: FastifyInstance) {
         variantId: string;
         name: string;
         talle: string;
-        color: string;
+        color: string | null;
         qty: number;
         channel: "online" | "local";
         unitPrice: number;

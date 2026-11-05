@@ -217,7 +217,7 @@ export async function productsRoutes(fastify: FastifyInstance) {
         .where(and(eq(productVariants.orgId, orgId), isNotNull(productVariants.barcode)));
 
       let productMatch: { productId: string; createdAt: Date } | null = null;
-      let colorNameMatch: { color: string; createdAt: Date } | null = null;
+      let colorNameMatch: { color: string | null; createdAt: Date } | null = null;
       let talleNameMatch: { talle: string; createdAt: Date } | null = null;
 
       for (const row of rows) {
@@ -280,7 +280,9 @@ export async function productsRoutes(fastify: FastifyInstance) {
     },
     async (request, reply) => {
       const orgId = requireOrgId(request);
-      const { categoryId, name, brandId, newBrandName, price, talle, color, barcode, qty } = request.body;
+      const { categoryId, name, brandId, newBrandName, price, talle, color: rawColor, barcode, qty } = request.body;
+      // T43 — color opcional: string vacío/ausente (ej. perfumes) queda null.
+      const color = rawColor?.trim() ? rawColor.trim() : null;
       await assertCategoryInOrg(categoryId, orgId);
 
       try {

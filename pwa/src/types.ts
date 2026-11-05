@@ -13,7 +13,8 @@ export type VariantByBarcode = {
   id: string;
   barcode: string | null;
   talle: string;
-  color: string;
+  // T43 — nullable: productos sin eje de color real (ej. perfumes).
+  color: string | null;
   stockLocal: number;
   priceOverride: number | null;
   product: {

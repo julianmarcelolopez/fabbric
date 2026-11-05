@@ -140,8 +140,9 @@ export function AltaScreen({ barcode, onDone }: Props) {
     setFormError(null);
 
     if (!categoryId) return setFormError("Elegí una categoría.");
-    if (!marca.trim() || !modelo.trim() || !talle.trim() || !color.trim()) {
-      return setFormError("Completá marca, modelo, talle y color.");
+    // T43 — color ya no es obligatorio (ej. perfumes, sin ese eje).
+    if (!marca.trim() || !modelo.trim() || !talle.trim()) {
+      return setFormError("Completá marca, modelo y talle.");
     }
 
     // T37 — modelo ya existente (sugerido por código de barras, T36) y el
@@ -153,7 +154,12 @@ export function AltaScreen({ barcode, onDone }: Props) {
       try {
         const variant = await apiJson<{ id: string }>(`/admin/products/${matchedProductId}/variants`, {
           method: "POST",
-          body: JSON.stringify({ talle: talle.trim(), color: color.trim(), barcode, stockLocal: qty }),
+          body: JSON.stringify({
+            talle: talle.trim(),
+            color: color.trim() === "" ? null : color.trim(),
+            barcode,
+            stockLocal: qty,
+          }),
         });
         setProductId(matchedProductId);
         setVariantId(variant.id);
@@ -182,7 +188,7 @@ export function AltaScreen({ barcode, onDone }: Props) {
           newBrandName: marca.trim(),
           price: priceCents,
           talle: talle.trim(),
-          color: color.trim(),
+          color: color.trim() === "" ? null : color.trim(),
           barcode,
           qty,
         }),
@@ -482,7 +488,7 @@ export function AltaScreen({ barcode, onDone }: Props) {
           />
           <input
             type="text"
-            placeholder="Color"
+            placeholder="Color (opcional)"
             value={color}
             onChange={(e) => setColor(e.target.value)}
             style={{ ...inputStyle, flex: 1 }}

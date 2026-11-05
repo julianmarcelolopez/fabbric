@@ -93,7 +93,7 @@ export function OrderNewPage() {
       {
         kind: "catalog",
         variantId: variant.id,
-        label: `${product.name} (${variant.talle}/${variant.color})`,
+        label: `${product.name} (${variant.talle}${variant.color ? `/${variant.color}` : ""})`,
         qty,
         channel,
         unitPrice: variant.priceOverride ?? product.price,
@@ -225,7 +225,7 @@ export function OrderNewPage() {
               <option value="">—</option>
               {variants.map((v) => (
                 <option key={v.id} value={v.id}>
-                  {v.talle}/{v.color} (online {v.stockOnline} · local {v.stockLocal})
+                  {v.talle}{v.color ? `/${v.color}` : ""} (online {v.stockOnline} · local {v.stockLocal})
                 </option>
               ))}
             </select>
