@@ -1,0 +1,111 @@
+/* T44 — login del admin: pantalla partida con la identidad de Eliathi.
+   Todo con prefijo .login-* para no chocar con .card/.field/.btn de admin.css.
+   Calcado de docs/T44_LoginEliathi/specs/login-mockup.html (alcance v1:
+   sin Google / Recordarme / Olvidé mi clave). */
+
+.login {
+  --login-navy: #1E2A4A;
+  --login-navy-2: #2B3A66;
+  --login-accent: #F07058;
+  --login-accent-2: #FF8A6E;
+  --login-off: #F8F7F5;
+  --login-field: #F1EEEA;
+  --login-gray: #E8E4DF;
+  --login-text: #2C2C2C;
+  --login-muted: #8A8278;
+  --login-danger: #DC2626;
+  --login-danger-bg: #FEE2E2;
+
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  min-height: 100vh;
+  background: var(--login-off);
+  color: var(--login-text);
+  font-family: 'DM Sans', system-ui, sans-serif;
+}
+
+/* ---------- Columna izquierda: formulario ---------- */
+.login-form-pane { display: flex; align-items: center; justify-content: center; padding: 32px 24px; }
+.login-form-wrap { width: 100%; max-width: 380px; }
+
+.login-brand-head { text-align: center; margin-bottom: 28px; }
+.login-script { font-family: 'Alex Brush', cursive; font-size: 64px; line-height: 1; color: var(--login-navy); margin: 0; }
+.login-sub { font-size: 11px; letter-spacing: 5px; color: var(--login-accent); font-weight: 700; margin: 2px 0 14px; padding-left: 5px; }
+.login-brand-head h1 { font-family: 'Cormorant Garamond', serif; font-weight: 600; font-size: 26px; color: var(--login-navy); margin: 0 0 4px; }
+.login-hint { margin: 0; font-size: 13.5px; color: var(--login-muted); }
+
+.login-field { position: relative; margin-bottom: 14px; }
+.login-ico { position: absolute; left: 18px; top: 50%; transform: translateY(-50%); width: 18px; height: 18px; color: var(--login-muted); pointer-events: none; }
+.login-field input {
+  width: 100%; height: 50px; box-sizing: border-box; border: 1.5px solid transparent; border-radius: 999px;
+  background: var(--login-field); padding: 0 48px 0 46px; font: inherit; font-size: 15px; color: var(--login-text);
+  outline: none; transition: border-color .15s, background .15s, box-shadow .15s;
+}
+.login-field input::placeholder { color: #A79F94; }
+.login-field input:focus { background: #fff; border-color: var(--login-accent); box-shadow: 0 0 0 4px rgba(240, 112, 88, .15); }
+.login-field.has-error input { border-color: var(--login-danger); background: #fff; }
+.login-eye {
+  position: absolute; right: 6px; top: 50%; transform: translateY(-50%); width: 38px; height: 38px; border: 0;
+  background: none; color: var(--login-muted); cursor: pointer; border-radius: 50%; display: grid; place-items: center;
+}
+.login-eye:hover { background: rgba(0, 0, 0, .05); color: var(--login-navy); }
+.login-eye:focus-visible { outline: 2px solid var(--login-accent); }
+.login-eye svg { width: 19px; height: 19px; }
+
+.login-error {
+  display: flex; align-items: center; gap: 8px; background: var(--login-danger-bg); color: var(--login-danger);
+  font-size: 13.5px; padding: 10px 14px; border-radius: 14px; margin: 0 0 14px;
+}
+.login-error svg { width: 16px; height: 16px; flex-shrink: 0; }
+
+.login-btn {
+  width: 100%; height: 52px; margin-top: 6px; border: 0; border-radius: 999px; font: inherit; font-size: 16px; font-weight: 700;
+  color: #fff; cursor: pointer; background: linear-gradient(135deg, var(--login-accent-2), var(--login-accent));
+  box-shadow: 0 8px 20px rgba(240, 112, 88, .35); transition: transform .1s, box-shadow .15s, opacity .15s;
+}
+.login-btn:hover { box-shadow: 0 10px 24px rgba(240, 112, 88, .45); }
+.login-btn:active { transform: translateY(1px); }
+.login-btn:focus-visible { outline: 3px solid rgba(240, 112, 88, .4); outline-offset: 2px; }
+.login-btn:disabled { opacity: .8; cursor: default; pointer-events: none; }
+.login-spin {
+  display: inline-block; width: 18px; height: 18px; border: 2.5px solid rgba(255, 255, 255, .4); border-top-color: #fff;
+  border-radius: 50%; animation: login-rot .7s linear infinite; vertical-align: -3px; margin-right: 8px;
+}
+@keyframes login-rot { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .login-spin { animation-duration: 2s; } }
+
+.login-help { text-align: center; margin: 22px 0 0; font-size: 13px; color: var(--login-muted); }
+
+/* ---------- Columna derecha: marca ---------- */
+.login-brand-pane {
+  position: relative; overflow: hidden; background: linear-gradient(150deg, var(--login-navy) 0%, var(--login-navy-2) 100%);
+  border-radius: 44px 0 0 44px; display: flex; align-items: center; justify-content: center; padding: 40px;
+}
+.login-waves { position: absolute; inset: 0; width: 100%; height: 100%; opacity: .18; }
+.login-glow {
+  position: absolute; width: 520px; height: 520px; border-radius: 50%; top: -160px; right: -140px;
+  background: radial-gradient(circle, rgba(240, 112, 88, .35), transparent 65%);
+}
+.login-glass {
+  position: relative; width: 100%; max-width: 420px; padding: 44px 36px 36px; border-radius: 28px; color: #fff;
+  background: rgba(255, 255, 255, .09); border: 1px solid rgba(255, 255, 255, .22);
+  backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); box-shadow: 0 30px 60px rgba(0, 0, 0, .28);
+}
+.login-glass .login-script { font-size: 92px; line-height: .95; color: #fff; }
+.login-glass .login-sub { font-size: 12px; letter-spacing: 8px; color: var(--login-accent-2); margin: 6px 0 26px; padding-left: 0; }
+.login-tag { font-family: 'Cormorant Garamond', serif; font-size: 25px; line-height: 1.25; margin: 0 0 26px; color: rgba(255, 255, 255, .95); }
+.login-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.login-chip {
+  display: inline-flex; align-items: center; gap: 7px; font-size: 13px; padding: 7px 13px; border-radius: 999px;
+  background: rgba(255, 255, 255, .12); border: 1px solid rgba(255, 255, 255, .2); color: rgba(255, 255, 255, .92);
+}
+.login-chip svg { width: 15px; height: 15px; }
+.login-foot { position: absolute; bottom: 22px; left: 0; right: 0; text-align: center; font-size: 12px; color: rgba(255, 255, 255, .5); }
+
+/* ---------- Móvil: solo el formulario ---------- */
+@media (max-width: 860px) {
+  .login { grid-template-columns: 1fr; }
+  .login-brand-pane { display: none; }
+  .login-form-pane { align-items: flex-start; padding-top: 40px; }
+  .login-script { font-size: 56px; }
+}

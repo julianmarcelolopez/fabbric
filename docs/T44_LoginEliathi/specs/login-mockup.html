@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Login Admin — Eliathi Modas (propuesta T44)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Alex+Brush&family=Cormorant+Garamond:wght@600&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy: #1E2A4A;
+    --navy-2: #2B3A66;
+    --accent: #F07058;
+    --accent-2: #FF8A6E;
+    --off: #F8F7F5;
+    --field: #F1EEEA;
+    --gray: #E8E4DF;
+    --text: #2C2C2C;
+    --muted: #8A8278;
+    --danger: #DC2626;
+    --danger-bg: #FEE2E2;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: 'DM Sans', system-ui, sans-serif; color: var(--text); background: var(--off); }
+
+  /* Barra de estados: solo para revisar el mockup, no es parte del diseño */
+  .mock-bar { position: fixed; top: 0; left: 0; right: 0; z-index: 10; display: flex; gap: 8px; flex-wrap: wrap; align-items: center;
+    padding: 8px 12px; background: #111827; color: #e5e7eb; font-size: 12px; }
+  .mock-bar b { color: #fff; margin-right: 4px; }
+  .mock-bar button { font: inherit; border: 1px solid #374151; background: #1f2937; color: #e5e7eb; border-radius: 999px; padding: 4px 12px; cursor: pointer; }
+  .mock-bar button.on { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+  .login { display: grid; grid-template-columns: 1fr 1fr; min-height: 100vh; padding-top: 40px; }
+
+  /* ---------- Columna izquierda: formulario ---------- */
+  .pane-form { display: flex; align-items: center; justify-content: center; padding: 32px 24px; }
+  .form-wrap { width: 100%; max-width: 380px; }
+  .brand { text-align: center; margin-bottom: 28px; }
+  .brand .script { font-family: 'Alex Brush', cursive; font-size: 64px; line-height: 1; color: var(--navy); margin: 0; }
+  .brand .sub { font-size: 11px; letter-spacing: 5px; color: var(--accent); font-weight: 700; margin: 2px 0 14px; padding-left: 5px; }
+  .brand h1 { font-family: 'Cormorant Garamond', serif; font-weight: 600; font-size: 26px; color: var(--navy); margin: 0 0 4px; }
+  .brand p.hint { margin: 0; font-size: 13.5px; color: var(--muted); }
+
+  .field { position: relative; margin-bottom: 14px; }
+  .field .ico { position: absolute; left: 18px; top: 50%; transform: translateY(-50%); width: 18px; height: 18px; color: var(--muted); pointer-events: none; }
+  .field input { width: 100%; height: 50px; border: 1.5px solid transparent; border-radius: 999px; background: var(--field);
+    padding: 0 48px 0 46px; font: inherit; font-size: 15px; color: var(--text); outline: none; transition: border-color .15s, background .15s, box-shadow .15s; }
+  .field input::placeholder { color: #A79F94; }
+  .field input:focus { background: #fff; border-color: var(--accent); box-shadow: 0 0 0 4px rgba(240,112,88,.15); }
+  .field.has-error input { border-color: var(--danger); background: #fff; }
+  .field .toggle { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); width: 38px; height: 38px; border: 0; background: none;
+    color: var(--muted); cursor: pointer; border-radius: 50%; display: grid; place-items: center; }
+  .field .toggle:hover { background: rgba(0,0,0,.05); color: var(--navy); }
+  .field .toggle svg { width: 19px; height: 19px; }
+
+  .error { display: none; align-items: center; gap: 8px; background: var(--danger-bg); color: var(--danger); font-size: 13.5px;
+    padding: 10px 14px; border-radius: 14px; margin: 0 0 14px; }
+  .error svg { width: 16px; height: 16px; flex-shrink: 0; }
+  .st-error .error { display: flex; }
+  .st-error .field input { border-color: var(--danger); background: #fff; }
+
+  .row-opts { display: flex; align-items: center; justify-content: space-between; margin: 2px 4px 18px; font-size: 13px; color: var(--muted); }
+  .row-opts label { display: flex; align-items: center; gap: 8px; cursor: pointer; }
+  .row-opts input[type=checkbox] { accent-color: var(--accent); width: 16px; height: 16px; }
+  .row-opts a { color: var(--muted); text-decoration: none; }
+  .row-opts a:hover { color: var(--accent); }
+
+  .btn-primary { width: 100%; height: 52px; border: 0; border-radius: 999px; font: inherit; font-size: 16px; font-weight: 700; color: #fff; cursor: pointer;
+    background: linear-gradient(135deg, var(--accent-2), var(--accent)); box-shadow: 0 8px 20px rgba(240,112,88,.35); transition: transform .1s, box-shadow .15s, opacity .15s; }
+  .btn-primary:hover { box-shadow: 0 10px 24px rgba(240,112,88,.45); }
+  .btn-primary:active { transform: translateY(1px); }
+  .btn-primary .spin { display: none; width: 18px; height: 18px; border: 2.5px solid rgba(255,255,255,.4); border-top-color: #fff; border-radius: 50%;
+    animation: r .7s linear infinite; vertical-align: -3px; margin-right: 8px; }
+  .st-loading .btn-primary { opacity: .8; pointer-events: none; }
+  .st-loading .btn-primary .spin { display: inline-block; }
+  @keyframes r { to { transform: rotate(360deg); } }
+
+  .sep { display: flex; align-items: center; gap: 12px; margin: 22px 0 16px; color: var(--muted); font-size: 12.5px; }
+  .sep::before, .sep::after { content: ""; flex: 1; height: 1px; background: var(--gray); }
+  .btn-google { width: 100%; height: 50px; border: 1.5px solid var(--gray); border-radius: 999px; background: #fff; font: inherit; font-size: 15px; font-weight: 500;
+    color: var(--text); display: flex; align-items: center; justify-content: center; gap: 10px; cursor: pointer; }
+  .btn-google:hover { border-color: #cfc8bf; }
+  .btn-google svg { width: 20px; height: 20px; }
+
+  .help { text-align: center; margin: 22px 0 0; font-size: 13px; color: var(--muted); }
+
+  /* Solo en la versión "completa" (decisiones abiertas del analisis.md) */
+  .extra { display: none; }
+  .full .extra { display: block; }
+  .full .row-opts .extra { display: inline; }
+  .v1 .row-opts { justify-content: flex-start; }
+
+  /* ---------- Columna derecha: marca ---------- */
+  .pane-brand { position: relative; overflow: hidden; background: linear-gradient(150deg, var(--navy) 0%, var(--navy-2) 100%);
+    border-radius: 44px 0 0 44px; display: flex; align-items: center; justify-content: center; padding: 40px; }
+  .pane-brand svg.waves { position: absolute; inset: 0; width: 100%; height: 100%; opacity: .18; }
+  .glow { position: absolute; width: 520px; height: 520px; border-radius: 50%; background: radial-gradient(circle, rgba(240,112,88,.35), transparent 65%);
+    top: -160px; right: -140px; }
+  .glass { position: relative; width: 100%; max-width: 420px; padding: 44px 36px 36px; border-radius: 28px;
+    background: rgba(255,255,255,.09); border: 1px solid rgba(255,255,255,.22); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+    box-shadow: 0 30px 60px rgba(0,0,0,.28); color: #fff; }
+  .glass .script { font-family: 'Alex Brush', cursive; font-size: 92px; line-height: .95; margin: 0; }
+  .glass .sub { font-size: 12px; letter-spacing: 8px; font-weight: 700; color: var(--accent-2); margin: 6px 0 26px; }
+  .glass p.tag { font-family: 'Cormorant Garamond', serif; font-size: 25px; line-height: 1.25; margin: 0 0 26px; color: rgba(255,255,255,.95); }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip { display: inline-flex; align-items: center; gap: 7px; font-size: 13px; padding: 7px 13px; border-radius: 999px;
+    background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.2); color: rgba(255,255,255,.92); }
+  .chip svg { width: 15px; height: 15px; }
+  .pane-foot { position: absolute; bottom: 22px; left: 0; right: 0; text-align: center; font-size: 12px; color: rgba(255,255,255,.5); }
+
+  /* ---------- Mobile: solo el formulario, marca arriba ---------- */
+  @media (max-width: 860px) {
+    .login { grid-template-columns: 1fr; }
+    .pane-brand { display: none; }
+    .pane-form { align-items: flex-start; padding-top: 28px; }
+    .brand .script { font-size: 56px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="mock-bar">
+  <b>Mockup T44</b>
+  <span>Estado:</span>
+  <button data-st="" class="on">Normal</button>
+  <button data-st="st-error">Error</button>
+  <button data-st="st-loading">Cargando</button>
+  <span style="margin-left:10px">Alcance:</span>
+  <button data-v="v1" class="on">v1 (recomendado)</button>
+  <button data-v="full">Completo (+ Google, olvidé clave)</button>
+</div>
+
+<main class="login v1" id="root">
+
+  <!-- Izquierda: formulario -->
+  <section class="pane-form">
+    <div class="form-wrap">
+      <div class="brand">
+        <p class="script">Eliathi</p>
+        <p class="sub">MODAS</p>
+        <h1>Bienvenida</h1>
+        <p class="hint">Ingresá al panel de tu tienda</p>
+      </div>
+
+      <form onsubmit="return false" novalidate>
+        <div class="field">
+          <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>
+          <input type="email" placeholder="Email" value="vendedor@eliathimodas.com" autocomplete="email" aria-label="Email">
+        </div>
+
+        <div class="field">
+          <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
+          <input type="password" id="pw" placeholder="Contraseña" value="secreto" autocomplete="current-password" aria-label="Contraseña">
+          <button type="button" class="toggle" id="eye" aria-label="Mostrar contraseña">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
+        </div>
+
+        <p class="error" role="alert">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16.5v.01"/></svg>
+          Email o contraseña incorrectos
+        </p>
+
+        <div class="row-opts">
+          <label class="extra"><input type="checkbox" checked> Recordarme</label>
+          <a href="#" class="extra">¿Olvidaste tu contraseña?</a>
+        </div>
+
+        <button class="btn-primary" type="submit"><span class="spin"></span><span id="lbl">Ingresar</span></button>
+
+        <div class="extra">
+          <div class="sep">o continuá con</div>
+          <button type="button" class="btn-google">
+            <svg viewBox="0 0 24 24"><path fill="#4285F4" d="M23 12.27c0-.85-.08-1.67-.22-2.45H12v4.64h6.17a5.27 5.27 0 0 1-2.29 3.46v2.87h3.7c2.17-2 3.42-4.94 3.42-8.52Z"/><path fill="#34A853" d="M12 23.5c3.1 0 5.7-1.03 7.58-2.78l-3.7-2.87c-1.03.69-2.34 1.1-3.88 1.1-2.98 0-5.5-2.01-6.4-4.72H1.77v2.96A11.5 11.5 0 0 0 12 23.5Z"/><path fill="#FBBC05" d="M5.6 14.23a6.9 6.9 0 0 1 0-4.46V6.81H1.77a11.5 11.5 0 0 0 0 10.38l3.83-2.96Z"/><path fill="#EA4335" d="M12 5.55c1.69 0 3.2.58 4.39 1.72l3.29-3.29C17.7 2.15 15.1 1 12 1 7.5 1 3.6 3.58 1.77 7.31L5.6 10.27C6.5 7.56 9.02 5.55 12 5.55Z"/></svg>
+            Continuar con Google
+          </button>
+        </div>
+
+        <p class="help">¿Problemas para entrar? Pedile acceso a quien administra la tienda.</p>
+      </form>
+    </div>
+  </section>
+
+  <!-- Derecha: marca -->
+  <aside class="pane-brand" aria-hidden="true">
+    <svg class="waves" viewBox="0 0 600 800" preserveAspectRatio="xMidYMid slice" fill="none" stroke="#fff" stroke-width="1.2">
+      <path d="M-20 120 C 120 60, 220 190, 360 130 S 560 60, 640 120"/>
+      <path d="M-20 200 C 120 140, 220 270, 360 210 S 560 140, 640 200"/>
+      <path d="M-20 560 C 120 500, 240 630, 380 570 S 560 520, 640 590"/>
+      <path d="M-20 640 C 120 580, 240 710, 380 650 S 560 600, 640 670"/>
+      <path d="M-20 720 C 120 660, 240 790, 380 730 S 560 680, 640 750"/>
+    </svg>
+    <div class="glow"></div>
+
+    <div class="glass">
+      <p class="script">Eliathi</p>
+      <p class="sub">MODAS</p>
+      <p class="tag">Tu stock, tus ventas y tu tienda online en un solo lugar.</p>
+      <div class="chips">
+        <span class="chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8 12 3 3 8v8l9 5 9-5V8Z"/><path d="m3 8 9 5 9-5M12 13v8"/></svg>Stock</span>
+        <span class="chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6h15l-1.5 9h-12L5 3H2"/><circle cx="9" cy="20" r="1.3"/><circle cx="18" cy="20" r="1.3"/></svg>Pedidos</span>
+        <span class="chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20h18M6 16V10M11 16V6M16 16v-4M21 16V8"/></svg>Finanzas</span>
+        <span class="chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18h2"/></svg>App de escaneo</span>
+      </div>
+    </div>
+    <div class="pane-foot">Panel de administración</div>
+  </aside>
+</main>
+
+<script>
+  const root = document.getElementById('root');
+  const states = ['st-error', 'st-loading'];
+  document.querySelectorAll('[data-st]').forEach(b => b.onclick = () => {
+    document.querySelectorAll('[data-st]').forEach(x => x.classList.remove('on')); b.classList.add('on');
+    states.forEach(s => root.classList.remove(s)); if (b.dataset.st) root.classList.add(b.dataset.st);
+    document.getElementById('lbl').textContent = b.dataset.st === 'st-loading' ? 'Ingresando...' : 'Ingresar';
+  });
+  document.querySelectorAll('[data-v]').forEach(b => b.onclick = () => {
+    document.querySelectorAll('[data-v]').forEach(x => x.classList.remove('on')); b.classList.add('on');
+    root.classList.remove('v1', 'full'); root.classList.add(b.dataset.v);
+  });
+  const pw = document.getElementById('pw');
+  document.getElementById('eye').onclick = () => { pw.type = pw.type === 'password' ? 'text' : 'password'; };
+</script>
+</body>
+</html>
